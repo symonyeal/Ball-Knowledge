@@ -110,7 +110,7 @@ export function hub() {
 }
 export function careerShareText() {
   const s = U.S.mode.career, r = s.S.L.rows.find(r => r[0] === s.q), pos = s.S.L.rows.indexOf(r) + 1;
-  return `Football Era Lab · ${cname(U.G, s.q)} · ${yr(s.S.s)}\nSeason ${s.y + 1} / ${s.years.length} · ${rules(s)}\n${s.S.h ? ord(pos) : 'Pre-season'} / ${s.S.L.rows.length} · ${r[7]} points · ${r[2]}W ${r[3]}D ${r[4]}L\n${s.trophies.length} trophies · ${s.pat} board patience\n${s.m.nm} · ${s.f}\nSeed ${s.seed}${typeof location === 'undefined' ? '' : `\n${location.href.split('?')[0]}?seed=${s.seed}&era=${s.D}&cap=${s.cap ? 1 : 0}`}`;
+  return `Football Era Draft · ${cname(U.G, s.q)} · ${yr(s.S.s)}\nSeason ${s.y + 1} / ${s.years.length} · ${rules(s)}\n${s.S.h ? ord(pos) : 'Pre-season'} / ${s.S.L.rows.length} · ${r[7]} points · ${r[2]}W ${r[3]}D ${r[4]}L\n${s.trophies.length} trophies · ${s.pat} board patience\n${s.m.nm} · ${s.f}\nSeed ${s.seed}${typeof location === 'undefined' ? '' : `\n${location.href.split('?')[0]}?seed=${s.seed}&era=${s.D}&cap=${s.cap ? 1 : 0}`}`;
 }
 export async function careerCardImage() {
   const s = U.S.mode.career, Q = E.rate(C.careerTeam(U.G, s), s.D), c = document.createElement('canvas'); c.width = 1200; c.height = 900;
@@ -118,7 +118,7 @@ export async function careerCardImage() {
   const g = c.getContext('2d'); g.fillStyle = '#070B14'; g.fillRect(0, 0, 1200, 900);
   g.fillStyle = U.G.clubs[s.q]?.k?.[0] || '#C9D2E3'; g.fillRect(0, 0, 1200, 12);
   const tx = (text, x, y, size = 26, col = '#F2F5FB') => { g.fillStyle = col; g.font = `800 ${size}px "Barlow Condensed", sans-serif`; g.fillText(text, x, y, 1080); };
-  tx('FOOTBALL ERA LAB', 56, 80, 48); tx(`${cname(U.G, s.q)} · ${yr(s.S.s)}`, 56, 155, 56);
+  tx('FOOTBALL ERA DRAFT', 56, 80, 48); tx(`${cname(U.G, s.q)} · ${yr(s.S.s)}`, 56, 155, 56);
   careerShareText().split('\n').slice(1).forEach((line, i) => tx(line, 56, 205 + i * 38, 27, '#B7C2D9'));
   tx('YOUR FIFTEEN', 56, 450, 30);
   [...Q.xi, ...Q.bn.filter(Boolean).map((p, i) => ({ ...p, s: `B${i + 1}` }))].forEach((p, i) => tx(`${p.s}   ${p.c.nm}   ${Math.round(p.a)}`, i < 8 ? 56 : 650, 495 + (i % 8) * 37, 25));

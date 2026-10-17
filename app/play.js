@@ -32,7 +32,7 @@ export function code(G, s) {
 
 export function uncode(G, c) {
   let z;
-  try { z = JSON.parse(unb64(String(c).trim())); } catch { throw new Error('That is not a Football Era Lab team code.'); }
+  try { z = JSON.parse(unb64(String(c).trim())); } catch { throw new Error('That is not a Football Era Draft team code.'); }
   if (![1, 2].includes(z?.v) || !Array.isArray(z.x) || z.x.length !== 15 || !DECADES.includes(z.D)) throw new Error('That team code is incomplete.');
   const slots = z.x.map(([k, p]) => ({ k, p }));
   if (new Set(slots.map(c => c.p)).size !== 15) throw new Error('A team code needs fifteen different people.');
