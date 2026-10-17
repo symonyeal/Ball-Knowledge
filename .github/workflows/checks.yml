@@ -22,7 +22,7 @@ jobs:
       - name: Check calibration against independent synthetic counts
         run: python -m pytest tests/test_calibration.py -q -p no:cacheprovider
       - name: Execute the notebook with the JavaScript engine
-        run: python -c "import nbformat; from nbclient import NotebookClient; n=nbformat.read('Football Era Lab.ipynb',as_version=4); NotebookClient(n,timeout=180,kernel_name='python3').execute()"
+        run: python -c "import nbformat; from nbclient import NotebookClient; n=nbformat.read('Football Era Draft.ipynb',as_version=4); NotebookClient(n,timeout=180,kernel_name='python3').execute()"
       - name: Install browser check tools
         run: |
           npm install --prefix "$RUNNER_TEMP/browser" --no-save playwright@1.64.0

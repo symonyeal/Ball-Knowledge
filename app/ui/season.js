@@ -208,7 +208,7 @@ export function about() {
 // Text and image for sharing a season.
 export function shareText() {
   const { R, S } = U, i = R.L.tab.findIndex(c => c.me), t = R.L.tab[i];
-  return `Football Era Lab · ${S.wk ? `Weekly ${S.wk} · ` : ''}${rules(S)} · ${S.D}s\n${ord(i + 1)} / 20 · ${t.Pts} points · ${t.W}W ${t.D}D ${t.L}L\nEuropean Cup: ${R.K.champ === 'your-club' ? 'WINNERS' : R.K.champN}\n${teamLine(S)}\nSeed ${S.seed} · ${location.href.split('?')[0]}?seed=${S.seed}&era=${S.D}&cap=${S.cap ? 1 : 0}`;
+  return `Football Era Draft · ${S.wk ? `Weekly ${S.wk} · ` : ''}${rules(S)} · ${S.D}s\n${ord(i + 1)} / 20 · ${t.Pts} points · ${t.W}W ${t.D}D ${t.L}L\nEuropean Cup: ${R.K.champ === 'your-club' ? 'WINNERS' : R.K.champN}\n${teamLine(S)}\nSeed ${S.seed} · ${location.href.split('?')[0]}?seed=${S.seed}&era=${S.D}&cap=${S.cap ? 1 : 0}`;
 }
 
 const METAL = { S: '#C9B6FF', A: '#E7B54A', B: '#C5CFDB', C: '#CD8D5C', D: '#8A94A6' };
@@ -224,7 +224,7 @@ export async function cardImage() {
   const bg = g.createRadialGradient(600, -80, 60, 600, 200, 900); bg.addColorStop(0, '#2A3352'); bg.addColorStop(1, '#070B14');
   g.fillStyle = bg; g.fillRect(0, 0, 1200, 900);
   g.fillStyle = k1; g.fillRect(0, 0, 840, 10); g.fillStyle = k2; g.fillRect(840, 0, 360, 10);
-  tx('FOOTBALL ERA LAB', 56, 76, 46, '#F2F5FB', 'Barlow Condensed', 800);
+  tx('FOOTBALL ERA DRAFT', 56, 76, 46, '#F2F5FB', 'Barlow Condensed', 800);
   tx(`${S.wk ? `WEEKLY ${S.wk} · ` : ''}${rules(S).toUpperCase()} · ${S.D}s SEASON`, 58, 112, 20, '#B7C2D9', 'Barlow', 600);
   tx(`${i + 1}`, 52, 270, 170, '#FFFFFF', 'Barlow Condensed', 800, 300); tx(ord(i + 1).slice(-2).toUpperCase(), 52 + g.measureText(`${i + 1}`).width + 8, 170, 46, '#FFFFFF', 'Barlow Condensed', 800);
   tx('LEAGUE FINISH', 58, 300, 18, '#8E9BB8', 'Barlow', 600);

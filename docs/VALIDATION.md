@@ -51,7 +51,7 @@ To reproduce them, serve the repository root, install Playwright and Chromium, a
 node tests/browser/acceptance.cjs --output /path/to/persistent/results --url http://127.0.0.1:8765/
 ```
 
-If Playwright is installed elsewhere, add `--playwright /path/to/playwright`. To use installed Microsoft Edge, add `--channel msedge`. The chosen output folder receives `acceptance.json`, screenshots, replays and result images. GitHub's workflow runs the same checks in Chromium and preserves those outputs as the `browser-checks` artifact. The harness can test the public site by changing `--url` to `https://symonyeal.github.io/Football-Era-Lab/`.
+If Playwright is installed elsewhere, add `--playwright /path/to/playwright`. To use installed Microsoft Edge, add `--channel msedge`. The chosen output folder receives `acceptance.json`, screenshots, replays and result images. GitHub's workflow runs the same checks in Chromium and preserves those outputs as the `browser-checks` artifact. The harness can test the public site by changing `--url` to `https://symonyeal.github.io/Football-Era-Draft/`.
 
 Choose an output folder outside the tracked source tree, or inside the ignored `work/` folder.
 
@@ -195,4 +195,4 @@ The browser workflow preserves fresh records in its `browser-checks` artifact. T
 
 Early-era estimates extend a model fitted to engine-rated cards from 1989 to 2025. Their errors measure resemblance to those games' ratings, not real historical ability. Missing squad members, incorrect club-name joins, decade-wide membership and estimated positions can affect results. The shipped bundle retains the nearby-source boundary rule described in [DATA.md](DATA.md#the-source-label-explains-what-rated-a-card); the pipeline now measures distance from the full spell interval for future rebuilds. The regressions establish that selection rule, not a change to the bundled cards. Additional unmeasured effects are listed in [MODEL.md](MODEL.md#what-the-model-leaves-out).
 
-The tests and reports under the [v1 tag](https://github.com/symonyeal/Football-Era-Lab/tree/v1) concern that earlier implementation. They do not establish the behavior of this engine.
+The tests and reports under the [v1 tag](https://github.com/symonyeal/Football-Era-Draft/tree/v1) concern that earlier implementation. They do not establish the behavior of this engine.

@@ -1,1 +1,1 @@
-"""Data pipeline for Football Era Lab: results, squads, ratings and managers to game JSON."""
+"""Data pipeline for Football Era Draft: results, squads, ratings and managers to game JSON."""
