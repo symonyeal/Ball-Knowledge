@@ -1,6 +1,7 @@
 import { mk, hs, sh, ft, em, rate, move } from './engine/index.js';
 import { TI, CAP, ck, left } from './cap.js';
 import { validRun } from './run.js';
+import { staff } from './staff.js';
 
 // G archive; s serializable run; T hydrated team; c card; p person id; D decade;
 // k club-decade key; S formation slots; xi starting eleven; bn four bench cards;
@@ -186,7 +187,7 @@ export function hydrate(G, r) {
   const c = G.cards[r.k]?.find(c => c.p === r.p);
   if (!c || !G.people[c.p]) throw new Error('A saved player is no longer in the dataset.');
   const [cq, D] = r.k.split(':');
-  return { ...c, id: c.p, nm: G.people[c.p].nm, D: Number(D), cq, src: c.s, duo: G.people[c.p].duo || [] };
+  return { ...c, id: c.p, nm: G.people[c.p].nm, D: Number(D), cq, lg:G.clubs?.[cq]?.cc||'', nat:G.people[c.p].nat||'', src: c.s, duo: G.people[c.p].duo || [] };
 }
 
 export function shape(G, n) {
@@ -198,7 +199,7 @@ export function shape(G, n) {
 
 export function team(G, s) {
   if (!s.manager) return null;
-  const m = G.managers.find(m => m.nm === s.manager.nm);
+  const m = staff(G, G.managers.find(m => m.nm === s.manager.nm), s.manager.q, s.D);
   const Q = s.slots.map(c => hydrate(G, c));
   return { m, S: shape(G, s.f), xi: Q.slice(0, 11), bn: Q.slice(11) };
 }
@@ -211,7 +212,7 @@ export function preview(G, s, p, i) {
   const slots = s.slots.slice(); slots[i] = { k: s.combo, p };
   const Q = rate(team(G, { ...s, slots }), s.D), R = rate(team(G, s), s.D);
   const v = i < 11 ? Q.xi[i] : Q.bn[i - 11];
-  return { c, slot: u, ...f, e, a: v.a, b: v.b || 0, up: Q.up, gA: Q.gA, gD: Q.gD, ovr: Q.ovr, da: Q.ovr - R.ovr };
+  return { c, slot: u, ...f, e, a: v.a, b: v.b || 0, n:v.n||0, chem:Q.chem.total, dc:Q.chem.total-R.chem.total, up: Q.up, gA: Q.gA, gD: Q.gD, ovr: Q.ovr, da: Q.ovr - R.ovr };
 }
 
 // A version 2 save chose a (manager, formation) pair: it keeps the pair as a legacy team

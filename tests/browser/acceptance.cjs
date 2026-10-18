@@ -74,8 +74,8 @@ async function pick(p, kind) {
     assert.match(await p.locator('#place-confirm').innerText(), /Place at/);
     await p.click('#place-confirm');
   } else {
-    assert.match(await p.locator('#lineup-instruction').innerText(), /base.*links/);
-    if (i < 11) assert.match(await p.locator(`[data-slot="${i}"]`).getAttribute('aria-label'), /links.*Squad overall/);
+    assert.match(await p.locator('#lineup-instruction').innerText(), /base.*chemistry/);
+    if (i < 11) assert.match(await p.locator(`[data-slot="${i}"]`).getAttribute('aria-label'), /chemistry.*Squad overall/);
     await p.click(`[data-slot="${i}"]`);
   }
   await settle(p);

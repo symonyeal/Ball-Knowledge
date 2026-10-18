@@ -2,6 +2,7 @@
 import { hydrate, shape } from './draft.js';
 import { mk, hs, sh, rate, move } from './engine/index.js';
 import { TI } from './cap.js';
+import { staff } from './staff.js';
 
 export const norm = s => String(s).normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 export const refid = c => `${c.k}/${c.p}`;
@@ -23,7 +24,7 @@ export function search(A, o = {}) {
 }
 
 export const freeSquad = (G, D = 1990) => ({ D, f: '4-3-3', m: G.managers.find(m => m.f.includes('4-3-3'))?.nm || G.managers[0].nm, slots: Array(15).fill(null), seed: 1 });
-export const freeTeam = (G, s) => ({ m: G.managers.find(m => m.nm === s.m), S: shape(G, s.f), xi: s.slots.slice(0, 11).map(c => hydrate(G, c)), bn: s.slots.slice(11).map(c => hydrate(G, c)) });
+export const freeTeam = (G, s) => ({ m: staff(G,G.managers.find(m => m.nm === s.m),null,s.D), S: shape(G, s.f), xi: s.slots.slice(0, 11).map(c => hydrate(G, c)), bn: s.slots.slice(11).map(c => hydrate(G, c)) });
 
 export function freePlace(G, s, c, i) {
   hydrate(G, c);

@@ -13,7 +13,7 @@ export const CAREER_DEV = {
   ...DEV,
   touch: { nm: 'First-touch Training', mx: 2, c: 3, boost: 1, ln: ['MID', 'WIDE', 'ATT'], tx: 'Adds one rating point per level to this player.' },
   composure: { nm: 'Composure Training', mx: 2, c: 3, boost: 1, tx: 'Adds one rating point per level for a player the side can trust.' },
-  team: { nm: 'Team First', team: 1, mx: 1, c: 3, tx: 'Partnership and teammate links count another 20% more across the squad.' },
+  team: { nm: 'Team First', team: 1, mx: 1, c: 3, tx: 'Partnership bonuses count another 20% more across the squad. Chemistry stays capped at 3 per starter.' },
   buyin: { nm: 'Player Buy-In', mx: 1, c: 2, boost: 1, tx: 'Adds one rating point and resolves this player’s desperation-signing disruption.' },
 };
 const TIERS = ['D', 'C', 'B', 'A', 'S'], PH = ['half', 'node', 'hop', 'repo', 'done', 'fired'];
@@ -34,7 +34,7 @@ export function careerTeam(G, s) {
     const v = s.skills[c.id] || {}, bonus = ['touch', 'composure', 'buyin'].reduce((a, k) => a + (v[k] || 0), 0);
     return bonus ? shift(c, bonus) : c;
   };
-  // A bargain star disrupts established links until he leaves or receives Player Buy-In.
+  // A bargain star disrupts established partnerships until he leaves or receives Player Buy-In.
   return { ...T, xi: T.xi.map(extra), bn: T.bn.map(extra),
     lk: T.lk * (s.badge.team ? 1.2 : 1) * (Object.keys(s.trouble).length ? 0.75 : 1) };
 }

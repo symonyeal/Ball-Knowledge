@@ -31,7 +31,7 @@ test('missing club identifiers never create teammate chemistry', () => {
   const T = club('a').T;
   for (const c of T.xi) delete c.cq;
   const R = E.rate(T, 1990);
-  assert.ok(R.xi.every(p => p.b === 0));
+  assert.ok(R.xi.every(p => p.b === 0 && p.n === 0));
 });
 
 test('duo links cannot stack duplicates or self-links and chemistry stays capped', () => {

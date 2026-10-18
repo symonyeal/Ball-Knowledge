@@ -1,5 +1,5 @@
 // G archive; x roster references {k,p}; c card; r base rating; n tier counts; lim tier allowances.
-// Tiers are fixed before position, era, links or manager adjustments. CAP is the drafted fifteen;
+// Tiers are fixed before position, era, chemistry or manager adjustments. CAP is the drafted fifteen;
 // GCAP is Eraball's Gauntlet cap on a capped run (at most 2 S and 4 A; B, C and D unlimited).
 export const TI = r => (r >= 90 ? 'S' : r >= 85 ? 'A' : r >= 80 ? 'B' : r >= 75 ? 'C' : 'D');
 export const CAP = Object.freeze({ S: 2, A: 4, B: 4, C: 3, D: 2 });

@@ -620,3 +620,8 @@ body[data-theme=light] .pt,body[data-theme=light] .vcard{--ink:#F2F5FB;--ink2:#D
   .club-detail{grid-template-columns:1fr;padding:14px}.club-detail .vcard{margin:auto}
   .club-filters .field{flex-basis:130px}.club-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+.chem ul{list-style:none;margin:6px 0;padding:0;display:grid;gap:4px}
+.chem li{display:grid;grid-template-columns:4.5em minmax(0,1fr) auto;gap:8px;font-size:13px}
+.chem li span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chem .sp b{font:800 20px var(--fd)}
+.chm{font-style:normal;letter-spacing:-1px;color:#9FE8B0}

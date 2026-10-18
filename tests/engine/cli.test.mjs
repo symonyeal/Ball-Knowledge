@@ -13,9 +13,10 @@ test('the reusable Node rating bridge uses the engine and returns finite named l
   assert.equal(r.status, 0, r.stderr);
   const a = JSON.parse(r.stdout);
   assert.equal(a[0].id, 'a');
-  assert.equal(a[0].M, 82);
-  assert.equal(a[0].K, 82);
-  assert.ok(Math.abs(a[0].A - 82) < 1e-10 && Number.isFinite(a[0].Dk));
+  // 80 base + 3 chemistry: eleven natural-position starters share one club (7 ≥ 7).
+  assert.ok(Math.abs(a[0].M - 83) < 1e-10);
+  assert.ok(Math.abs(a[0].K - 83) < 1e-10);
+  assert.ok(Math.abs(a[0].A - 83) < 1e-10 && Number.isFinite(a[0].Dk));
 });
 
 test('the Gauntlet balance command completes current rounds, rewards and transfers', () => {

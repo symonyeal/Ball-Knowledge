@@ -66,7 +66,7 @@ export function mountClubhouse(U, { notice, weekly }) {
 
   function comparisons() {
     if(!pins.length)return '';
-    return `<section class="club-comparison"><h2>Pinned cards</h2><div class="club-grid">${pins.map(id=>{const c=by.get(id);return `<article class="stat-card"><h3>${esc(cardLabel(c))}</h3><p>${number(c.r)} overall · ${c.pos.join('/')} · ${esc(SRC[c.s]||c.s)}</p><p class="small">Era-adjusted base (before position fit and links): ${DECADES.map(d=>`${d}s ${number(c.r*E.em(c.D,d,c.tg?.tl||0))}`).join(' · ')}</p>${btn('Remove',`data-pin="${esc(id)}"`)}</article>`;}).join('')}</div></section>`;
+    return `<section class="club-comparison"><h2>Pinned cards</h2><div class="club-grid">${pins.map(id=>{const c=by.get(id);return `<article class="stat-card"><h3>${esc(cardLabel(c))}</h3><p>${number(c.r)} overall · ${c.pos.join('/')} · ${esc(SRC[c.s]||c.s)}</p><p class="small">Era-adjusted base (before position fit and chemistry): ${DECADES.map(d=>`${d}s ${number(c.r*E.em(c.D,d,c.tg?.tl||0))}`).join(' · ')}</p>${btn('Remove',`data-pin="${esc(id)}"`)}</article>`;}).join('')}</div></section>`;
   }
 
   function cardRows(Q, action='inspect') {

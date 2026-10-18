@@ -2,6 +2,7 @@
 export * from './rng.js';
 export * from './pos.js';
 export * from './era.js';
+export * from './chemistry.js';
 export * from './rate.js';
 export * from './xi.js';
 export * from './match.js';
