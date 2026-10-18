@@ -4,6 +4,13 @@ The checks answer several different questions: whether the game follows its rule
 
 ## The rules are checked automatically
 
+The account-free Clubhouse expansion adds sandbox invariants, deterministic daily
+puzzles, resumable deadlines, calendar streaks, completed-event deduplication,
+collection identity and profile validation. `tests/browser/clubhouse.cjs` exercises
+these controls at desktop and phone widths; CI runs it after the existing game
+acceptance suite. See [CLUBHOUSE.md](CLUBHOUSE.md) for the feature rules, REA
+reference investigation and limits of the personal statistics.
+
 The JavaScript suite checks draft limits, one-person identity, position assignment, rating adjustments, leagues and cups, substitutions and agreement between match events and reported totals. It also covers repeatable results, the circuit, weekly seeds, team codes, Gauntlet maps, four-round acts, rewards, same-person boosts, two-legged boss ties, retries, transfers, development and valid or malformed saves. Formation tests require changes to preserve cards, the bench and future draws; manager tests retain exact club spells and accept legacy saves and team codes. Interface tests check surname particles and text and focus contrast against the declared surfaces.
 
 Career checks cover real league membership, season-specific and nearby squads, labelled stand-ins, two-point seasons, odd-sized fields, competition availability and qualification, partial-season continuation and the expectation-based patience scale. Save validation checks the career independently of its original draft and Gauntlet. The lobby regression renders an unrecorded selected formation and requires that formation's actual pitch, rather than only the manager's recorded miniatures. Version 4 options are checked across every decade and both manager re-spins; version 2 and version 3 choices and both older team-code formats retain their original validation rules.

@@ -571,3 +571,52 @@ tbody tr:last-child td{border-bottom:0}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
+
+/* Account-free archive, progress and puzzles share the existing game surfaces. */
+.club-entry{margin:24px 28px;padding:24px;border:1px solid var(--l1);border-radius:16px;background:var(--n1);display:flex;justify-content:space-between;gap:24px;align-items:center}
+.club-entry h2{font:800 32px var(--fd);margin:6px 0}
+.clubhouse{width:min(1200px,calc(100vw - 32px));max-width:1200px;max-height:calc(100dvh - 32px);padding:24px;background:var(--n0);color:var(--ink);overscroll-behavior:contain}
+.clubhouse::backdrop{background:rgba(0,0,0,.78)}
+.club-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.club-heading h1{font:800 clamp(32px,5vw,48px) var(--fd)}
+.club-nav{display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--l1);padding:18px 0;margin-bottom:24px}
+.club-nav [aria-current=page],.clubhouse [aria-pressed=true]{border-color:var(--focus);background:var(--n3)}
+.club-content{display:grid;gap:20px;min-width:0}
+.club-content .lede{max-width:850px}
+.club-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,265px),1fr));gap:16px;min-width:0}
+.club-grid .challenge-card,.club-grid .stat-card{display:flex;flex-direction:column;gap:12px;min-width:0;padding:20px;border:1px solid var(--l1);border-radius:12px;background:var(--n1)}
+.club-grid h2{font:800 27px var(--fd)}
+.club-grid .btn{align-self:flex-start;margin-top:auto}
+.club-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:12px}
+.club-metrics .stat-card{padding:16px;background:var(--n1);border-radius:12px;border:1px solid var(--l1)}
+.club-metric{font:800 32px var(--fd);overflow-wrap:anywhere}
+.club-filters{display:flex;align-items:flex-end;flex-wrap:wrap;gap:12px;min-width:0}
+.club-filters .field{flex:1 1 135px;min-width:0;max-width:100%}
+.club-search{flex-basis:260px!important}
+.clubhouse input:not([type=checkbox]):not([type=file]),.clubhouse select{background:var(--n1);color:var(--ink);border:1px solid var(--l2);border-radius:8px;min-height:44px;padding:10px;width:100%;min-width:0}
+.clubhouse input[type=checkbox]{width:18px;height:18px;accent-color:var(--focus);flex:none}
+.club-choice{display:flex;gap:12px;align-items:center;padding:12px;background:var(--n1);border:1px solid var(--l1);border-radius:8px;min-height:48px}
+.club-detail{display:grid;grid-template-columns:180px 1fr;gap:24px;background:var(--n1);padding:20px;border:1px solid var(--l1);border-radius:12px;align-items:start}
+.club-detail>div{min-width:0}.club-detail .vcard{width:160px}.club-detail p{margin:12px 0}
+.club-comparison{display:grid;gap:12px}.club-table{width:100%;font-size:14px}.club-table td{vertical-align:middle}.club-table .btn{white-space:nowrap}
+.club-earned{border-color:var(--good)!important}
+.club-content progress{width:100%;height:12px;accent-color:var(--good)}
+.club-result{padding:20px;background:var(--n1);border:1px solid var(--l2);border-radius:12px;display:grid;gap:12px;min-width:0}
+.club-feedback{padding:12px;border:1px solid var(--warn);border-radius:8px}
+.clue-yes{color:var(--good);font-weight:600}.clue-no{color:var(--ink2)}
+.clubhouse .tw{max-width:100%;overflow-x:auto}.clubhouse table{min-width:530px}.clubhouse abbr{text-decoration-style:dotted}
+body[data-effects=false] *,body[data-effects=false] *::before,body[data-effects=false] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+body[data-effects=false]{--era:transparent}
+body[data-backdrop=plain]{background:var(--n0)}
+body[data-backdrop=pitch]{background:repeating-linear-gradient(0deg,transparent 0 79px,color-mix(in srgb,var(--ink) 3%,transparent) 79px 80px),var(--n0)}
+body[data-compact=true] .pr{padding-top:5px;padding-bottom:5px;min-height:44px}
+body[data-theme=light]{color-scheme:light;--n0:#F2F4F8;--n1:#FFFFFF;--n2:#E6EBF2;--n3:#DCE4EF;--l1:#C2CDDC;--l2:#9BAFC6;--ink:#102139;--ink2:#344C68;--ink3:#4A607A;--focus:#005C83;--good:#186537;--warn:#805100;--bad:#A52323}
+body[data-theme=light] .pt,body[data-theme=light] .vcard{--ink:#F2F5FB;--ink2:#D9E1EF;--ink3:#B7C2D9;--n1:#0D1426;--n2:#141E36;--n3:#1D2A47;--focus:#6CD4FF;color:var(--ink)}
+@media(max-width:767px){
+  .club-entry{margin:18px 14px;padding:18px;flex-direction:column;align-items:stretch}
+  .clubhouse{width:calc(100vw - 12px);max-height:calc(100dvh - 12px);padding:14px}
+  .club-heading{align-items:flex-start}.club-heading .btn{max-width:115px}
+  .club-nav{gap:6px}.club-nav .btn{font-size:12px;padding:8px}
+  .club-detail{grid-template-columns:1fr;padding:14px}.club-detail .vcard{margin:auto}
+  .club-filters .field{flex-basis:130px}.club-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
