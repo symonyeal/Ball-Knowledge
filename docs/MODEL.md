@@ -224,6 +224,21 @@ The career uses the ten Gauntlet developments listed [below](#era-gauntlet), plu
 | Team First | 1 | 3 | Multiply the squad's partnership points by a further 1.2. Chemistry stays capped at 3. |
 | Player Buy-In | 1 | 2 | Add 1 rating point and clear that player's desperation disruption. |
 
+#### In-forms and Evolutions
+
+Both adapt EA FC Ultimate Team mechanics to the simulated career. An in-form follows a strong match: within the current season, a player earns one for each win in which he has three or more goal involvements (goals plus assists, all competitions), and a keeper earns one for every five clean sheets. Each in-form adds 1 rating point, at most 3. The game derives them from the season's saved fixtures and statistics, so an in-form earned during a half applies from the next half, and a new season resets them. The card shows a black-and-gold in-form face.
+
+An Evolution sets one player an objective. Only one runs at a time; starting one is free. The player's base rating must be 86 or lower, and his line must suit the evolution:
+
+| Evolution | Lines | Objective, all competitions | Reward |
+| --- | --- | --- | --- |
+| Goal Machine | attack, wide | 10 goals | +2 rating, natural ST |
+| Creator | midfield, wide | 8 assists | +2 rating, natural CAM |
+| Safe Hands | goalkeeper | 8 clean sheets | +2 rating |
+| Ever Present | defence | 25 appearances | +2 rating, natural CDM |
+
+Progress counts the statistics recorded after the evolution starts and is checked after each half. A new natural position counts for chemistry, and its slot rating rises to the overall rating, so it carries no fit loss. Each evolution is completed at most once per player. A completed evolution stays with the person through a card upgrade and leaves with him when he is released. Evolved cards show a teal face.
+
 Below 5 patience, desperation offers include cut-price A or S players. They cost 1 at 3 or 4 patience, and are free at 1 or 2. While any such disruptive signing remains without Player Buy-In, squad partnership points are multiplied by 0.75. Release the player or apply Buy-In to remove his disruption.
 
 After winter rewards, rearrange the lineup or formation before the run-in. After summer rewards, two free pools offer up to three players each: one from next season's real league rivals whose spell covers that year, and one from the career decade. Take one from each available pool and release a different squad member for each signing; an empty pool is optional. Stand-in players never enter the market. Check the cap, then set the next season's lineup and formation. The final year has no further summer transfer pool.
@@ -331,6 +346,10 @@ These rules adapt Eraball's maps, board patience, rewards and squad cap to footb
 A circuit runs 10 to 20 events, starting in the season decade and cycling through the eras. It rotates an eight-club league, a sixteen-club European Cup, an eight-club knockout, sixteen clubs in groups followed by knockout, and a one-match Super Cup against the decade's strongest club in the selected field. Each event reassesses the squad for its decade. Titles and player awards come from all of the circuit's recorded match events.
 
 Head to Head accepts two team codes containing exact cards and placement. Both codes must use the same rules, salary cap or Classic. It plays two legs, with each team at home in its own decade. A level aggregate adds extra time and penalties in the second leg.
+
+Squad Building Challenges adapt EA FC's SBCs to the sandbox. Each sets requirements on a starting eleven: team chemistry, squad rating (the mean base rating of the eleven), players from a nation, league or one club, cards from a decade, a minimum number of nations, or a maximum number of S-tier players. Eight challenges are permanent. Three more change every ISO week: a nation drawn from those with at least 600 archive cards, a league with at least 2,000, and a decade. Completing a challenge unlocks a reward card in the collection, drawn by seed from the challenge's A-tier pool, once per challenge. The test suite builds a passing eleven from archive cards for every permanent challenge and for sampled weeks.
+
+Drawing a squad deals its cards into the list. When the squad's best card is S or A tier, a walkout shows his nation, his club, then the card, as in an EA FC pack opening. The overlay is visual only; it respects reduced motion and the effects setting. Icon-sourced cards carry an ivory face.
 
 The Weekly Challenge chooses one seed and decade for the whole ISO week, Monday to Sunday in UTC, and always uses the salary cap. Everyone sees the same manager options and the same first squad. Later squads come from the same seeded order, but each must suit the tiers that player still needs, so different picks lead to different clubs. Over 320 test seeds, pairs of drafts following different strategies met the same club on 71% of second draws, 18% of third draws and 8% of fifth draws. These modes have no server-held leaderboard or authenticated competition record.
 

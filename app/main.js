@@ -1,11 +1,12 @@
 import * as E from './engine/index.js';
-import { STORE, DECADES, start, choose, reroll, spin, place, swap, form, preview, shape } from './draft.js';
+import { STORE, DECADES, start, choose, reroll, spin, place, swap, form, preview, shape, hydrate } from './draft.js';
+import { TI } from './cap.js';
 import { fields } from './data.js';
 import * as Rn from './run.js';
 import * as Cr from './career.js';
 import { restore } from './save.js';
 import { wk, code, uncode, h2h } from './play.js';
-import { U, esc, nm, club, kv, rules } from './ui/kit.js';
+import { U, esc, nm, club, kv, rules, vcard } from './ui/kit.js';
 import { intro, teams } from './ui/lobby.js';
 import { desk, rosterList } from './ui/desk.js';
 import { results, about, season, me, shareText, cardImage, signing } from './ui/season.js';
@@ -56,6 +57,7 @@ function render() {
   bar();
   const v = !U.S ? 'intro' : U.S.phase === 'manager' ? 'teams' : U.S.phase === 'results' ? 'results' : 'desk';
   root.innerHTML = v === 'intro' ? intro() : v === 'teams' ? teams() : v === 'results' ? (U.S.mode?.career ? hub() : results()) : desk();
+  U.deal = null;
   if (document.body.dataset.screen && document.body.dataset.screen !== v) $('#notice').hidden = true;
   document.body.dataset.screen = v;
   document.body.dataset.era = U.S?.D || (U.D === 'random' ? '' : U.D);
@@ -117,10 +119,22 @@ function undo(redo) {
   save(); render(); notice(redo ? 'Lineup change redone.' : `Lineup change undone: ${U.S.f}.`);
 }
 
+// Walkout (EA FC pack reveal): an S or A best card in the drawn squad shows nation, club, then the card.
+// The overlay ignores pointer events and leaves on its own, so play continues underneath.
+function walkout(k) {
+  const c = hydrate(U.G, { k, p: U.G.cards[k].reduce((a, b) => (b.r > a.r ? b : a)).p });
+  if (!['S', 'A'].includes(TI(c.r))) return;
+  const o = document.createElement('div');
+  o.className = `walkout t${TI(c.r)}`; o.setAttribute('aria-hidden', 'true');
+  o.innerHTML = `<div class="wo"><span class="wo-1">${esc(c.nat || 'Nation unrecorded')}</span><span class="wo-2" style="${kv(c.cq)}">${esc(club(k))}</span><div class="wo-3">${vcard(c)}</div></div>`;
+  document.body.append(o); setTimeout(() => o.remove(), 2600);
+}
+
 async function reel(next) {
   const h = $('#reveal-club'), box = $('#reveal');
-  const done = () => { U.q = ''; U.ln = 'All'; U.fit = false; U.cmp = []; U.view = 'squad'; U.focus = '#squad-club'; change(next, `${club(next.combo)} drawn.`); };
-  if (rM || document.body.dataset.effects === 'false' || !h) return done();
+  const fx = !rM && document.body.dataset.effects !== 'false';
+  const done = () => { U.q = ''; U.ln = 'All'; U.fit = false; U.cmp = []; U.view = 'squad'; U.focus = '#squad-club'; U.deal = fx ? next.combo : null; change(next, `${club(next.combo)} drawn.`); if (fx) walkout(next.combo); };
+  if (!fx || !h) return done();
   const K = U.G.combos; U.busy = true; document.body.setAttribute('aria-busy', 'true'); box.classList.add('rolling');
   root.querySelectorAll('#squad-spin, [data-act="spin"]').forEach(b => { b.disabled = true; });
   try {
@@ -319,6 +333,7 @@ root.addEventListener('click', async e => {
     else if (b.id === 'career-form-apply') setCareer(Cr.careerForm(G, U.S.mode.career, $('#career-form').value));
     else if (b.id === 'career-swap') setCareer(Cr.careerSwap(U.S.mode.career, Number($('#career-swap-a').value), Number($('#career-swap-b').value)));
     else if (b.id === 'career-next') setCareer(Cr.careerNext(G, U.S.mode.career));
+    else if (b.id === 'career-evo-start') { const s = U.S.mode.career, o = Cr.evoOptions(G, s)[Number($('#career-evo').value)]; setCareer(Cr.careerAction(G, s, { type: 'evo', p: o.p, id: o.id }), `Evolution started: ${Cr.EVO[o.id].nm}.`); }
     else if (b.id === 'run-start') { const r = Rn.runNew(U.S.seed, U.S, $('#run-map').value); setRun(r, `The Gauntlet begins in the ${Rn.D_of(r)}s.`); }
     else if (b.id === 'run-round') setRun(Rn.runRound(G, U.F, U.S.mode.run));
     else if (b.id === 'run-boss') setRun(Rn.runPlayBoss(G, U.F, U.S.mode.run));

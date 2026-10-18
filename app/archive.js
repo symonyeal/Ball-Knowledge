@@ -11,7 +11,7 @@ export const TAGS = { tl: 'Timeless', tal: 'Attacking talent', rock: 'Defensive 
 export function archive(G) {
   return Object.entries(G.cards).flatMap(([k, Q]) => Q.map(c => {
     const [q, d] = k.split(':');
-    return { ...c, k, q, D: Number(d), nm: G.people[c.p].nm,
+    return { ...c, k, q, D: Number(d), nm: G.people[c.p].nm, nat: G.people[c.p].nat || '', lg: G.clubs[q].cc,
       search: norm(`${G.people[c.p].nm} ${G.clubs[q].nm} ${G.clubs[q].cc} ${d} ${c.pos.join(' ')} ${Object.keys(c.tg || {}).filter(t => c.tg[t]).map(t => TAGS[t] || t).join(' ')}`) };
   })).sort((a, b) => b.r - a.r || a.nm.localeCompare(b.nm) || a.k.localeCompare(b.k));
 }

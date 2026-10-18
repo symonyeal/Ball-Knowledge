@@ -34,16 +34,23 @@ export function record(P, G, S, R = null, C = null, H = null) {
   return added.length ? {...P,events:[...P.events,...added]} : P;
 }
 
+// A completed Squad Building Challenge: identity sbc:<id>, its reward card the only slot.
+export function completeSbc(P, ch, s, ref) {
+  const id = `sbc:${ch.id}`;
+  if (P.events.some(e => e.id === id)) return P;
+  return { ...P, events: [...P.events, { id, kind:'sbc', mode:'SBC', D:s.D, seed:0, week:ch.wk || '', slots:[ref], manager:s.m, w:0,d:0,l:0,gf:0,ga:0,titles:0,position:0,score:0 }] };
+}
+
 export function totals(P, mode = '', D = '') {
   const include=e=>(!mode||e.mode===mode)&&(!D||e.D===Number(D));
-  const Q = P.events.filter(e=>e.kind!=='draft' && e.kind!=='map' && include(e));
+  const Q = P.events.filter(e=>!['draft','map','sbc'].includes(e.kind) && include(e));
   const t = { seasons:Q.filter(e=>e.kind==='season').length, drafts:P.events.filter(e=>e.kind==='draft'&&include(e)).length,w:0,d:0,l:0,gf:0,ga:0,titles:0 };
   for (const e of Q) for (const k of ['w','d','l','gf','ga','titles']) t[k]+=e[k];
   return t;
 }
 
 export function collection(P) {
-  return new Set(P.events.filter(e=>e.kind==='season'&&e.titles>0).flatMap(e=>e.slots.map(refid)));
+  return new Set(P.events.filter(e=>(e.kind==='season'&&e.titles>0)||e.kind==='sbc').flatMap(e=>e.slots.map(refid)));
 }
 
 export function achievements(P) {
@@ -57,7 +64,9 @@ export function achievements(P) {
     ['eras','Across the eras','Win a league in all eight simulation decades.',new Set(Q.filter(e=>e.league).map(e=>e.D)).size,8],
     ['gauntlet','Boss breaker','Win a Gauntlet boss tie.',P.events.filter(e=>e.kind==='boss'&&e.w).length,1],
     ['maps','The long road','Complete all four Gauntlet maps.',maps.size,4],
-    ['collector','Collector','Unlock ten exact club-era cards.',collection(P).size,10] ];
+    ['collector','Collector','Unlock ten exact club-era cards.',collection(P).size,10],
+    ['sbc','Squad builder','Complete a Squad Building Challenge.',P.events.filter(e=>e.kind==='sbc').length,1],
+    ['sbc-core','Master builder','Complete all eight permanent Squad Building Challenges.',P.events.filter(e=>e.kind==='sbc'&&!e.week).length,8] ];
   for (const [k,nm] of Object.entries(KINDS)) {
     const st=streak(P.sessions,k);
     rows.push([`mini-${k}`,nm,`Win ${nm} in daily mode.`,st.wins,1],[`streak-${k}`,`${nm}: five days`,'Win on five consecutive local calendar days.',st.best,5]);
@@ -71,8 +80,8 @@ export function achievements(P) {
 export function validateProfile(G, A, raw) {
   if (!raw || raw.v!==1 || !Array.isArray(raw.events) || raw.events.length>20000 || !raw.sessions || typeof raw.sessions!=='object' || Array.isArray(raw.sessions) || Object.keys(raw.sessions).length>5000) throw new Error('Choose a valid Football Era Draft profile.');
   const events=raw.events.map(e=>{
-    if(!e || typeof e.id!=='string' || e.id.length>50000 || !['draft','season','boss','map','circuit','tie'].includes(e.kind) ||
-      !['Classic','Salary cap','Weekly','Gauntlet','Circuit','Head to head'].includes(e.mode) || ![1950,1960,1970,1980,1990,2000,2010,2020].includes(e.D) ||
+    if(!e || typeof e.id!=='string' || e.id.length>50000 || !['draft','season','boss','map','circuit','tie','sbc'].includes(e.kind) ||
+      !['Classic','Salary cap','Weekly','Gauntlet','Circuit','Head to head','SBC'].includes(e.mode) || ![1950,1960,1970,1980,1990,2000,2010,2020].includes(e.D) ||
       !['w','d','l','gf','ga','titles','position','score','seed'].every(k=>Number.isSafeInteger(e[k])&&e[k]>=0&&e[k]<=4294967295) ||
       !Array.isArray(e.slots)||e.slots.length>15 || new Set(e.slots.map(c=>c.p)).size!==e.slots.length ||
       typeof e.manager!=='string' || (e.year!==undefined&&(!Number.isInteger(e.year)||e.year<1950||e.year>2029)) ||

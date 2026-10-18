@@ -1,4 +1,4 @@
-import { mk, hs, rate, shift, move } from './engine/index.js';
+import { mk, hs, rate, shift, move, SL } from './engine/index.js';
 import { hydrate, shape, draw, key, DECADES } from './draft.js';
 import { TI, GCAP, fits, ck } from './cap.js';
 import { DEV, PAT0, PAT_MAX, B_WIN, B_LOSS, dP, REST, DESP, line, versions, upC,
@@ -28,11 +28,63 @@ const seedKey = s => `${s.seed}:career:${s.lg}:${s.q}`;
 const lastYear = s => s.y === s.years.length - 1;
 export const careerBill = (G, s) => bill(G, s);
 
+// In-forms (EA FC): in the current season a player earns one for each win in which he has 3 or more goal
+// involvements, a keeper one per 5 clean sheets (S.sy column 3); each adds a rating point, at most IF_MAX.
+// Derived from the season record, so one earned in a half applies from the next half.
+export const IF_MAX = 3;
+export function inForms(s) {
+  const n = {}, add = (p, k) => { n[p] = (n[p] || 0) + k; };
+  if (!s.S) return n;
+  for (const f of s.S.me) if (f.gf > f.ga) {
+    const g = {};
+    for (const e of f.sc) if (e[1]) for (const p of [e[2], e[3]]) if (p) g[p] = (g[p] || 0) + 1;
+    for (const [p, k] of Object.entries(g)) if (k >= 3) add(p, 1);
+  }
+  for (const r of s.S.sy) if (r[5] && r[3] >= 5) add(r[0], Math.floor(r[3] / 5));
+  return Object.fromEntries(Object.entries(n).map(([p, k]) => [p, Math.min(IF_MAX, k)]));
+}
+
+// Evolutions (EA FC): one objective at a time on a player of base rating at most EVO_MAX in a suitable line.
+// Progress is his all-competition total in S.sy column k since it began; completion adds r rating points
+// and, where given, a natural position. Each evolution is completed at most once per player.
+export const EVO_MAX = 86;
+export const EVO = {
+  goal: { nm: 'Goal Machine', ln: ['ATT', 'WIDE'], k: 1, n: 10, r: 2, pos: 'ST', tx: 'Score 10 goals in any competition.' },
+  cre: { nm: 'Creator', ln: ['MID', 'WIDE'], k: 2, n: 8, r: 2, pos: 'CAM', tx: 'Provide 8 assists in any competition.' },
+  wall: { nm: 'Safe Hands', ln: ['GK'], k: 3, n: 8, r: 2, tx: 'Keep 8 clean sheets in any competition.' },
+  iron: { nm: 'Ever Present', ln: ['DEF'], k: 4, n: 25, r: 2, pos: 'CDM', tx: 'Make 25 appearances in any competition.' },
+};
+const snaps = s => [...s.history.map(h => h.S), ...(s.half === 2 ? [] : [s.S])];
+export const evoStat = (s, p, k) => snaps(s).reduce((x, S) => x + (S.sy.find(r => r[0] === p)?.[k] || 0), 0);
+export const evoProgress = s => s.evo ? Math.min(EVO[s.evo.id].n, evoStat(s, s.evo.p, EVO[s.evo.id].k) - s.evo.b) : 0;
+// learn(c, x): x becomes a natural position; a slot rating for x rises to the overall rating.
+const learn = (c, x) => c.pos.includes(x) ? c : { ...c, pos: [...c.pos, x], ...(c.sr ? { sr: c.sr.map((a, j) => SL[j] === x ? Math.max(a, c.r) : a) } : {}) };
+export function evoOptions(G, s) {
+  if (s.evo || ['fired', 'done'].includes(s.ph)) return [];
+  return s.slots.flatMap((r, i) => {
+    const c = hydrate(G, r);
+    return c.r > EVO_MAX ? [] : Object.entries(EVO).filter(([id, e]) => e.ln.includes(line(c)) && !(s.evd?.[r.p] || []).includes(id)).map(([id]) => ({ i, p: r.p, id }));
+  });
+}
+export function careerEvo(G, s, p, id) {
+  if (!evoOptions(G, s).some(o => o.p === p && o.id === id)) throw new Error('Choose an evolution this player is eligible for; one runs at a time.');
+  return { ...s, evo: { p, id, b: evoStat(s, p, EVO[id].k) }, log: [...s.log, { t: 'evo', p, id }],
+    owner: `${G.people[p].nm} has a target: ${EVO[id].tx.toLowerCase().replace(/\.$/, '')}.` };
+}
+const evolve = s => {
+  if (!s.evo || evoProgress(s) < EVO[s.evo.id].n) return s;
+  const { p, id } = s.evo;
+  return { ...s, evo: null, evd: { ...s.evd, [p]: [...(s.evd?.[p] || []), id] }, log: [...s.log, { t: 'evd', p, id }] };
+};
+
 export function careerTeam(G, s) {
   const T = runTeam(G, s);
+  const F = inForms(s);
   const extra = c => {
-    const v = s.skills[c.id] || {}, bonus = ['touch', 'composure', 'buyin'].reduce((a, k) => a + (v[k] || 0), 0);
-    return bonus ? shift(c, bonus) : c;
+    const v = s.skills[c.id] || {}, X = (s.evd?.[c.id] || []).map(k => EVO[k]), f = F[c.id] || 0;
+    const bonus = ['touch', 'composure', 'buyin'].reduce((a, k) => a + (v[k] || 0), 0) + X.reduce((a, e) => a + e.r, 0) + f;
+    const x = X.reduce((c, e) => e.pos ? learn(c, e.pos) : c, c);
+    return { ...shift(x, bonus), ...(f || c.fm ? { fm: (c.fm || 0) + f } : {}), ...(X.length ? { ev: X.length } : {}) };
   };
   // A bargain star disrupts established partnerships until he leaves or receives Player Buy-In.
   return { ...T, xi: T.xi.map(extra), bn: T.bn.map(extra),
@@ -65,7 +117,7 @@ export function careerStart(G, draft) {
   const s = { v: CAREER_VERSION, kind: 'career', seed: draft.seed, cap: !!draft.cap, D: draft.D,
     m: { ...draft.manager }, f: draft.f, slots, lg, q, years, y: 0, ph: 'half', half: 0,
     pat: PAT0, rest: 0, lost: 0, tags: {}, up: {}, mv: {}, neg: {}, skills: {}, trouble: {},
-    badge: { glue: 0, mgr: 0, team: 0 }, last: [], fa: 0, prem: 0, history: [], trophies: [], log: [],
+    badge: { glue: 0, mgr: 0, team: 0 }, last: [], fa: 0, prem: 0, history: [], trophies: [], log: [], evo: null, evd: {},
     node: { window: 'winter', left: 0, free: 0 }, owner: 'You have a decade to make this club yours. Show me what this squad can do.' };
   return { ...s, S: season(G, s) };
 }
@@ -123,6 +175,7 @@ export function careerPlayHalf(G, s) {
         : won ? 'You delivered what the board asked. Build on it in the summer.' : 'The objective was clear and we missed it. The next season must justify our patience.',
       log: [...nx.log, { t: 'boss', D: s.D, act: s.y, s: S.s, won, n: 1, pos, target: S.obj.t, dp: bossDP, ...v }] };
   }
+  nx = evolve(nx);
   if (nx.pat <= 0) return { ...nx, pat: 0, ph: 'fired', node: { ...nx.node, left: 0, free: 0 }, owner: 'The club needs another direction. Your time in charge ends here.' };
   return { ...nx, ph: 'node' };
 }
@@ -202,9 +255,9 @@ export function careerRespin(G, s, premium = false) {
   return { ...s, pat: a.pat, fa: a.fa, prem: a.prem, log: a.log, owner: 'The scouts have fresh names. Choose a deal we can afford.' };
 }
 const spend = (s, n) => { if (n && s.pat - n < 1) throw new Error(`Needs ${n + 1} patience; the board keeps at least 1.`); return s.pat - n; };
-const drop = (s, p) => Object.fromEntries(['tags', 'up', 'mv', 'neg', 'skills', 'trouble'].map(k => {
+const drop = (s, p) => ({ ...Object.fromEntries(['tags', 'up', 'mv', 'neg', 'skills', 'trouble', 'evd'].map(k => {
   const v = { ...s[k] }; delete v[p]; return [k, v];
-}));
+})), evo: s.evo?.p === p ? null : s.evo ?? null });
 function afterReward(s, O) {
   const node = { ...s.node, left: s.node.left - 1, free: Math.max(0, s.node.free - 1) };
   const ph = node.left > 0 ? 'node' : s.half === 1 ? 'repo' : lastYear(s) ? 'done' : 'hop';
@@ -295,7 +348,7 @@ export function careerNext(G, s) {
   if (lastYear(s)) throw new Error('The decade is complete.');
   const nx = { ...s, y: s.y + 1, half: 0, ph: 'half', rest: 0, fa: 0, prem: 0, node: { window: 'winter', left: 0, free: 0 },
     owner: 'A new season, a new objective. Earn the club another year of progress.', log: [...s.log, { t: 'act', act: s.y + 1 }] };
-  return { ...nx, S: season(G, nx) };
+  return { ...nx, S: season(G, { ...nx, S: null }) };
 }
 export const careerScore = s => ({ ...score(s), seasons: s.history.length, trophies: s.trophies.length });
 export function careerAction(G, s, action) {
@@ -308,6 +361,7 @@ export function careerAction(G, s, action) {
   if (type === 'swap') return careerSwap(s, o.a, o.b);
   if (type === 'form') return careerForm(G, s, o.f);
   if (type === 'next') return careerNext(G, s);
+  if (type === 'evo') return careerEvo(G, s, o.p, o.id);
   throw new Error('Unknown career action.');
 }
 
@@ -386,6 +440,7 @@ export function validCareer(G, s, manager, cap) {
       e.in.every(c => Array.isArray(c) && c.length === 2 && ref({ k: c[0], p: c[1] })) && Array.isArray(e.out) && e.out.length === e.in.length && e.out.every(person);
     if (e.t === 'form') return int(e.act, 0, s.years.length - 1) && typeof e.f === 'string' && Object.hasOwn(G.formations, e.f);
     if (e.t === 'act') return int(e.act, 1, s.years.length - 1);
+    if (e.t === 'evo' || e.t === 'evd') return person(e.p) && Object.hasOwn(EVO, e.id);
     return false;
   };
   const ok = obj(s) && s.v === CAREER_VERSION && s.kind === 'career' && int(s.seed, 0, 4294967295) && typeof s.cap === 'boolean' &&
@@ -415,7 +470,9 @@ export function validCareer(G, s, manager, cap) {
     (s.ph !== 'node' || (s.half > 0 && s.node.left > 0)) && (!['hop', 'done'].includes(s.ph) || (s.half === 2 && s.node.left === 0)) &&
     (s.ph !== 'repo' || (s.half > 0 && s.node.left === 0 && (s.half === 1 || !lastYear(s)))) &&
     (s.ph !== 'hop' || !lastYear(s)) && (s.ph !== 'done' || lastYear(s)) &&
-    (s.ph === 'node' || (s.node.left === 0 && s.node.free === 0 && s.fa === 0 && s.prem === 0));
+    (s.ph === 'node' || (s.node.left === 0 && s.node.free === 0 && s.fa === 0 && s.prem === 0)) &&
+    (s.evo == null || (obj(s.evo) && Object.hasOwn(EVO, s.evo.id) && s.slots.some(c => c.p === s.evo.p) && int(s.evo.b) && s.evo.b <= evoStat(s, s.evo.p, EVO[s.evo.id].k))) &&
+    (s.evd === undefined || dictPeople(s.evd, x => strings(x) && unique(x) && x.length > 0 && x.every(k => Object.hasOwn(EVO, k))));
   if (!ok) throw new Error('The saved club career is invalid.');
   if (s.cap !== cap) throw new Error('The saved career cap does not match the draft.');
   const snapshots = [...s.history.map(h => h.S), ...(s.half === 2 ? [] : [s.S])];
@@ -436,7 +493,7 @@ export function validCareer(G, s, manager, cap) {
     if (!b.won) losses++;
   }
   if (s.half === 2 && !eq(s.S, s.history.at(-1).S)) throw new Error('The saved career season does not match its history.');
-  for (const k of ['tags', 'skills', 'trouble', 'up', 'mv', 'neg']) if (Object.keys(s[k]).some(p => !s.slots.some(c => c.p === p))) throw new Error('The saved career has records for a departed player.');
+  for (const k of ['tags', 'skills', 'trouble', 'up', 'mv', 'neg', 'evd']) if (Object.keys(s[k] || {}).some(p => !s.slots.some(c => c.p === p))) throw new Error('The saved career has records for a departed player.');
   const U = {};
   for (const e of s.log) {
     if (e.t === 'boost') U[e.p] ||= e.from;

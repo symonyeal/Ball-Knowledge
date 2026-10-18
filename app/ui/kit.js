@@ -105,8 +105,12 @@ function token(S, i, c, o) {
   const tab = o.mode === 'view' ? '' : ` type="button" tabindex="${o.entry === i ? 0 : -1}" aria-label="${esc(c?.label || s)}"${o.lock ? ' disabled' : ''}`;
   if (!c || c.kind === 'e') return `<${tag} class="tk e ${s === 'GK' ? 'gk ' : ''}${c?.on ? 'on' : ''}" style="${pos}" ${at}${tab}><span class="c">${s}</span>${o.sm ? '' : '<span class="n">Open</span>'}</${tag}>`;
   if (c.kind === 'p') return `<${tag} class="tk p ${s === 'GK' ? 'gk ' : ''}${c.best ? 'best' : ''} ${c.on ? 'on' : ''}" style="${pos}" ${at}${tab}><span class="c">${Math.round(c.v)}</span><span class="n">${s}${c.best ? ' · Best' : ''}</span><span class="s ${fitCls(c.f)}">${fitText(c.f)}${c.n === undefined || o.sm ? '' : ` · ${chem(c.n)}`}</span></${tag}>`;
-  return `<${tag} class="tk f ${s === 'GK' ? 'gk ' : ''}${c.moved ? 'mvd' : ''} ${c.on ? 'on' : ''}" style="${pos};${kv(c.q)}" ${at}${tab}><span class="c">${Math.round(c.a)}</span><span class="n">${esc(sn(c.nm))}</span><span class="s">${s} ${tier(c.t, 'sm')}${c.n === undefined ? '' : ` ${chem(c.n)}`}${c.f > 0.02 ? ` <b class="${fitCls(c.f) || 'mild'}">−${pct(c.f)}%</b>` : ''}</span></${tag}>`;
+  return `<${tag} class="tk f ${s === 'GK' ? 'gk ' : ''}${c.moved ? 'mvd' : ''} ${c.on ? 'on' : ''} ${c.fc ? `fx-${c.fc}` : ''}" style="${pos};${kv(c.q)}" ${at}${tab}><span class="c">${Math.round(c.a)}</span><span class="n">${esc(sn(c.nm))}</span><span class="s">${s} ${tier(c.t, 'sm')}${c.n === undefined ? '' : ` ${chem(c.n)}`}${c.f > 0.02 ? ` <b class="${fitCls(c.f) || 'mild'}">−${pct(c.f)}%</b>` : ''}</span></${tag}>`;
 }
+
+// face(c): special card face after EA FC: in-form (fm > 0), evolved (ev), EA Icon source; otherwise the tier frame.
+export const face = c => (c.fm > 0 ? 'if' : c.ev ? 'evo' : c.src === 'i' ? 'icon' : '');
+export const FACE = { if: 'In-form', evo: 'Evolved', icon: 'Icon' };
 
 // chem(n): n of 3 chemistry points as filled diamonds.
 export const chem = n => `<i class="chm" title="Chemistry ${n}/3">${'◆'.repeat(n)}${'◇'.repeat(3 - n)}</i>`;
@@ -149,7 +153,8 @@ export function row(c, o = {}) {
 // Collectible card: metal frame by tier, kit band, rating, best three slots, name, club and decade, source.
 export function vcard(c, o = {}) {
   const t = TI(c.r), top = rated(c, o.Ds || c.D).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([s, v]) => `${s} ${v}`).join(' · ');
-  return `<div class="vc ${o.cls || ''}" style="--tier:var(--t${t});${kv(c.cq)}"><div class="vi"><span class="rt">${Math.round(c.r)}</span><span class="ps">${top}</span>${tier(t)}<span class="vn">${esc(c.nm)}</span><span class="cl">${esc(U.G.clubs[c.cq]?.nm || c.cq)} · ${c.D}s</span><span class="src">${SRC[c.src] || SRC.e}</span></div>${o.ov ? `<div class="ov ${o.ovc || ''}">${o.ov}</div>` : ''}</div>`;
+  const fc = face(c);
+  return `<div class="vc ${o.cls || ''} ${fc ? `fx-${fc}` : ''}" style="--tier:var(--t${t});${kv(c.cq)}"><div class="vi"><span class="rt">${Math.round(c.r)}</span><span class="ps">${top}</span>${tier(t)}${fc ? `<span class="fxl">${FACE[fc]}</span>` : ''}<span class="vn">${esc(c.nm)}</span><span class="cl">${esc(U.G.clubs[c.cq]?.nm || c.cq)} · ${c.D}s${c.nat ? ` · ${esc(c.nat)}` : ''}</span><span class="src">${SRC[c.src] || SRC.e}</span></div>${o.ov ? `<div class="ov ${o.ovc || ''}">${o.ov}</div>` : ''}</div>`;
 }
 
 export function capTiles(n, lim = CAP) {

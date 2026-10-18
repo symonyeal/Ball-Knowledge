@@ -625,3 +625,34 @@ body[data-theme=light] .pt,body[data-theme=light] .vcard{--ink:#F2F5FB;--ink2:#D
 .chem li span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chem .sp b{font:800 20px var(--fd)}
 .chm{font-style:normal;letter-spacing:-1px;color:#9FE8B0}
+/* Special card faces (EA FC): in-form black and gold, evolved teal, Icon ivory */
+.vc.fx-if{background:linear-gradient(150deg,#E8C35A,#6B5212 45%,#E8C35A)}.vc.fx-if .vi{background:radial-gradient(120% 70% at 50% 0%,#2A2A2A,#050505 72%)}
+.vc.fx-evo{background:linear-gradient(150deg,#5EE6D0,#14615A 45%,#5EE6D0)}.vc.fx-evo .vi{background:radial-gradient(120% 70% at 50% 0%,#14423F,#06181A 72%)}
+.vc.fx-icon{background:linear-gradient(150deg,#F6EED8,#A08A55 45%,#F6EED8)}.vc.fx-icon .vi{background:radial-gradient(120% 70% at 50% 0%,#3A3426,#14110A 72%)}
+.vc .fxl{font:700 11px var(--fu);letter-spacing:.08em;text-transform:uppercase;color:#E8C35A;margin-top:4px}
+.vc.fx-evo .fxl{color:#5EE6D0}.vc.fx-icon .fxl{color:#F6EED8}
+.tk.f.fx-if .c{background:#050505;border-color:#E8C35A;color:#E8C35A}
+.tk.f.fx-evo .c{background:#06181A;border-color:#5EE6D0;color:#5EE6D0}
+.tk.f.fx-icon .c{background:#14110A;color:#F6EED8}
+.career-evo progress{width:100%}
+/* Pack reveal: the squad list deals in; walkout for an S or A best card */
+@keyframes deal{from{opacity:0;transform:translateY(10px) rotateX(70deg)}to{opacity:1;transform:none}}
+.list.deal .pr{animation:deal .38s cubic-bezier(.2,.8,.2,1) both}
+.list.deal .pr:nth-child(2){animation-delay:0.035s}.list.deal .pr:nth-child(3){animation-delay:0.070s}.list.deal .pr:nth-child(4){animation-delay:0.105s}.list.deal .pr:nth-child(5){animation-delay:0.140s}.list.deal .pr:nth-child(6){animation-delay:0.175s}.list.deal .pr:nth-child(7){animation-delay:0.210s}.list.deal .pr:nth-child(8){animation-delay:0.245s}.list.deal .pr:nth-child(9){animation-delay:0.280s}.list.deal .pr:nth-child(10){animation-delay:0.315s}.list.deal .pr:nth-child(11){animation-delay:0.350s}.list.deal .pr:nth-child(12){animation-delay:0.385s}.list.deal .pr:nth-child(13){animation-delay:0.420s}.list.deal .pr:nth-child(14){animation-delay:0.455s}.list.deal .pr:nth-child(15){animation-delay:0.490s}.list.deal .pr:nth-child(16){animation-delay:0.525s}.list.deal .pr:nth-child(17){animation-delay:0.560s}.list.deal .pr:nth-child(18){animation-delay:0.595s}.list.deal .pr:nth-child(19){animation-delay:0.630s}.list.deal .pr:nth-child(20){animation-delay:0.665s}.list.deal .pr:nth-child(21){animation-delay:0.700s}.list.deal .pr:nth-child(22){animation-delay:0.735s}.list.deal .pr:nth-child(23){animation-delay:0.770s}.list.deal .pr:nth-child(24){animation-delay:0.805s}
+.walkout{position:fixed;inset:0;z-index:90;display:grid;place-items:center;pointer-events:none;background:radial-gradient(circle,rgba(5,9,18,.55),rgba(5,9,18,.92));animation:wo-bg 2.6s both}
+.walkout.tS{background:radial-gradient(circle,rgba(232,195,90,.28),rgba(5,9,18,.94) 60%)}
+.wo{display:grid;justify-items:center;gap:10px}
+.wo-1,.wo-2{font:800 clamp(28px,6vw,56px)/1 var(--fd);text-transform:uppercase;color:#fff;opacity:0}
+.wo-2{color:var(--k1,#fff)}
+.wo-1{animation:wo-in .5s .1s both,wo-out .3s .9s forwards}.wo-2{animation:wo-in .5s .6s both,wo-out .3s 1.3s forwards}
+.wo-3{opacity:0;animation:wo-card .6s 1.3s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes wo-in{from{opacity:0;transform:scale(1.6)}to{opacity:1;transform:none}}
+@keyframes wo-out{to{opacity:0;transform:translateY(-20px)}}
+@keyframes wo-card{from{opacity:0;transform:rotateY(90deg) scale(.7)}to{opacity:1;transform:none}}
+@keyframes wo-bg{0%{opacity:0}8%{opacity:1}85%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.list.deal .pr{animation:none}.walkout{display:none}}
+body[data-effects=false] .walkout{display:none}body[data-effects=false] .list.deal .pr{animation:none}
+.sbc-req{margin:6px 0;padding-left:18px;display:grid;gap:3px;font-size:13.5px}
+.sbc-panel{padding:12px 14px;border-radius:14px;border:1px solid var(--l1);background:var(--n1);margin:10px 0}
+.sbc-panel .sbc-req{list-style:none;padding:0}.sbc-panel li{display:flex;justify-content:space-between;gap:10px}
+.sbc-panel li.ok{color:var(--good,#9FE8B0)}.sbc-panel li.no{color:var(--ink2)}
