@@ -75,10 +75,20 @@ During the draft and lineup review, a formation change previews the new placemen
 Each starter's contribution begins with:
 
 ```text
-adjusted rating = overall rating × (1 - position loss) × era factor + teammate points
+adjusted rating = overall rating × (1 - position loss) × era factor + partnership points + chemistry
 ```
 
-A starter earns 3 points for each listed partner who also starts. He earns 1 point for each teammate from the same club and decade within 34 pitch-coordinate units, up to 2 such points. The total teammate bonus per starter stops at 5. The partnership list is curated; the proximity threshold is a game rule.
+A starter earns 3 partnership points for each listed partner who also starts, up to 5. The partnership list is curated.
+
+Chemistry follows EA FC Ultimate Team ([FUT 23 chemistry notes](https://www.ea.com/en-au/ea-play/news/pitch-notes-fifa-23-fut-chemistry-update)). Only starters placed in one of their listed positions count; bench players and out-of-position starters earn nothing and add no penalty. For each such starter, count the eligible starters sharing his club, nation and league, himself included. The manager adds one to the count of his nation and of his league. A starter earns one point per threshold reached:
+
+| shared | 1 point | 2 points | 3 points |
+|---|---|---|---|
+| club | 2 | 4 | 7 |
+| nation | 2 | 5 | 8 |
+| league | 3 | 5 | 8 |
+
+His chemistry is the sum, capped at 3; the team's is the sum over the eleven, at most 33. Each point adds one rating point. Club is the club of the card, whatever its decade. Nation is the Wikidata country for sport (P1532) bundled with the archive; a missing nation is unknown and matches nobody. League is the club's country, since every archive club played in its national top flight. A manager's nation is known only for the 41 managers linked to a Wikidata person; his league is the country of his club spell. EA's Icon and Hero bonuses are not modelled.
 
 Every outfield position allocates its adjusted rating between attack, midfield and defence. A centre back contributes 2%, 8% and 90% to those lines; a striker contributes 90%, 8% and 2%. The full allocation table is `W` in [rate.js](../app/engine/rate.js). A line's average player quality is then adjusted for the number of players the formation commits to it, relative to a 4-4-2:
 
@@ -102,7 +112,7 @@ Talisman, Rock and Maestro tags raise attack, defence and midfield, capped at 4%
 
 Midfield receives the average of the manager's attacking and defensive bonuses. Selecting a signature player anywhere in the fifteen raises both grades one step. The squad overall shown on screen combines 85% of the starters' average and 15% of the bench's, then applies that average manager bonus. Matches use the individual lines, so two squads with the same displayed overall can have different strengths.
 
-The notebook's `best` placement helper assigns players to maximize position- and era-adjusted base ratings, then selects the remaining bench. It does not optimize teammate points or the chance of winning the season. Browser placement is always manual.
+The notebook's `best` placement helper assigns players to maximize position- and era-adjusted base ratings, then selects the remaining bench. It does not optimize partnership points, chemistry or the chance of winning the season. Browser placement is always manual.
 
 ## Drawing the match score
 
@@ -211,10 +221,10 @@ The career uses the ten Gauntlet developments listed [below](#era-gauntlet), plu
 | --- | ---: | ---: | --- |
 | First-touch Training | 2 | 3 | Add 1 rating point per level to a midfield, wide or attacking player. |
 | Composure Training | 2 | 3 | Add 1 rating point per level to any player. |
-| Team First | 1 | 3 | Multiply the squad's partnership and teammate links by a further 1.2. |
+| Team First | 1 | 3 | Multiply the squad's partnership points by a further 1.2. Chemistry stays capped at 3. |
 | Player Buy-In | 1 | 2 | Add 1 rating point and clear that player's desperation disruption. |
 
-Below 5 patience, desperation offers include cut-price A or S players. They cost 1 at 3 or 4 patience, and are free at 1 or 2. While any such disruptive signing remains without Player Buy-In, squad link points are multiplied by 0.75. Release the player or apply Buy-In to remove his disruption.
+Below 5 patience, desperation offers include cut-price A or S players. They cost 1 at 3 or 4 patience, and are free at 1 or 2. While any such disruptive signing remains without Player Buy-In, squad partnership points are multiplied by 0.75. Release the player or apply Buy-In to remove his disruption.
 
 After winter rewards, rearrange the lineup or formation before the run-in. After summer rewards, two free pools offer up to three players each: one from next season's real league rivals whose spell covers that year, and one from the career decade. Take one from each available pool and release a different squad member for each signing; an empty pool is optional. Stand-in players never enter the market. Check the cap, then set the next season's lineup and formation. The final year has no further summer transfer pool.
 
@@ -226,7 +236,7 @@ The existing notebook uses your team and nineteen eligible decade-wide club squa
 
 ## The salary cap limits stars across the whole squad
 
-A new draft uses the salary cap unless you choose Classic. Each card has a tier set by its base rating, before position, era, link and manager adjustments, and the fifteen must fill these places:
+A new draft uses the salary cap unless you choose Classic. Each card has a tier set by its base rating, before position, era, chemistry, partnership and manager adjustments, and the fifteen must fill these places:
 
 | Tier | Base rating | Places |
 | --- | --- | ---: |
@@ -297,7 +307,7 @@ An S market signing costs 1 less if he starts. An A or S signing without Europea
 
 | Development | Levels | Base price | Effect |
 | --- | ---: | ---: | --- |
-| Dressing Room Glue | 1 | 2 | Multiply squad link points by 1.5. |
+| Dressing Room Glue | 1 | 2 | Multiply squad partnership points by 1.5. |
 | Manager Development | 2 | 4 | Raise both manager grades one step per level. |
 | European Pedigree | 3 | 2 | Add one European Cup per level for knockout strength. |
 | Timeless Training | 2 | 3 | Retain one-half, then one-quarter, of era loss. |
@@ -343,8 +353,8 @@ With IDs alone, the bridge prefers a card from the season decade, then the highe
 
 Manager and formation settings are notebook experiments. With empty player lists, the demonstration uses five real squad draws, selects three players per draw and assigns an eleven. It does not automate choices in the browser.
 
-The outputs show sources, position losses, era multipliers, teammate points, manager grades, line strengths, match parameters, tables, fixtures, Cup ties, player totals and awards. The notebook prints the data hash and both draft and season seeds, and checks repeatability for unchanged settings. It writes no export unless `export_path` names a persistent file.
+The outputs show sources, position losses, era multipliers, partnership points, chemistry, manager grades, line strengths, match parameters, tables, fixtures, Cup ties, player totals and awards. The notebook prints the data hash and both draft and season seeds, and checks repeatability for unchanged settings. It writes no export unless `export_path` names a persistent file.
 
 ## What the model leaves out
 
-The model does not simulate pressing, tactical changes during a match or individual defending actions. The career uses real league fields and broad era differences in its cups, with declared shortcuts for qualification, tournament size and missing squads. It does not reproduce every historical squad or competition rule. The notebook and extra modes retain their fictional formats. The match fit covers modern club-season rosters, with random absences, fatigue, substitutions and curated bonuses excluded from that fit. Historical squads, mixed-era lineups, manager effects, links and era penalties remain outside what was validated. A result from the game is a result under these rules.
+The model does not simulate pressing, tactical changes during a match or individual defending actions. The career uses real league fields and broad era differences in its cups, with declared shortcuts for qualification, tournament size and missing squads. It does not reproduce every historical squad or competition rule. The notebook and extra modes retain their fictional formats. The match fit covers modern club-season rosters, with random absences, fatigue, substitutions and curated bonuses excluded from that fit. Historical squads, mixed-era lineups, manager effects, chemistry, partnerships and era penalties remain outside what was validated. A result from the game is a result under these rules.

@@ -106,7 +106,7 @@ test('import cannot mark an over-cap classic roster as salary cap', () => {
   assert.equal(Dr.valid(G, s).phase, 'review');
 });
 
-test('placement preview includes actual teammate links and a signature manager upgrade', () => {
+test('placement preview includes partnership, chemistry and a signature manager upgrade', () => {
   const H = structuredClone(G);
   let s = Dr.spin(H, Dr.choose(H, Dr.start(25, 1990, true), 0));
   const Q = H.cards[s.combo];
@@ -114,8 +114,9 @@ test('placement preview includes actual teammate links and a signature manager u
   H.managers.find(m => m.nm === s.manager.nm).sig = [Q[1].p];
   s = Dr.place(H, s, Q[0].p, 9);
   const v = Dr.preview(H, s, Q[1].p, 10);
-  assert.equal(v.b, 4); // 3 for the listed partner, 1 for a nearby club-decade teammate.
-  assert.equal(v.a, 96); // 92 base + 4 links in a natural ST slot, at home in 1990.
+  assert.equal(v.b, 3); // the listed partner
+  assert.equal(v.n, 2); // club: 2 starters ≥ 2; league: 2 starters + the ENG manager ≥ 3
+  assert.equal(v.a, 97); // 92 base + 3 partnership + 2 chemistry in a natural ST slot, at home in 1990.
   assert.equal(v.gA, 'A');
   assert.equal(v.up, true);
   const n = Dr.place(H, s, Q[1].p, 10), R = E.rate(Dr.team(H, n), n.D);

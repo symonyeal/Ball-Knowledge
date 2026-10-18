@@ -13,11 +13,11 @@
 //            (R. Carlos, M. van Basten)
 //   pitch(S, cells, o)  floodlit pitch: S slots, cells[i] {kind: f filled | p preview | e open, ...};
 //            o.mode play (buttons data-slot) | sheet (buttons data-target) | view (static)
-//   links(S, xi)  starter pairs from one club and decade within d_cl: the teammate links rate() counts
+//   links(S, xi)  natural-position starter pairs from one club: the club links chemistry counts
 //   row(c, o)     roster row; smap(c, Ds) the card's rating in each of the 15 slots
 
 import { TI, CAP } from '../cap.js';
-import { SL, ft, em, W, d_cl } from '../engine/index.js';
+import { SL, ft, em, W } from '../engine/index.js';
 
 export const U = {
   G: null, S: null, F: null, R: null, C: null, H: null, D: 1980, cap: true, seed: '',
@@ -91,7 +91,7 @@ export const links = (S, xi) => {
   const L = [];
   for (let i = 0; i < 11; i++) for (let j = i + 1; j < 11; j++) {
     const a = xi[i], b = xi[j];
-    if (a && b && a.cq && a.cq === b.cq && a.D === b.D && Math.hypot(S[i].x - S[j].x, S[i].y - S[j].y) <= d_cl) L.push([i, j, a.cq]);
+    if (a && b && a.cq && a.cq === b.cq && a.pos?.includes(S[i].s) && b.pos?.includes(S[j].s)) L.push([i, j, a.cq]);
   }
   return L;
 };
@@ -104,9 +104,12 @@ function token(S, i, c, o) {
   const tag = o.mode === 'view' ? 'div' : 'button', at = o.mode === 'play' ? `data-slot="${i}" data-key="s:${i}"` : o.mode === 'sheet' ? `data-target="${i}" data-key="t:${i}"` : '';
   const tab = o.mode === 'view' ? '' : ` type="button" tabindex="${o.entry === i ? 0 : -1}" aria-label="${esc(c?.label || s)}"${o.lock ? ' disabled' : ''}`;
   if (!c || c.kind === 'e') return `<${tag} class="tk e ${s === 'GK' ? 'gk ' : ''}${c?.on ? 'on' : ''}" style="${pos}" ${at}${tab}><span class="c">${s}</span>${o.sm ? '' : '<span class="n">Open</span>'}</${tag}>`;
-  if (c.kind === 'p') return `<${tag} class="tk p ${s === 'GK' ? 'gk ' : ''}${c.best ? 'best' : ''} ${c.on ? 'on' : ''}" style="${pos}" ${at}${tab}><span class="c">${Math.round(c.v)}</span><span class="n">${s}${c.best ? ' · Best' : ''}</span><span class="s ${fitCls(c.f)}">${fitText(c.f)}${c.b && !o.sm ? ` · +${c.b}` : ''}</span></${tag}>`;
-  return `<${tag} class="tk f ${s === 'GK' ? 'gk ' : ''}${c.moved ? 'mvd' : ''} ${c.on ? 'on' : ''}" style="${pos};${kv(c.q)}" ${at}${tab}><span class="c">${Math.round(c.a)}</span><span class="n">${esc(sn(c.nm))}</span><span class="s">${s} ${tier(c.t, 'sm')}${c.f > 0.02 ? ` <b class="${fitCls(c.f) || 'mild'}">−${pct(c.f)}%</b>` : ''}</span></${tag}>`;
+  if (c.kind === 'p') return `<${tag} class="tk p ${s === 'GK' ? 'gk ' : ''}${c.best ? 'best' : ''} ${c.on ? 'on' : ''}" style="${pos}" ${at}${tab}><span class="c">${Math.round(c.v)}</span><span class="n">${s}${c.best ? ' · Best' : ''}</span><span class="s ${fitCls(c.f)}">${fitText(c.f)}${c.n === undefined || o.sm ? '' : ` · ${chem(c.n)}`}</span></${tag}>`;
+  return `<${tag} class="tk f ${s === 'GK' ? 'gk ' : ''}${c.moved ? 'mvd' : ''} ${c.on ? 'on' : ''}" style="${pos};${kv(c.q)}" ${at}${tab}><span class="c">${Math.round(c.a)}</span><span class="n">${esc(sn(c.nm))}</span><span class="s">${s} ${tier(c.t, 'sm')}${c.n === undefined ? '' : ` ${chem(c.n)}`}${c.f > 0.02 ? ` <b class="${fitCls(c.f) || 'mild'}">−${pct(c.f)}%</b>` : ''}</span></${tag}>`;
 }
+
+// chem(n): n of 3 chemistry points as filled diamonds.
+export const chem = n => `<i class="chm" title="Chemistry ${n}/3">${'◆'.repeat(n)}${'◇'.repeat(3 - n)}</i>`;
 
 export function pitch(S, cells, o = {}) {
   const line = ([a, b, q]) => `<line x1="${S[a].x}" y1="${yd(S[a]) * 1.35}" x2="${S[b].x}" y2="${yd(S[b]) * 1.35}" stroke="${kit(q)[0]}" stroke-opacity=".8" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;

@@ -4,7 +4,7 @@
 //   S draft; T team; Q its rating; SH formation slots; P previewed draft (form(G, S, U.pv)); c selected card
 //   V[i]    preview of the selected card in open slot i; b index of the best one
 //   pool()  the revealed squad as rows {c, ok, why, own, best, lines, top}; best = [slot, value] over open
-//           pitch slots, value the rating there after position fit and era (no links)
+//           pitch slots, value the rating there after position fit and era (no chemistry)
 //   med(D)  medians of attack, midfield, defence and overall over the season decade's nineteen opponents
 //   badge(f) the selected card's best open slot in formation f, or the change in overall for the XI
 //   group(f) formation family for the catalogue list: recorded, four, three or five at the back, historical
@@ -151,10 +151,10 @@ export function desk() {
   const VS = P ? SP : SH, VQ = P ? QP : Q;
   const cells = VS.map((x, i) => {
     const p = VQ.xi[i];
-    if (p.c) return { kind: 'f', nm: p.c.nm, a: p.a, t: TI(p.c.r), q: p.c.cq, f: p.f, on: U.sw === i, moved: P ? moved.includes(p.c.id) : U.moved.has(p.c.id),
-      label: `${x.s}, ${p.c.nm}, adjusted ${num(p.a)}, ${fitText(p.f)}${p.b ? `, +${p.b} links` : ''}. ${U.sw === i ? 'Selected: choose another place.' : 'Select to move or swap.'}` };
+    if (p.c) return { kind: 'f', nm: p.c.nm, a: p.a, t: TI(p.c.r), q: p.c.cq, f: p.f, n: p.n, on: U.sw === i, moved: P ? moved.includes(p.c.id) : U.moved.has(p.c.id),
+      label: `${x.s}, ${p.c.nm}, adjusted ${num(p.a)}, ${fitText(p.f)}, chemistry ${p.n} of 3${p.b ? `, +${p.b} partnership` : ''}. ${U.sw === i ? 'Selected: choose another place.' : 'Select to move or swap.'}` };
     const v = !P && V[i];
-    if (v) return { kind: 'p', v: v.a, f: v.f, b: v.b, best: i === b, label: `${x.s}, open. ${c.nm} would rate ${num(v.a)}: fit loss ${pct(v.f)}%, era loss ${pct(1 - v.e)}%, +${v.b} links. Squad overall ${num(v.ovr)}.${v.up ? ' Manager signature bonus active.' : ''}` };
+    if (v) return { kind: 'p', v: v.a, f: v.f, b: v.b, n: v.n, best: i === b, label: `${x.s}, open. ${c.nm} would rate ${num(v.a)}: fit loss ${pct(v.f)}%, era loss ${pct(1 - v.e)}%, chemistry ${v.n} of 3, +${v.b} partnership. Team chemistry ${v.chem}/33. Squad overall ${num(v.ovr)}.${v.up ? ' Manager signature bonus active.' : ''}` };
     return { kind: 'e', label: `${x.s}, open.${c ? '' : ' Select a squad player first.'}` };
   });
   const ghosts = P ? moved.map(p => { const i = was.get(p), r = Q.xi[i]; return { x: SH[i].x, y: SH[i].y, a: r.a, nm: r.c.nm, q: r.c.cq }; }) : [];
@@ -162,12 +162,12 @@ export function desk() {
   const entry = b >= 0 ? b : U.sw !== null && U.sw < 11 ? U.sw : Math.max(0, VQ.xi.findIndex(p => p.c));
   const bench = T.bn.map((x, j) => {
     const i = j + 11, r = Q.bn[j], v = Vb[j];
-    const lab = x ? `Bench ${j + 1}, ${x.nm}, ${num(r.a)}. ${U.sw === i ? 'Selected: choose another place.' : 'Select to move or swap.'}` : v ? `Bench ${j + 1}, open. ${c.nm} would rate ${num(v.a)}: no fit loss on the bench, era loss ${pct(1 - v.e)}%, +0 links. Squad overall ${num(v.ovr)}.` : `Bench ${j + 1}, open.`;
+    const lab = x ? `Bench ${j + 1}, ${x.nm}, ${num(r.a)}. ${U.sw === i ? 'Selected: choose another place.' : 'Select to move or swap.'}` : v ? `Bench ${j + 1}, open. ${c.nm} would rate ${num(v.a)}: no fit loss on the bench, era loss ${pct(1 - v.e)}%, no chemistry on the bench. Squad overall ${num(v.ovr)}.` : `Bench ${j + 1}, open.`;
     return `<button type="button" class="bs ${x ? 'f' : v ? 'p' : ''} ${U.sw === i ? 'on' : ''}" data-slot="${i}" data-key="s:${i}" aria-label="${esc(lab)}" ${lock || P ? 'disabled' : ''} style="${x ? kv(x.cq) : ''}">
       <span class="v">${x ? Math.round(r.a) : v ? Math.round(v.a) : '+'}</span><span class="t"><b>${x ? esc(x.nm) : `Bench ${j + 1}`}</b><small>${x ? `${tier(TI(x.r), 'sm')} ${esc(x.pos.join(' · '))}` : v ? 'No fit loss' : 'Open'}</small></span></button>`;
   }).join('');
   const n = S.slots.filter(Boolean).length;
-  const ins = c ? `<strong>${esc(c.nm)} · ${TI(c.r)} tier · ${num(c.r)} base</strong> selected. Choose a place; the values include position fit, era and links.${T.m.sig.includes(c.id) ? ' A signature player: drafting him raises both manager grades.' : ''}`
+  const ins = c ? `<strong>${esc(c.nm)} · ${TI(c.r)} tier · ${num(c.r)} base</strong> selected. Choose a place; the values include position fit, era, chemistry and partnerships.${T.m.sig.includes(c.id) ? ' A signature player: drafting him raises both manager grades.' : ''}`
     : U.sw !== null ? 'Choose another place to move or swap, or the same place to cancel.'
       : P ? 'Previewing a formation: apply it or keep your current one.'
         : rv ? 'Your fifteen are drafted. Swap places or change formation, then kick off.' : 'Select a squad player, then a place. Select two places to swap them.';
@@ -195,12 +195,12 @@ function mcap() {
 }
 
 function dash(T, Q, c, V, b, pv) {
-  const { G, S } = U, m = T.m, sp = spell(S), n = S.slots.filter(Boolean).length, M = med(S.D);
+  const { G, S } = U, m = T.m, sp = spell(S), n = S.slots.filter(Boolean).length, M = med(S.D), C = Q.chem;
   const sig = [...T.xi, ...T.bn].filter(x => x && m.sig.includes(x.id)).map(x => x.nm);
   const tm = `<section class="tm" style="${kv(sp?.q)}" aria-label="Your team"><p class="lbl">Your team</p><p class="tm-nm">${esc(m.nm)}</p><p class="small">${sp ? `${esc(sp.club)} · ${sp.yrs}` : 'Career (saved before club spells)'}</p>
     <div class="row"><div class="gr"><span>Att <b>${Q.gA}</b></span><span>Def <b>${Q.gD}</b></span></div><p class="small">${Q.up ? `${m.ga}/${m.gd} → ${Q.gA}/${Q.gD} with ${esc(sig[0])}${sig.length > 1 ? ` +${sig.length - 1}` : ''}` : 'A signature player raises both one step'}</p></div></section>`;
   const nt = ct(G, S.slots), seq = Object.keys(CAP).flatMap(t => Array(nt[t]).fill(t));
-  const cap = S.cap ? `<section class="capb" aria-label="Salary cap: places left by tier"><div class="row"><p class="lbl">Salary cap</p><span class="small sp">${15 - n ? `${15 - n} place${15 - n === 1 ? '' : 's'} left` : 'Cap met'}</span></div>${capTiles(nt)}${segs(seq)}<p class="small dim">Tier is the base rating, before position, era and links.</p></section>`
+  const cap = S.cap ? `<section class="capb" aria-label="Salary cap: places left by tier"><div class="row"><p class="lbl">Salary cap</p><span class="small sp">${15 - n ? `${15 - n} place${15 - n === 1 ? '' : 's'} left` : 'Cap met'}</span></div>${capTiles(nt)}${segs(seq)}<p class="small dim">Tier is the base rating, before position, era, chemistry and partnerships.</p></section>`
     : '<section class="capb classic"><p class="lbl">Classic draft</p><p class="small">Any tier can fill an open place.</p></section>';
   const cnt = `<section class="cnt" aria-label="Progress"><div><b>${Math.min(5, S.spin + (S.combo ? 1 : 0))} / 5</b><span>Squads</span></div><div><b>${n} / 15</b><span>Players</span></div><div><b>${1 - S.squadReroll}</b><span>Re-spin left</span></div></section>`;
   const SH = shape(G, S.f), open = { GK: 0, DEF: 0, MID: 0, ATT: 0 };
@@ -216,7 +216,16 @@ function dash(T, Q, c, V, b, pv) {
     body = `<section class="moves" aria-label="Who moves"><p class="lbl">Who moves in ${esc(pv.P.f)}</p><ul>${mv.join('') || '<li><span>Nobody changes role.</span></li>'}</ul><p class="small dim">Bench, cards and cap charges unchanged. Undo restores ${esc(S.f)} exactly.</p></section>${table(T, Q)}`;
   } else if (c) body = inspector(c, V, b);
   else if (S.phase === 'review') body = `${lines}${table(T, Q)}`;
-  return `${tm}${cap}${cnt}${need}<div class="dash-body">${body}</div>`;
+  // Chemistry progress: the largest group of each kind and the count its next point needs (E.THRESHOLDS).
+  const lab = { club: q => G.clubs[q]?.nm || q, nation: x => x.replace(/^./, a => a.toUpperCase()), league: x => `${x} league` };
+  const prog = Object.entries(E.THRESHOLDS).map(([k, t]) => {
+    const [v, x] = Object.entries(C.groups[k]).sort((a, b) => b[1] - a[1])[0] || [];
+    const nx = t.find(y => y > (x || 0));
+    return `<li><span>${k[0].toUpperCase() + k.slice(1)}</span><span>${v ? `${esc(lab[k](v))} ${x}` : '—'}</span><b>${nx ? `${nx} for +1` : 'max'}</b></li>`;
+  }).join('');
+  const chm = `<section class="chem" aria-label="Team chemistry"><div class="row"><p class="lbl">Chemistry</p><span class="sp"><b>${C.total}</b> / 33</span></div><ul>${prog}</ul>
+    <p class="small dim">Natural-position starters only; up to 3 each, +1 rating per point. Manager: ${m.nat || m.lg ? `${esc(m.nat || 'nation unknown')} · ${esc(m.lg ? `${m.lg} league` : 'league unknown')}` : 'unknown'}.</p></section>`;
+  return `${tm}${chm}${cap}${cnt}${need}<div class="dash-body">${body}</div>`;
 }
 
 function table(T, Q) {

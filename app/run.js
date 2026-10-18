@@ -1,6 +1,7 @@
 import { mk, hs, sh, play, P, tie, shift, move } from './engine/index.js';
 import { hydrate, shape, draw, key } from './draft.js';
 import { TI, GCAP, fits, ck } from './cap.js';
+import { staff } from './staff.js';
 export { TI, CAP, GCAP } from './cap.js';
 
 // Era Gauntlet: Eraball's roguelike run with the drafted fifteen, scaled from a nine-man basketball
@@ -57,7 +58,7 @@ export const REST = [2, 1, 0];
 export const LINES = { GK: ['GK'], DEF: ['CB', 'LB', 'RB', 'LWB', 'RWB'], MID: ['CDM', 'CM', 'CAM'], WIDE: ['LM', 'RM', 'LW', 'RW'], ATT: ['CF', 'ST'] };
 export const line = c => Object.keys(LINES).find(l => LINES[l].includes(c?.pos?.[0])) || 'MID';
 export const DEV = {
-  glue: { nm: 'Dressing Room Glue', team: 1, mx: 1, c: 2, tx: 'Teammate and partnership link points count 50% more across the squad.' },
+  glue: { nm: 'Dressing Room Glue', team: 1, mx: 1, c: 2, tx: 'Historical partnership bonuses count 50% more across the squad. Chemistry stays capped at 3 per starter.' },
   mgr: { nm: 'Manager Development', team: 1, mx: 2, c: 4, tx: 'Your manager improves one grade step in attack and in defence for the rest of the run.' },
   euro: { nm: 'European Pedigree', mx: 3, c: 2, k: 'bg', tx: 'Adds a European Cup to his record. Cups lift a side in every knockout tie, boss ties included.' },
   time: { nm: 'Timeless Training', mx: 2, c: 3, k: 'tl', tx: 'He ages well: moving across decades costs him half, then a quarter, of the usual loss.' },
@@ -112,7 +113,7 @@ const isLast = s => s.act >= MAPS[s.map].D.length - 1;
 const term = (s, p, i) => (s.neg?.[p] === 'S' && i >= 11 ? -3 : s.neg?.[p] === 'C' && i < 11 ? 3 : 0);
 
 export function runTeam(G, s) {
-  const m = G.managers.find(m => m.nm === s.m.nm);
+  const m = staff(G, G.managers.find(m => m.nm === s.m.nm), s.m.q, s.D);
   const Q = s.slots.map((r, i) => {
     const c = hydrate(G, r), t = s.tags[r.p], d = (s.mv?.[r.p] || 0) + term(s, r.p, i);
     const x = t ? { ...c, tg: { ...c.tg, ...t } } : c;

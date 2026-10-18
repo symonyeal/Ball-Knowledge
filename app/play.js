@@ -1,6 +1,7 @@
 import { mk, hs, play, P } from './engine/index.js';
 import { hydrate, shape, DECADES } from './draft.js';
 import { ck } from './cap.js';
+import { staff } from './staff.js';
 
 // Weekly Challenge and Head to Head. Both need no server: the week fixes the seed for everyone, and
 // a team travels between friends as a code.
@@ -42,7 +43,7 @@ export function uncode(G, c) {
   const m = G.managers.find(m => m.nm === z.m?.nm), f = z.v === 1 ? z.m?.f : z.f;
   if (!m || typeof f !== 'string' || !Object.hasOwn(G.formations, f) || (z.v === 1 && !m.f.includes(f))) throw new Error('That team code names a manager or formation this game does not have.');
   const Q = slots.map(r => hydrate(G, r));
-  return { b: z.b, D: z.D, cap: !!z.cap, m: z.m, f, slots, T: { m, S: shape(G, f), xi: Q.slice(0, 11), bn: Q.slice(11) } };
+  return { b: z.b, D: z.D, cap: !!z.cap, m: z.m, f, slots, T: { m:staff(G,m,z.m.q,z.D), S: shape(G, f), xi: Q.slice(0, 11), bn: Q.slice(11) } };
 }
 
 export function h2h(seed, A, B) {

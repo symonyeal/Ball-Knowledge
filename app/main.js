@@ -64,7 +64,7 @@ function render() {
   if (k) (k.startsWith('#') ? document.getElementById(k.slice(1)) : root.querySelector(`[data-key="${CSS.escape(k)}"]`))?.focus({ preventScroll: !k.startsWith('#') && !phone() });
 }
 
-// Best open pitch slot for the selected player, by adjusted rating after fit, era and links.
+// Best open pitch slot for the selected player, by adjusted rating after fit, era, chemistry and partnerships.
 function best() {
   const { G, S } = U, SH = shape(G, S.f);
   let b = -1, a = -Infinity;
