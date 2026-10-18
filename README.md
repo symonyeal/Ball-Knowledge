@@ -8,6 +8,12 @@ Football Era Draft is a draft game about building a team across generations. Mar
 
 ## Five clubs supply your fifteen players
 
+The **Clubhouse** button opens the account-free extras from any stage of the game. Browse all 52,976 club-era cards by player, club, decade, position, tier or tag; inspect their rating sources and pin up to three versions for comparison. Sandbox lets you choose any fifteen distinct players, change their formation, manager and simulation era, fill empty places automatically and play a league and European Cup. Export a sandbox squad or send its Classic team code to a friend.
+
+Four mini-games offer daily puzzles and unlimited practice: guess an exact club-era card, compare overall ratings, recall a historical squad against a two-minute clock, or identify clubs in a player's recorded career. Daily results and streaks survive reloads. Career Trail asks about the bundled archive, which can omit real club spells. Twelve previous weekly challenges remain playable alongside the current week.
+
+Lifetime statistics and personal records track completed games by mode and era. Identical seeded drafts and replays count once. Football achievements show their requirements and progress; winning a trophy in a completed career season unlocks the exact club-era cards in that season's final squad. Sandbox experiments keep separate records. Preferences include day/night appearance, backdrops, motion, compact lists, default roster sorting and optional stadium ambience. **Settings → Export profile** backs up this progress and the sandbox; use the existing **Download replay** control to back up the active career. There are no accounts or shared online standings.
+
 Start by choosing where the career takes place: one of eight decades from the 1950s to the 2020s. This sets the league seasons, opposition and conditions your players will face. It leaves the player draft open to every era. Random decade lets your replay seed choose an era; the seed has its own re-roll button.
 
 The first draw gives you five managers, each paired with a recorded club spell that overlaps your decade and that club's real top-flight records. You can re-spin twice before keeping one. Choose the formation independently: the preview follows your selection, and recorded formations are clickable. Change it during the draft or before kick-off; it sets the eleven starting positions you must fill. The manager has attacking and defensive grades, and selecting one of his signature players improves those grades.

@@ -338,6 +338,13 @@ async function full(kind) {
     await p.click('#career-half'); await settle(p);
     const full = (await st(p)).mode.career;
     assert.equal(full.half, 2); assert.equal(full.history.length, 1);
+    const personal = await p.evaluate(() => JSON.parse(localStorage.getItem('football-era-draft-profile-v1')));
+    const completed = personal.events.filter(e => e.kind === 'season');
+    assert.equal(completed.length, 1);
+    assert.equal(completed[0].w, full.history[0].w);
+    assert.equal(completed[0].gf, full.history[0].gf);
+    await p.reload(); await settle(p);
+    assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('football-era-draft-profile-v1')).events.filter(e => e.kind === 'season').length), 1);
     await p.click('[data-tab="fixtures"]'); await settle(p); assert.equal(await p.locator('.fixture[data-comp="L"]').count(), 2 * (career0.S.ord.length - 1));
     await p.click('[data-tab="cup"]'); await settle(p); assert.ok(await p.locator('.career-bracket').count() >= 1);
     await p.click('[data-tab="stats"]'); await settle(p); await p.click('[data-tab="lineup"]'); await settle(p);

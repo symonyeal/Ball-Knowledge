@@ -41,6 +41,7 @@ export function intro() {
   <section class="weekly" aria-label="Weekly challenge"><div><p class="lbl">This week · ${esc(w.id)}</p><p class="wk">${w.D}s season · one seed for everyone</p>
     <p class="small">Same managers and first squad for every player this week, under Salary cap. Your picks steer which clubs follow.</p></div>
     <button class="btn q" id="weekly" type="button">Play the weekly challenge</button></section>
+  <section class="club-entry" aria-label="Explore more football"><div><p class="eyebrow">Beyond the draft</p><h2>Your football clubhouse</h2><p class="small">Free squad building, daily puzzles and a personal history across the eras.</p></div><div class="row wrap"><button class="btn q sm" type="button" data-club-open="sandbox">Sandbox</button><button class="btn q sm" type="button" data-club-open="database">Player database</button><button class="btn q sm" type="button" data-club-open="minis">Mini-games</button><button class="btn q sm" type="button" data-club-open="weekly">Weekly archive</button><button class="btn sm" type="button" data-club-open="home">Open clubhouse</button></div></section>
   <ol class="how" aria-label="How a draft works"><li><b>Team</b><span>A manager at one of his clubs sets grades and signature players.</span></li>
     <li><b>Five squads</b><span>Three players from each historical club squad, inside the salary cap.</span></li>
     <li><b>Lineup</b><span>Any formation, any placement; ratings follow each player's position fit.</span></li>

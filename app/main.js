@@ -10,6 +10,7 @@ import { intro, teams } from './ui/lobby.js';
 import { desk, rosterList } from './ui/desk.js';
 import { results, about, season, me, shareText, cardImage, signing } from './ui/season.js';
 import { hub, careerShareText, careerCardImage, careerSigning } from './ui/career.js';
+import { mountClubhouse } from './ui/clubhouse.js';
 
 // Browser game controller. Views render from the shared state U (app/ui/kit.js); this module turns
 // events into new states. change(next, msg, o): commit a draft state; o.edit marks a lineup edit
@@ -19,7 +20,7 @@ import { hub, careerShareText, careerCardImage, careerSigning } from './ui/caree
 const root = document.querySelector('#game'), $ = s => document.querySelector(s);
 const rM = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const phone = () => window.matchMedia?.('(max-width: 767px)').matches;
-let timer;
+let timer, clubhouse;
 
 function notice(msg, error = false) {
   const n = $('#notice'); n.textContent = msg; n.hidden = false;
@@ -27,6 +28,7 @@ function notice(msg, error = false) {
   timer = setTimeout(() => { n.hidden = true; }, error ? 9000 : 4000);
 }
 function save() {
+  clubhouse?.track();
   try { if (U.S) localStorage.setItem(STORE, JSON.stringify(U.S)); }
   catch { notice('This browser cannot save the run. Keep this page open or download your replay.', true); }
 }
@@ -118,7 +120,7 @@ function undo(redo) {
 async function reel(next) {
   const h = $('#reveal-club'), box = $('#reveal');
   const done = () => { U.q = ''; U.ln = 'All'; U.fit = false; U.cmp = []; U.view = 'squad'; U.focus = '#squad-club'; change(next, `${club(next.combo)} drawn.`); };
-  if (rM || !h) return done();
+  if (rM || document.body.dataset.effects === 'false' || !h) return done();
   const K = U.G.combos; U.busy = true; document.body.setAttribute('aria-busy', 'true'); box.classList.add('rolling');
   root.querySelectorAll('#squad-spin, [data-act="spin"]').forEach(b => { b.disabled = true; });
   try {
@@ -345,6 +347,7 @@ root.addEventListener('click', async e => {
       const t = uncode(G, $('#their-code').value);
       if (t.cap !== !!U.S.cap) throw new Error(`Your team uses ${rules(U.S)} rules. Ask your friend for a matching ${rules(U.S)} team code, or start a draft with their rules.`);
       U.H = h2h(U.S.seed, { id: 'your-club', nm: 'Your Era XI', T: me().T, D: U.S.D }, { id: 'friend', nm: "Friend's XI", T: t.T, D: t.D });
+      save();
       render(); notice(U.H.w === 'your-club' ? 'You won the tie.' : 'Your friend won the tie.');
     }
   } catch (x) { U.busy = false; document.body.setAttribute('aria-busy', 'false'); notice(x.message, true); }
@@ -369,6 +372,10 @@ async function boot() {
     if (!U.G.meta || !U.G.people || !U.G.cards || !U.G.managers || !U.G.formations) throw new Error('The football archive is incomplete.');
     if (U.G.params) E.cfg(U.G.params);
     U.F = fields(U.G);
+    clubhouse = mountClubhouse(U, { notice, weekly: w => {
+      U.insp = 0; U.f0 = null; U.R = U.C = U.H = null;
+      change({ ...start(w.seed, w.D, true), wk: w.id }, `Weekly challenge ${w.id}: Salary cap in the ${w.D}s.`);
+    } });
     $('#about-content').innerHTML = about();
     $('#data-status').textContent = `${new Set(U.G.combos.map(c => c.q)).size} clubs · ${U.G.meta.counts.combos} club eras · ${U.G.meta.counts.people.toLocaleString()} people`;
     let resumed = false;
@@ -387,6 +394,7 @@ async function boot() {
       const era = Number(u.searchParams.get('era')); if (DECADES.includes(era)) U.D = era;
     }
     render();
+    clubhouse.track();
     if (resumed) notice('Your saved run is back where you left it.');
   } catch (x) {
     root.innerHTML = `<div class="loading"><p class="eyebrow">Archive unavailable</p><h1>The archive needs a moment</h1><p>${esc(x.message)}</p><p><a class="btn" href="./">Try again ↻</a></p></div>`;
