@@ -3,13 +3,14 @@ import { DECADES, hydrate } from '../draft.js';
 import { wk, code } from '../play.js';
 import { TI } from '../cap.js';
 import { archive, search, refid, freeSquad, freeTeam, freeRating, freePlace, freeForm, freeFill, TAGS } from '../archive.js';
-import { PROFILE, emptyProfile, validateProfile, record, totals, collection, achievements } from '../profile.js';
+import { PROFILE, emptyProfile, validateProfile, record, totals, collection, achievements, completeSbc } from '../profile.js';
+import * as Sbc from '../sbc.js';
 import { KINDS, day, puzzle, answer, clues, cardAt, streak } from '../minis.js';
 import { esc, SRC, SRT, vcard } from './kit.js';
 import { xi, breakdown } from './season.js';
 import { ambience } from '../ambience.js';
 
-const pages = { home:'Clubhouse', sandbox:'Sandbox', database:'Player database', stats:'Lifetime stats', records:'Personal records', achievements:'Achievements', collection:'Card collection', minis:'Mini-games', weekly:'Weekly archive', settings:'Settings' };
+const pages = { home:'Clubhouse', sandbox:'Sandbox', sbc:'Squad challenges', database:'Player database', stats:'Lifetime stats', records:'Personal records', achievements:'Achievements', collection:'Card collection', minis:'Mini-games', weekly:'Weekly archive', settings:'Settings' };
 const btn = (label, attrs = '', quiet = true) => `<button type="button" class="btn ${quiet?'q ':''}sm" ${attrs}>${label}</button>`;
 const options = (Q, value) => Q.map(([v,n])=>`<option value="${esc(v)}" ${String(value)===String(v)?'selected':''}>${esc(n)}</option>`).join('');
 const select = (label, id, Q, value) => `<label class="field"><span class="lbl">${label}</span><select id="${id}">${options(Q,value)}</select></label>`;
@@ -22,7 +23,7 @@ export function mountClubhouse(U, { notice, weekly }) {
   const sound=ambience();
   try { const raw=localStorage.getItem(PROFILE); if(raw)P=validateProfile(G,A,JSON.parse(raw)); }
   catch(x) {loadError=`Saved profile could not be loaded: ${x.message} Your draft save is separate. Export the existing profile before replacing it.`;}
-  let page='home', query={q:'',D:'',club:'',pos:'',tier:'',tag:''}, offset=0, detail=null, pins=[], mode='', recordEra='', collectionState='all', mini=null, daily=true, chosen=new Set(), feedback='', sandboxResult=null;
+  let sbcId=null, sbcWeek=null; let page='home', query={q:'',D:'',club:'',pos:'',tier:'',tag:''}, offset=0, detail=null, pins=[], mode='', recordEra='', collectionState='all', mini=null, daily=true, chosen=new Set(), feedback='', sandboxResult=null;
   const dialog=document.createElement('dialog'); dialog.id='clubhouse'; dialog.className='dialog clubhouse'; dialog.setAttribute('aria-labelledby','clubhouse-title'); document.body.append(dialog);
   const clubs=Object.entries(G.clubs).sort((a,b)=>a[1].nm.localeCompare(b[1].nm)).map(([q,c])=>[q,c.nm]);
   const save = () => {
@@ -45,7 +46,7 @@ export function mountClubhouse(U, { notice, weekly }) {
   function home() {
     const t=totals(P), ach=achievements(P);
     return `${top('Build freely, explore the archive and keep your football history. No account required.')}<div class="club-metrics">${metric(t.drafts,'Drafts')}${metric(t.seasons,'League seasons')}${metric(t.titles,'Trophies')}${metric(ach.filter(a=>a.unlocked).length,'Achievements')}</div>
-    <div class="club-grid">${Object.entries(pages).filter(([k])=>k!=='home').map(([k,n])=>`<article class="challenge-card"><h2>${n}</h2><p class="small">${{sandbox:'Choose any fifteen cards and test them across eras.',database:'Search players, club spells, positions, tiers and tags.',stats:'Your matches, goals, trophies and favourite players.',records:'Compare completed seasons by mode and era.',achievements:'Football milestones with visible progress.',collection:'Win silverware to unlock the exact cards in your squad.',minis:'Four daily puzzles, streaks and unlimited practice.',weekly:'Replay this week or any of the past twelve weeks.',settings:'Appearance, motion, roster sort and profile backups.'}[k]}</p>${btn('Open',`data-club-page="${k}"`)}</article>`).join('')}</div>`;
+    <div class="club-grid">${Object.entries(pages).filter(([k])=>k!=='home').map(([k,n])=>`<article class="challenge-card"><h2>${n}</h2><p class="small">${{sandbox:'Choose any fifteen cards and test them across eras.',sbc:'EA-style squad puzzles: meet chemistry, nation and rating targets to unlock reward cards.',database:'Search players, club spells, positions, tiers and tags.',stats:'Your matches, goals, trophies and favourite players.',records:'Compare completed seasons by mode and era.',achievements:'Football milestones with visible progress.',collection:'Win silverware to unlock the exact cards in your squad.',minis:'Four daily puzzles, streaks and unlimited practice.',weekly:'Replay this week or any of the past twelve weeks.',settings:'Appearance, motion, roster sort and profile backups.'}[k]}</p>${btn('Open',`data-club-page="${k}"`)}</article>`).join('')}</div>`;
   }
 
   function filters() {
@@ -81,9 +82,24 @@ export function mountClubhouse(U, { notice, weekly }) {
       <div class="row wrap">${btn('Previous','id="archive-prev"'+(offset?'':' disabled'))}${btn('Next','id="archive-next"'+(offset+24<Q.length?'':' disabled'))}</div>`;
   }
 
+  // Squad Building Challenges: the permanent set and this ISO week's three; a challenge is built in the sandbox.
+  const challenges = () => { const w=wk(new Date()); if(sbcWeek?.w!==w)sbcWeek={w,Q:Sbc.weekly(G,A,w)}; return [...Sbc.CORE,...sbcWeek.Q]; };
+  const sbcDone = () => new Set(P.events.filter(e=>e.kind==='sbc').map(e=>e.id.slice(4)));
+  function squadChallenges() {
+    const done=sbcDone(), Q=challenges();
+    return `${top(`${Q.filter(c=>done.has(c.id)).length} / ${Q.length} completed. Build a starting eleven in the sandbox that meets every requirement; each challenge unlocks its reward card once. Chemistry follows the lineup rules: natural positions only.`)}
+      <div class="club-grid">${Q.map(c=>{const ref=Sbc.reward(A,c), x=by.get(refid(ref));return `<article class="challenge-card ${done.has(c.id)?'club-earned':''}"><p class="lbl">${c.wk?`Weekly · ${esc(c.wk)}`:'Permanent'}${done.has(c.id)?' · Completed':''}</p><h2>${esc(c.nm)}</h2><ul class="sbc-req">${c.req.map(([k,n,v])=>`<li>${esc(Sbc.R[k].tx(n,v,G))}</li>`).join('')}</ul><p class="small">Reward: ${esc(cardLabel(x))} · ${number(x.r)}</p>${done.has(c.id)?'':btn('Build in sandbox',`data-sbc-build="${esc(c.id)}"`,false)}</article>`;}).join('')}</div>`;
+  }
+  function sbcPanel(s) {
+    const c=challenges().find(c=>c.id===sbcId); if(!c)return '';
+    const rows=Sbc.check(G,s,c), ok=rows.every(r=>r.ok);
+    return `<section class="sbc-panel" aria-label="Challenge requirements"><h2>${esc(c.nm)}</h2><ul class="sbc-req">${rows.map(r=>`<li class="${r.ok?'ok':'no'}"><span>${r.ok?'✓':'✗'} ${esc(r.tx)}</span><b>${r.x}</b></li>`).join('')}</ul>
+      <div class="row wrap">${btn('Submit challenge',`id="sbc-submit" ${ok?'':'disabled'}`,false)}${btn('Leave challenge','id="sbc-leave"')}</div></section>`;
+  }
+
   function sandbox() {
     const s=sbox(), T=freeTeam(G,s), Q=freeRating(G,s), places=[...T.S.map(p=>p.s),'B1','B2','B3','B4'];
-    return `${top('Choose any fifteen distinct footballers. Compare formations and eras, then simulate a league and European Cup. Sandbox has its own records and does not unlock competitive achievements or collection cards.')}
+    return `${top('Choose any fifteen distinct footballers. Compare formations and eras, then simulate a league and European Cup. Sandbox has its own records; only Squad challenges unlock collection cards from here.')}${sbcId?sbcPanel(sbox()):''}
       <div class="club-filters">${select('Simulation era','sandbox-D',DECADES.map(d=>[d,`${d}s`]),s.D)}${select('Formation','sandbox-f',Object.keys(G.formations).map(f=>[f,f]),s.f)}
       ${select('Manager','sandbox-m',G.managers.map(m=>[m.nm,m.nm]),s.m)}<label class="field"><span class="lbl">Replay seed</span><input id="sandbox-seed" inputmode="numeric" value="${s.seed}"></label></div>
       <div class="row wrap">${btn('Fill empty places','id="sandbox-fill"')}${btn('Clear squad','id="sandbox-clear"')}${btn('Simulate season',`id="sandbox-play" ${s.slots.every(Boolean)?'':'disabled'}`,false)}${btn('Export squad','id="sandbox-export"')}${btn('Copy team code',`id="sandbox-code" ${s.slots.every(Boolean)?'':'disabled'}`)}<label class="btn q sm">Import squad<input id="sandbox-import" type="file" accept=".json,application/json" class="sr-only"></label></div>
@@ -109,7 +125,7 @@ export function mountClubhouse(U, { notice, weekly }) {
   const modeSelect = () => `<div class="club-filters">${select('Mode','profile-mode',[['','All modes'],...['Classic','Salary cap','Weekly','Gauntlet','Circuit','Head to head','Mini-games'].map(m=>[m,m])],mode)}${mode==='Mini-games'?'':select('Simulation decade','profile-era',[['','All decades'],...DECADES.map(d=>[d,`${d}s`])],recordEra)}</div>`;
   function records() {
     if(mode==='Mini-games')return `${modeSelect()}<div class="tw"><table><thead><tr><th>Puzzle</th><th>Date</th><th>Mode</th><th>Result</th><th>Score</th></tr></thead><tbody>${Object.values(P.sessions).filter(s=>s.done).sort((a,b)=>b.date.localeCompare(a.date)||b.score-a.score).slice(0,200).map(s=>`<tr><td>${KINDS[s.kind]}</td><td>${s.date}</td><td>${s.seed==='daily'?'Daily':'Practice'}</td><td>${s.won?'Won':'Complete'}</td><td>${s.score}</td></tr>`).join('')}</tbody></table></div>`;
-    const Q=P.events.filter(e=>e.kind!=='draft'&&(!mode||mode===e.mode)&&(!recordEra||e.D===Number(recordEra))).sort((a,b)=>b.titles-a.titles||a.position-b.position||b.score-a.score);
+    const Q=P.events.filter(e=>e.kind!=='draft'&&e.kind!=='sbc'&&(!mode||mode===e.mode)&&(!recordEra||e.D===Number(recordEra))).sort((a,b)=>b.titles-a.titles||a.position-b.position||b.score-a.score);
     return `${top('Your completed results on this browser. Filter by mode to compare like with like.')}${modeSelect()}<div class="tw"><table><thead><tr><th>Mode</th><th>Era / season</th><th>Finish</th><th>W–D–L</th><th>Trophies</th><th>Seed</th></tr></thead><tbody>${Q.slice(0,200).map(e=>`<tr><td>${esc(e.mode)} · ${e.kind}</td><td>${e.year?`${e.year}/${String(e.year+1).slice(-2)}`:`${e.D}s`}${e.week?` · ${esc(e.week)}`:''}</td><td>${e.position||'—'}</td><td>${e.w}–${e.d}–${e.l}</td><td>${e.titles}</td><td>${e.seed}</td></tr>`).join('')}</tbody></table></div>${Q.length?'':'<p class="empty">Your completed games will appear here.</p>'}<h2>Sandbox records</h2><p class="small">Free squad experiments are stored separately below.</p>${(P.sandboxRecords||[]).map(r=>`<p>${r.D}s · ${esc(r.f)} · seed ${r.seed} · ${r.position} / 20 · ${r.w}W ${r.d}D ${r.l}L · ${r.titles} trophies</p>`).join('')||'<p class="small">No sandbox seasons yet.</p>'}`;
   }
   function achievementView() {
@@ -162,7 +178,7 @@ export function mountClubhouse(U, { notice, weekly }) {
 
   function paint() {
     const active=document.activeElement, id=dialog.contains(active)?active.id:null, start=active?.selectionStart, scroll=dialog.scrollTop;
-    dialog.innerHTML=`<header class="club-heading"><div><p class="eyebrow">Football Era Draft</p><h1 id="clubhouse-title">${pages[page]}</h1></div>${btn('Return to game','id="clubhouse-close"')}</header><nav class="club-nav" aria-label="Clubhouse sections">${Object.entries(pages).map(([k,n])=>btn(n,`data-club-page="${k}" aria-current="${page===k?'page':'false'}"`)).join('')}</nav>${loadError?`<p role="alert" class="warn">${esc(loadError)}</p>`:''}<section class="club-content">${({home,sandbox,database,stats:statistics,records,achievements:achievementView,collection:()=>`${top(`${collection(P).size} exact club-era cards unlocked. Win a trophy in a completed career season with a card in your squad to collect it.`)}${database(true)}`,minis,weekly:weeklyView,settings}[page])()}</section>`;
+    dialog.innerHTML=`<header class="club-heading"><div><p class="eyebrow">Football Era Draft</p><h1 id="clubhouse-title">${pages[page]}</h1></div>${btn('Return to game','id="clubhouse-close"')}</header><nav class="club-nav" aria-label="Clubhouse sections">${Object.entries(pages).map(([k,n])=>btn(n,`data-club-page="${k}" aria-current="${page===k?'page':'false'}"`)).join('')}</nav>${loadError?`<p role="alert" class="warn">${esc(loadError)}</p>`:''}<section class="club-content">${({home,sandbox,database,sbc:squadChallenges,stats:statistics,records,achievements:achievementView,collection:()=>`${top(`${collection(P).size} exact club-era cards unlocked. Win a trophy in a completed career season with a card in your squad, or complete a Squad challenge, to collect it.`)}${database(true)}`,minis,weekly:weeklyView,settings}[page])()}</section>`;
     if(id) {const el=document.getElementById(id);el?.focus({preventScroll:true});if(typeof start==='number'&&el?.setSelectionRange&&el.type!=='number')el.setSelectionRange(start,start);}
     dialog.scrollTop=scroll;
   }
@@ -216,6 +232,9 @@ export function mountClubhouse(U, { notice, weekly }) {
       else if(b.dataset.person){query={q:G.people[b.dataset.person].nm};offset=0;detail=null;paint();}
       else if(b.dataset.pin){const id=b.dataset.pin;pins=pins.includes(id)?pins.filter(x=>x!==id):[...pins,id].slice(-3);paint();}
       else if(b.dataset.archivePick){changeSandbox(freePlace(G,sbox(),by.get(b.dataset.archivePick),slot));slot=sbox().slots.findIndex(c=>!c);if(slot<0)slot=0;paint();}
+      else if(b.dataset.sbcBuild){sbcId=b.dataset.sbcBuild;page='sandbox';sandboxResult=null;paint();dialog.scrollTop=0;}
+      else if(b.id==='sbc-leave'){sbcId=null;paint();}
+      else if(b.id==='sbc-submit'){const c=challenges().find(c=>c.id===sbcId);if(!c||!Sbc.met(G,sbox(),c))throw new Error('The squad does not meet every requirement.');const ref=Sbc.reward(A,c);P=completeSbc(P,c,sbox(),ref);save();sbcId=null;page='sbc';paint();notice(`${c.nm} complete. ${cardLabel(by.get(refid(ref)))} joins your collection.`);}
       else if(b.id==='sandbox-fill')changeSandbox(freeFill(G,A,sbox(),sbox().seed));
       else if(b.id==='ambience-play'){P={...P,settings:{...P.settings,volume:P.settings.volume||20}};await sound(P.settings.volume);save();paint();}
       else if(b.id==='ambience-mute'){P={...P,settings:{...P.settings,volume:0}};await sound(0);save();paint();}

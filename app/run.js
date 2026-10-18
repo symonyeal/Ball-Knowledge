@@ -116,8 +116,8 @@ export function runTeam(G, s) {
   const m = staff(G, G.managers.find(m => m.nm === s.m.nm), s.m.q, s.D);
   const Q = s.slots.map((r, i) => {
     const c = hydrate(G, r), t = s.tags[r.p], d = (s.mv?.[r.p] || 0) + term(s, r.p, i);
-    const x = t ? { ...c, tg: { ...c.tg, ...t } } : c;
-    return shift(x, d);
+    const x = shift(t ? { ...c, tg: { ...c.tg, ...t } } : c, d);
+    return s.mv?.[r.p] > 0 ? { ...x, fm: s.mv[r.p] } : x;
   });
   return { m, S: shape(G, s.f), xi: Q.slice(0, 11), bn: Q.slice(11), lk: s.badge?.glue ? 1.5 : 1, gs: s.badge?.mgr || 0 };
 }

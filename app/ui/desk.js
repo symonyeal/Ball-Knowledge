@@ -13,7 +13,7 @@ import { TI, CAP, ct } from '../cap.js';
 import * as E from '../engine/index.js';
 import { leagueOf, years, field } from '../club.js';
 import { form, team, preview, used, room, can, hydrate, shape } from '../draft.js';
-import { U, esc, num, club, kv, tier, fitText, delta, pitch, links, mini, smap, rated, share, row, capTiles, segs, spell, IC, LINE, SRC, SRT, RANGE, pct } from './kit.js';
+import { U, esc, num, club, kv, tier, fitText, delta, pitch, links, face, mini, smap, rated, share, row, capTiles, segs, spell, IC, LINE, SRC, SRT, RANGE, pct } from './kit.js';
 
 const MED = new Map();
 function opponents(D) {
@@ -85,7 +85,7 @@ function squad() {
     <div class="ctl"><label class="in">${IC.search}<span class="sr-only">Search name or position</span><input id="roster-search" type="search" placeholder="Name or position" value="${esc(U.q)}" autocomplete="off"><kbd aria-hidden="true">/</kbd></label>
       <label class="sel"><span class="sr-only">Sort the squad</span><select id="roster-sort">${Object.entries({ fit: 'Best fit here', rating: 'Rating', name: 'Name', apps: 'Appearances' }).map(([v, l]) => `<option value="${v}" ${U.sort === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label></div>
     <div class="fcs" role="group" aria-label="Filter by line">${Object.entries(k).map(([l, v]) => `<button type="button" class="fc2" data-line="${l}" aria-pressed="${U.ln === l}">${l} <small>${v}</small></button>`).join('')}<label class="fc2 chk"><input type="checkbox" id="fit-only" ${U.fit ? 'checked' : ''}> Fits an open slot</label></div>
-    <div class="list" id="roster-list" role="group" aria-label="${esc(c.nm)} ${d}s squad">${rosterList()}</div>`;
+    <div class="list ${U.deal === S.combo ? 'deal' : ''}" id="roster-list" role="group" aria-label="${esc(c.nm)} ${d}s squad">${rosterList()}</div>`;
 }
 
 function review(T, Q) {
@@ -151,7 +151,7 @@ export function desk() {
   const VS = P ? SP : SH, VQ = P ? QP : Q;
   const cells = VS.map((x, i) => {
     const p = VQ.xi[i];
-    if (p.c) return { kind: 'f', nm: p.c.nm, a: p.a, t: TI(p.c.r), q: p.c.cq, f: p.f, n: p.n, on: U.sw === i, moved: P ? moved.includes(p.c.id) : U.moved.has(p.c.id),
+    if (p.c) return { kind: 'f', nm: p.c.nm, a: p.a, t: TI(p.c.r), q: p.c.cq, f: p.f, n: p.n, fc: face(p.c), on: U.sw === i, moved: P ? moved.includes(p.c.id) : U.moved.has(p.c.id),
       label: `${x.s}, ${p.c.nm}, adjusted ${num(p.a)}, ${fitText(p.f)}, chemistry ${p.n} of 3${p.b ? `, +${p.b} partnership` : ''}. ${U.sw === i ? 'Selected: choose another place.' : 'Select to move or swap.'}` };
     const v = !P && V[i];
     if (v) return { kind: 'p', v: v.a, f: v.f, b: v.b, n: v.n, best: i === b, label: `${x.s}, open. ${c.nm} would rate ${num(v.a)}: fit loss ${pct(v.f)}%, era loss ${pct(1 - v.e)}%, chemistry ${v.n} of 3, +${v.b} partnership. Team chemistry ${v.chem}/33. Squad overall ${num(v.ovr)}.${v.up ? ' Manager signature bonus active.' : ''}` };

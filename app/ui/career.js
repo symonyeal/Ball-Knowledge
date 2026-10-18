@@ -40,7 +40,7 @@ function offer(o, j, s) {
       <label class="field"><span class="lbl">Sign</span><select id="career-fa-${j}" data-career-fa="${j}">${o.list.map((f, i) => `<option value="${i}">${esc(nm(f.p))} · ${esc(club(f.k))} · ${Math.round(f.r)} · ${TI(f.r)} tier</option>`).join('')}</select></label>
       <label class="field"><span class="lbl">Release</span><select id="career-out-${j}" data-career-fa="${j}">${placeOptions(s)}</select></label>
       <p class="small" id="career-price-${j}">${esc(x.tx)}</p><button class="btn" type="button" data-career-take="${j}" ${x.ok ? '' : 'disabled'}>Sign him</button>
-      <p class="small dim">${o.kind === 'desp' ? 'This bargain reduces squad link bonuses by 25% until he leaves or receives Player Buy-In.' : 'An S signing loses 3 rating points on the bench; a C signing gains 3 when starting.'}</p>
+      <p class="small dim">${o.kind === 'desp' ? 'This bargain reduces squad partnership bonuses by 25% until he leaves or receives Player Buy-In.' : 'An S signing loses 3 rating points on the bench; a C signing gains 3 when starting.'}</p>
       ${o.re ? `<div class="row wrap"><button class="btn q sm" type="button" data-career-respin="scout" ${s.pat < min(false) ? 'disabled' : ''}>Scout re-spin · ${1 + u}</button><button class="btn q sm" type="button" data-career-respin="premium" ${s.pat < min(true) ? 'disabled' : ''}>A/S re-spin · ${5 + u}</button></div>` : ''}</article>`;
   }
   return `<article class="reward"><p class="lbl">Rest</p><h3>Recover</h3><p class="small">${o.gain ? `+${o.gain} patience.` : 'Consecutive rests are now worth zero.'}</p><button class="btn q" type="button" data-career-take="${j}" data-career-rest>Rest</button></article>`;
@@ -65,6 +65,18 @@ function action(s) {
   if (s.ph === 'repo') return preparation(s);
   const sc = C.careerScore(s);
   return `<h3>${s.ph === 'done' ? 'Decade complete' : 'The board has ended your career'}</h3><p class="small">${s.history.length} seasons completed · ${s.trophies.length} trophies · score ${num(sc.score ?? sc)}.</p>`;
+}
+function evolutions(s) {
+  const e = s.evo && C.EVO[s.evo.id], O = C.evoOptions(U.G, s), F = C.inForms(s), k = C.evoProgress(s);
+  const reward = x => `+${x.r} rating${x.pos ? `, natural ${x.pos}` : ''}`;
+  const done = Object.entries(s.evd || {}).flatMap(([p, Q]) => Q.map(id => `${esc(nm(p))} · ${esc(C.EVO[id].nm)}`));
+  const form = Object.entries(F).filter(([p]) => s.slots.some(c => c.p === p)).map(([p, n]) => `${esc(nm(p))} +${n}`);
+  return `<section class="career-evo" aria-label="Evolutions and in-forms"><h2 class="st">Evolutions</h2>
+    ${e ? `<p><b>${esc(nm(s.evo.p))} · ${esc(e.nm)}</b>. ${esc(e.tx)} Reward: ${reward(e)}.</p><progress max="${e.n}" value="${k}" aria-label="Evolution progress"></progress><p class="small">${k} / ${e.n}</p>`
+    : O.length ? `<div class="career-controls"><label class="field"><span class="lbl">Evolution</span><select id="career-evo">${O.map((o, j) => `<option value="${j}">${esc(nm(o.p))} · ${esc(C.EVO[o.id].nm)}: ${esc(C.EVO[o.id].tx)} ${reward(C.EVO[o.id])}</option>`).join('')}</select></label><button class="btn q" id="career-evo-start" type="button">Start evolution</button></div>`
+    : `<p class="small">${['fired', 'done'].includes(s.ph) ? 'The career is over.' : 'No eligible player for a new evolution.'}</p>`}
+    <p class="small dim">One evolution at a time, free, for players with a base rating of ${C.EVO_MAX} or below. Completed: ${done.join(' · ') || 'none yet'}.</p>
+    <h2 class="st">In-forms this season</h2><p class="small">${form.join(' · ') || 'None yet.'} A win with 3 goal involvements, or every 5 clean sheets for a keeper, earns +1 from the next half, at most +${C.IF_MAX}; the season's end resets them.</p></section>`;
 }
 function table(s, src = []) {
   const sources = new Map(src.map(c => [c.id, c]));
@@ -99,7 +111,7 @@ export function hub() {
     const sources = C.careerSource(U.G, s);
     return `${table(s, sources)}<p class="small">${S.L.rows.length} clubs · home and away · ${S.w} points for a win. Ranked by points, goal difference, goals scored.</p>${real.pos ? `<p class="small dim">Real ${yr(S.s)} record: ${ord(real.pos)} of ${real.n}, ${real.pts} points. Your career results are simulated.</p>` : '<p class="small dim">Your club takes the lowest-placed top-flight club’s place this season.</p>'}${rivals(s, sources)}`;
   },
-    fixtures: () => fixtures(s), cup: () => competitions(s), stats: () => stats(s), lineup: () => `${xi(T, Q, s.D, `Your ${s.f}`)}${breakdown(Q)}<p class="small">${s.cap ? 'At most 2 S-tier and 4 A-tier charges; earned upgrades retain the original charge.' : 'Classic: no tier limits.'}</p>`, history: () => seasonHistory(s), more: () => `${gauntlet()}${more()}` };
+    fixtures: () => fixtures(s), cup: () => competitions(s), stats: () => stats(s), lineup: () => `${xi(T, Q, s.D, `Your ${s.f}`)}${evolutions(s)}${breakdown(Q)}<p class="small">${s.cap ? 'At most 2 S-tier and 4 A-tier charges; earned upgrades retain the original charge.' : 'Classic: no tier limits.'}</p>`, history: () => seasonHistory(s), more: () => `${gauntlet()}${more()}` };
   return `<section class="result-hero career-hero" style="${kv(s.q)}"><div class="rh-pos"><p class="lbl">${yr(S.s)} · ${S.h === 0 ? 'Pre-season' : S.h === 1 ? 'Winter' : 'Full time'}</p><p class="big">${S.h ? pos : '–'}${S.h ? `<sup>${ord(pos).slice(-2)}</sup>` : ''}</p><p class="small">${name(s.q)}</p></div>
     <div class="rh-stats"><div><b>${r[7]}</b><span>Points</span></div><div><b>${r[2]}–${r[3]}–${r[4]}</b><span>W–D–L</span></div><div><b>${s.pat} / 20</b><span>Board patience</span></div><div><b>${s.trophies.length}</b><span>Trophies</span></div></div>
     <div class="rh-team"><p class="lbl">${esc(compName(s, 'L'))} · Season ${s.y + 1} / ${s.years.length}</p><h1>${name(s.q)}</h1><p class="small">${esc(s.m.nm)} · ${esc(s.f)} · ${rules(s)}</p><p class="small"><b>Board objective:</b> finish ${S.obj.t === 1 ? 'first' : `in the top ${S.obj.t}`}.</p></div></section>

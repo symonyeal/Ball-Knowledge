@@ -20,7 +20,7 @@ const sound=async p=>{
       p.on('pageerror',e=>errors.push(e.message));
       await p.goto(arg('--url')||'http://127.0.0.1:8765/');await ready(p);
       await p.click('.bar [data-club-open]');await p.locator('#clubhouse').waitFor({state:'visible'});
-      for(const name of ['home','database','stats','records','achievements','collection','minis','weekly','settings','sandbox']){await section(p,name);await sound(p);assert.ok(await p.locator('#clubhouse-title').textContent());}
+      for(const name of ['home','database','stats','records','achievements','collection','minis','weekly','settings','sbc','sandbox']){await section(p,name);await sound(p);assert.ok(await p.locator('#clubhouse-title').textContent());}
       ok(`${kind}: every section opens without overflow or duplicate IDs`);
       await section(p,'database');await p.fill('#archive-query','messi');assert.ok(await p.locator('.club-table tbody tr').count());
       await p.locator('[data-archive-inspect]').first().click();assert.match(await p.locator('.club-detail').textContent(),/Messi/);
@@ -35,6 +35,10 @@ const sound=async p=>{
       await p.screenshot({path:path.join(out,`${kind}-sandbox.png`)});
       const d=await Promise.all([p.waitForEvent('download'),p.click('#sandbox-export')]);const file=await d[0].path();assert.equal(JSON.parse(fs.readFileSync(file)).sandbox.slots.length,15);
       await p.click('#sandbox-clear');await p.setInputFiles('#sandbox-import',file);await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k)).sandbox.slots.every(Boolean),KEY);ok(`${kind}: sandbox formation, simulation, separate records and squad round trip`);
+      await section(p,'sbc');assert.equal(await p.locator('.challenge-card').count(),11);await sound(p);
+      await p.locator('[data-sbc-build="first"]').click();await p.locator('.sbc-panel').waitFor();assert.equal(await p.locator('.sbc-panel li').count(),2);
+      assert.equal(await p.locator('#sbc-submit').isEnabled(),await p.locator('.sbc-panel li.no').count()===0);
+      await p.click('#sbc-leave');assert.equal(await p.locator('.sbc-panel').count(),0);assert.equal((await profile(p)).events.length,0);ok(`${kind}: squad challenges list, requirement panel and submission state`);
       await section(p,'minis');await p.click('[data-mini-start="card"]');let P=await profile(p), key=Object.keys(P.sessions).find(k=>k.endsWith(':card:daily')), target=P.sessions[key].target;
       const label=await p.evaluate(async id=>{const g=await(await fetch('./data/game.json')).json();return g.people[id.split('/')[1]].nm;},target);
       await p.fill('#mini-query',label);const guess=p.locator(`[data-archive-guess="${target}"]`);
