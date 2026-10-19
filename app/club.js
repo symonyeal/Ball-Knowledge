@@ -1,5 +1,6 @@
 import * as E from './engine/index.js';
 import { hydrate, shape } from './draft.js';
+import { staff } from './staff.js';
 
 // Club seasons for the career: the real top flight of a season with your fifteen in your club's place, its
 // real squads, and the domestic and European competitions of that country and year, played in two halves
@@ -14,7 +15,8 @@ import { hydrate, shape } from './draft.js';
 //   basis      stand-in rating basis: points (real league record), default (74), given (explicit rating)
 //   squad()    people whose stint at q covers s; below NQ players or without a keeper, the club's nearest
 //              players in time (stints within NEAR seasons, this or an adjacent decade), regulars first
-//   boss()     the curated manager whose tenure at q covers s, else club staff in the decade's formation DF
+//   boss()     the curated manager whose tenure at q covers s, else club staff in the decade's formation DF;
+//              staff() adds his nation and q's league, which count towards chemistry as for every manager
 //   standin()  a club the archive cannot field: fifteen squad players rated x from its real points per game
 //   field()    the league in season s with you in q's place (the lowest-placed club's when q was not in
 //              that top flight); stand-ins rated by a least-squares fit of strength on real points per game
@@ -79,7 +81,7 @@ export function squad(G, q, s, ban = new Set()) {
 export function boss(G, q, s, you) {
   const m = G.managers.find(m => m.nm !== you && m.t.some(([c, a, b]) => c === q && a <= s && s <= b));
   const f = m?.f.find(f => G.formations[f]);
-  return m && f ? { nm: m.nm, f, ga: m.ga, gd: m.gd, sig: m.sig } : { nm: 'Club staff', f: DF[dec(s)], ga: 'C', gd: 'C', sig: [] };
+  return staff(G, m && f ? { nm: m.nm, f, ga: m.ga, gd: m.gd, sig: m.sig } : { nm: 'Club staff', f: DF[dec(s)], ga: 'C', gd: 'C', sig: [] }, q, dec(s));
 }
 
 const CACHE = new WeakMap();

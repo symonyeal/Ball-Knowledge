@@ -1,5 +1,10 @@
 // Explicit manager/person identities. Nations come from the bundled Wikidata P1532 records;
 // a missing person or nation remains unknown. No nationality is inferred from a managed club.
+// NATION: a P1532 label under FIFA's name for that team; West Germany's record is Germany's, and the
+// United Kingdom fields no football team, so it is unknown.
+export const NATION = { 'West Germany':'Germany', 'Kingdom of the Netherlands':'Netherlands',
+  'Socialist Federal Republic of Yugoslavia':'Yugoslavia', 'Federal Republic of Yugoslavia':'Yugoslavia', 'United Kingdom':'' };
+export const nation = x => NATION[x] ?? x ?? '';
 export const MANAGER_PEOPLE = {
   'Miguel Muñoz':'Q361210', 'Don Revie':'Q350795', 'Ernst Happel':'Q157126',
   'Luis Aragonés':'Q576614', 'Robert Herbin':'Q729021', 'Kees Rijvers':'Q955365',
@@ -20,5 +25,5 @@ export const MANAGER_PEOPLE = {
 export function staff(G, m, q = null, D = 1990) {
   const full = G.managers.find(x=>x.nm===m.nm) || m, p = G.people?.[MANAGER_PEOPLE[m.nm]];
   q ||= m.cq || full.t?.find(([,a,b])=>a<=D+9&&b>=D)?.[0] || full.t?.[0]?.[0];
-  return {...m,cq:q||'',lg:G.clubs?.[q]?.cc||m.lg||'',nat:m.nat||(p?.nm===m.nm?p.nat:'')||''};
+  return {...m,cq:q||'',lg:G.clubs?.[q]?.cc||m.lg||'',nat:m.nat||(p?.nm===m.nm?nation(p.nat):'')};
 }

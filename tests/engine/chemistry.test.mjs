@@ -2,7 +2,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as E from '../../app/engine/index.js';
+import { readFileSync } from 'node:fs';
 import { club } from './fixtures.mjs';
+import { NATION, MANAGER_PEOPLE, staff } from '../../app/staff.js';
+import { hydrate } from '../../app/draft.js';
+import { archive } from '../../app/archive.js';
+import * as Club from '../../app/club.js';
+
+const G = JSON.parse(readFileSync(new URL('../../data/game.json', import.meta.url), 'utf8'));
+const card = p => { const k = Object.keys(G.cards).find(k => G.cards[k].some(c => c.p === p)); return hydrate(G, { k, p }); };
 
 // T(f): the fixture eleven with club, nation and league set per index by f(i) = [cq, nat, lg].
 const T = f => {
@@ -52,4 +60,24 @@ test('chemistry adds one rating point per point and the bench earns none', () =>
   assert.ok(R.xi.every(p => p.n === 3 && Math.abs(p.a - 83) < 1e-9));
   assert.ok(R.bn.every(p => p.a === 75));
   assert.equal(R.chem.total, 33);
+});
+
+test('a nation label names one football team: West Germany is Germany, the United Kingdom fields none', () => {
+  assert.equal(card('Q4457').nat, 'Germany');            // Franz Beckenbauer, P1532 West Germany
+  assert.equal(card('Q182685').nat, 'Netherlands');      // Maarten Stekelenburg, P1532 Kingdom of the Netherlands
+  assert.equal(card('Q10524').nat, '');                  // Ryan Giggs, P1532 United Kingdom (his Wales label is not bundled)
+  assert.ok(archive(G).every(c => !Object.hasOwn(NATION, c.nat)));
+});
+
+test('nation groups keep the name of the nation', () => {
+  const C = E.chemistry(T(i => [`z${i}`, 'Ivory Coast', '']));
+  assert.deepEqual(C.groups.nation, { 'Ivory Coast': 11 });
+});
+
+test('a career rival’s manager counts towards his nation and league, as in the Gauntlet fields', () => {
+  const m = G.managers.find(m => MANAGER_PEOPLE[m.nm] && m.t.some(([q]) => G.clubs[q])), [q, a] = m.t.find(([q]) => G.clubs[q]);
+  const b = Club.boss(G, q, a, '');
+  assert.equal(b.lg, G.clubs[q].cc);
+  assert.deepEqual(b, staff(G, b, q, Club.dec(a)));
+  if (b.nm === m.nm) assert.ok(b.nat);
 });
