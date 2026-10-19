@@ -9,7 +9,7 @@
 import { DECADES, POOL, opts, hydrate, shape } from '../draft.js';
 import { MAPS } from '../run.js';
 import { wk } from '../play.js';
-import { U, esc, seasons, kv, mini, pitch, vcard, ERA, nm } from './kit.js';
+import { U, esc, seasons, kv, mini, pitch, vcard, portrait, ERA, nm } from './kit.js';
 
 const ART = [['Q17515', 'Q2641:1980', -9], ['Q1835', 'Q8682:2000', 0], ['Q17163', 'Q7156:1970', 9]];
 
@@ -37,7 +37,7 @@ export function intro() {
         </div>
       </form>
     </div>
-    <div class="land-art" aria-hidden="true"><div class="land-pitch">${pitch(G.formations['4-3-3'].slots.map(([s, x, y]) => ({ s, x, y })), [], { mode: 'view', sm: true })}</div><div class="fans">${cards}</div></div>
+    <div class="land-art" aria-hidden="true" inert><div class="land-pitch">${pitch(G.formations['4-3-3'].slots.map(([s, x, y]) => ({ s, x, y })), [], { mode: 'view', sm: true })}</div><div class="fans">${cards}</div></div>
   </section>
   <section class="weekly gauntlet-entry" aria-label="Era Gauntlet"><div><p class="lbl">Era Gauntlet · a roguelike run</p><p class="wk">Draft, then survive decade after decade</p>
     <p class="small">Draft fifteen from the decades near your map's first stop, then play four six-match rounds and a two-legged boss in every decade, with rewards, transfers and board patience between. Uses the rules and seed above.</p></div>
@@ -66,9 +66,9 @@ export function teams() {
   const { G, S } = U, O = opts(G, S), j = Math.min(U.insp, O.length - 1);
   const card = (o, i) => {
     const m = G.managers.find(m => m.nm === o.nm), c = G.clubs[o.q], [n, of] = spells(m, o), s = sig(m, o), D = sq(o);
-    return `<article class="tc ${i === j ? 'on' : ''}" style="${kv(o.q)}" aria-label="${esc(`${m.nm}, ${c.nm} ${seasons(o.a, o.b)}`)}">
+    return `<article class="tc ${i === j ? 'on' : ''}" data-manager-card="${i}" style="${kv(o.q)}" aria-label="${esc(`${m.nm}, ${c.nm} ${seasons(o.a, o.b)}`)}">
       <div class="th"><p class="lbl">Option ${i + 1} · ${esc(c.cc)}</p><p class="cn">${esc(c.nm)}</p><p class="yr">${seasons(o.a, o.b)}</p><p class="small career-context">${esc(career(o))}</p></div>
-      <div class="bd"><div class="row top"><p class="mg">${esc(m.nm)}</p>${of > 1 ? `<span class="tg o">Spell ${n} of ${of}</span>` : ''}</div>
+      <div class="bd">${portrait('manager:' + m.nm, m.nm)}<div class="row top"><button class="mg manager-name" type="button" data-inspect="${i}" aria-controls="manager-preview" aria-pressed="${i === j}">${esc(m.nm)}</button>${of > 1 ? `<span class="tg o">Spell ${n} of ${of}</span>` : ''}</div>
         <div class="gr"><span>Att <b>${m.ga}</b></span><span>Def <b>${m.gd}</b></span></div>
         <div><p class="lbl">Recorded formations</p><p class="fs">${m.f.map(esc).join(' · ')}</p></div>
         <div><p class="lbl">Signature players</p><p class="small"><b>${s.here.length} in this team's squads</b>${s.away.length ? ` · ${s.away.length} elsewhere` : ''}${s.here.length ? `<br>${s.here.slice(0, 3).map(esc).join(' · ')}` : ''}</p></div>
@@ -84,7 +84,8 @@ export function teams() {
       <p class="lede">Five managers, one club spell each${S.v === 4 ? ` in the ${S.D}s` : ''}. The team sets grades and signature players; the formation stays your choice until kick-off.</p></div>
       <button class="btn q" type="button" id="manager-reroll" ${S.managerRoll >= 2 ? 'disabled' : ''}>Re-spin teams <span>${2 - S.managerRoll} left</span></button></div>
     <div class="tcs">${O.map(card).join('')}</div>
-    <section class="insp-team" aria-label="${esc(`${m.nm} at ${c.nm}`)}" style="${kv(o.q)}">
+    <section class="insp-team" id="manager-preview" tabindex="-1" aria-label="${esc(`${m.nm} at ${c.nm}`)}" style="${kv(o.q)}">
+      <header class="manager-identity">${portrait('manager:' + m.nm,m.nm)}<p class="lbl">Manager preview · Option ${j + 1}</p><h2>${esc(m.nm)}</h2><p>${esc(c.nm)} · ${seasons(o.a, o.b)}</p></header>
       <div><p class="lbl">Start in · change any time before kick-off</p>
         <div class="shape-preview"><div class="start-shape" id="start-shape" data-formation="${esc(f0)}" aria-label="${esc(f0)} formation preview">${pitch(shape(G, f0), [], { mode: 'view', sm: true })}</div><p class="shape-caption"><b>${esc(f0)}</b><span class="small">${rec.includes(f0) ? 'Recorded formation' : 'Your formation'}</span></p></div>
         <div class="row wrap">${rec.map(f => `<button type="button" class="fm ${f === f0 ? 'on' : ''}" data-start-form="${esc(f)}" data-key="sf:${esc(f)}" aria-pressed="${f === f0}">${mini(G, f)}<span><b>${esc(f)}</b><small>Recorded</small></span></button>`).join('')}</div>

@@ -152,10 +152,13 @@ export function row(c, o = {}) {
 }
 
 // Collectible card: metal frame by tier, kit band, rating, best three slots, name, club and decade, source.
+export function portrait(id, name) {
+  return `<span class="portrait" data-portrait="${esc(id)}" data-state="loading"><span class="portrait-fallback" role="img" aria-label="Photo unavailable for ${esc(name)}"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="30" r="19"/><path d="M12 100v-12a38 38 0 0 1 76 0v12z"/></svg></span><img alt="${esc(name)}" decoding="async"><a class="photo-source" href="https://commons.wikimedia.org/" target="_blank" rel="noopener noreferrer" aria-label="Photo source for ${esc(name)}">Photo source</a></span>`;
+}
 export function vcard(c, o = {}) {
   const t = TI(c.r), top = rated(c, o.Ds || c.D).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([s, v]) => `${s} ${v}`).join(' · ');
   const fc = face(c);
-  return `<div class="vc ${o.cls || ''} ${fc ? `fx-${fc}` : ''}" style="--tier:var(--t${t});${kv(c.cq)}"><div class="vi"><span class="rt">${Math.round(c.r)}</span><span class="ps">${top}</span>${tier(t)}${fc ? `<span class="fxl">${FACE[fc]}</span>` : ''}<span class="vn">${esc(c.nm)}</span><span class="cl">${esc(U.G.clubs[c.cq]?.nm || c.cq)} · ${c.D}s${c.nat ? ` · ${esc(c.nat)}` : ''}</span><span class="src">${SRC[c.src] || SRC.e}</span></div>${o.ov ? `<div class="ov ${o.ovc || ''}">${o.ov}</div>` : ''}</div>`;
+  return `<div class="vc ${o.cls || ''} ${fc ? `fx-${fc}` : ''}" style="--tier:var(--t${t});${kv(c.cq)}"><div class="vi"><span class="rt">${Math.round(c.r)}</span><span class="ps">${top}</span>${tier(t)}${fc ? `<span class="fxl">${FACE[fc]}</span>` : ''}${portrait(c.id, c.nm)}<span class="vn">${esc(c.nm)}</span><span class="cl">${esc(U.G.clubs[c.cq]?.nm || c.cq)} · ${c.D}s${c.nat ? ` · ${esc(c.nat)}` : ''}</span><span class="src">${SRC[c.src] || SRC.e}</span></div>${o.ov ? `<div class="ov ${o.ovc || ''}">${o.ov}</div>` : ''}</div>`;
 }
 
 export function capTiles(n, lim = CAP) {

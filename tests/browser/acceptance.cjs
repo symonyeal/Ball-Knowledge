@@ -39,6 +39,8 @@ const view = async (p, kind, v) => { if (kind === 'mobile') { await p.click(`.se
 async function page(kind, o = {}) {
   const b = await chromium.launch({ headless: true, channel: arg('--channel'), downloadsPath: path.join(out, 'downloads') });
   const ctx = await b.newContext({ viewport: VP[kind], acceptDownloads: true, hasTouch: kind !== 'desktop', ...o });
+  // Optional archive photos outside the bundled library must not make gameplay checks depend on Wikimedia.
+  await ctx.route('https://www.wikidata.org/w/api.php?**', r => r.fulfill({ json: { entities: {} } }));
   const p = await ctx.newPage();
   p.on('pageerror', e => errors.push(`${kind}: ${e.message}`));
   p.on('console', m => { if (m.type() === 'error') errors.push(`${kind}: ${m.text()}`); });
@@ -169,7 +171,7 @@ async function runControls(p, kind) {
   ok(`${kind}: a selected prime upgrade changes the card and preserves its original cap charge`);
   s = await stageRun(p, 'hop');
   assert.equal(await p.locator('[data-hop-pick]').count(), 10);
-  await p.click('#run-hop'); await settle(p);
+  assert.equal(await p.locator('#run-hop').isDisabled(), true);
   assert.equal((await st(p)).mode.run.ph, 'hop', 'incomplete transfers must preserve the run');
   const h = await p.evaluate(async key => {
     const R = await import('./app/run.js'), { ct, TI } = await import('./app/cap.js'), { hydrate } = await import('./app/draft.js');
@@ -514,7 +516,7 @@ async function careerControls() {
     assert.equal((await st(p)).mode.career.slots[deal.slot].p, deal.p);
     ok('career prime upgrades keep the person and tier charge; scouting and quoted signings apply to the chosen place');
     s = (await st(p)).mode.career; assert.equal(s.ph, 'hop');
-    await p.click('#career-hop'); await settle(p); assert.equal((await st(p)).mode.career.ph, 'hop');
+    assert.equal(await p.locator('#career-hop').isDisabled(), true); assert.equal((await st(p)).mode.career.ph, 'hop');
     const transfers = await p.evaluate(async key => {
       const C = await import('./app/career.js'), g = await (await fetch('./data/game.json')).json(), s = JSON.parse(localStorage.getItem(key)).mode.career, H = C.careerHopPools(g, s);
       for (let old = 0; old < H.old.length; old++) for (let neu = 0; neu < H.neu.length; neu++)

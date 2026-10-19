@@ -13,7 +13,7 @@ import { TI, CAP, ct } from '../cap.js';
 import * as E from '../engine/index.js';
 import { leagueOf, years, field } from '../club.js';
 import { form, team, preview, used, room, lim, can, hydrate, shape } from '../draft.js';
-import { U, esc, num, club, kv, tier, fitText, delta, pitch, links, face, mini, smap, rated, share, row, capTiles, segs, spell, IC, LINE, SRC, SRT, pct } from './kit.js';
+import { U, esc, num, club, kv, tier, fitText, delta, pitch, links, face, portrait, mini, smap, rated, share, row, capTiles, segs, spell, IC, LINE, SRC, SRT, pct } from './kit.js';
 
 const MED = new Map();
 function opponents(D) {
@@ -245,7 +245,7 @@ function inspector(c, V, b, inSheet = false) {
   const st = c.st?.xmi >= 450 ? `xG ${(90 * c.st.xg / c.st.xmi).toFixed(2)} · xA ${(90 * c.st.xa / c.st.xmi).toFixed(2)} per 90` : c.st?.mi >= 450 ? `${(90 * c.st.g / c.st.mi).toFixed(2)} goals · ${(90 * c.st.a / c.st.mi).toFixed(2)} assists per 90` : '';
   const pin = U.cmp.filter(p => p !== c.id && G.cards[S.combo].some(x => x.p === p)).map(p => hydrate(G, { k: S.combo, p }));
   const cmp = pin.length ? `<div class="tw"><table class="cmpp"><thead><tr><th>Slot</th><th class="k">${esc(c.nm.split(' ').at(-1))}</th>${pin.map(x => `<th class="k">${esc(x.nm.split(' ').at(-1))}</th>`).join('')}</tr></thead><tbody>${R.slice(0, 6).map(([s, v]) => `<tr><td>${s}</td><td class="k">${v}</td>${pin.map(x => `<td class="k">${rated(x, S.D).find(r => r[0] === s)[1]}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : '';
-  return `<section class="insp" aria-label="${esc(c.nm)}"><div class="row top"><span class="big">${Math.round(c.r)}</span><div class="grow"><p class="pnm">${esc(c.nm)}</p><p class="small">${esc(club(`${c.cq}:${c.D}`))} · <span title="${esc(SRT[c.src] || SRT.e)}">${SRC[c.src] || SRC.e}</span></p></div>${tier(TI(c.r))}</div>
+  return `<section class="insp" aria-label="${esc(c.nm)}"><div class="row top">${portrait(c.id,c.nm)}<span class="big">${Math.round(c.r)}</span><div class="grow"><p class="pnm">${esc(c.nm)}</p><p class="small">${esc(club(`${c.cq}:${c.D}`))} · <span title="${esc(SRT[c.src] || SRT.e)}">${SRC[c.src] || SRC.e}</span></p></div>${tier(TI(c.r))}</div>
     ${smap(c, S.D, bs ? [bs] : [])}
     <dl class="kv"><dt>Listed</dt><dd>${c.pos.join(' · ')}</dd><dt>Best here</dt><dd>${b >= 0 ? `${bs} ${num(V[b].a)} · ${fitText(V[b].f)}` : 'No open pitch place'}</dd>
       <dt>Line share</dt><dd>${two.map(s => `${s} ${share(s)}`).join(' · ')} <span class="dim">att/mid/def</span></dd>
@@ -263,7 +263,7 @@ function sheet(c, SH, V, Vb, b) {
   const cells = SH.map((x, i) => (Q.xi[i].c ? { kind: 'f', nm: Q.xi[i].c.nm, a: Q.xi[i].a, t: TI(Q.xi[i].c.r), q: Q.xi[i].c.cq, f: Q.xi[i].f, label: `${x.s}, taken` }
     : { kind: 'p', v: V[i].a, f: V[i].f, b: V[i].b, best: i === b, on: t === i, label: `${x.s}: ${c.nm} would rate ${num(V[i].a)}, ${fitText(V[i].f)}` }));
   return `<div class="sheet" id="sheet" role="dialog" aria-label="${esc(`Place ${c.nm}`)}"><div class="handle" aria-hidden="true"></div>
-    <div class="row top"><span class="big">${Math.round(c.r)}</span><div class="grow"><p class="pnm">${esc(c.nm)}</p><p class="small">${esc(club(`${c.cq}:${c.D}`))} · ${c.pos.join(' · ')}</p></div>${tier(TI(c.r))}<button type="button" class="iconbtn" id="sheet-close" aria-label="Close">×</button></div>
+    <div class="row top">${portrait(c.id,c.nm)}<span class="big">${Math.round(c.r)}</span><div class="grow"><p class="pnm">${esc(c.nm)}</p><p class="small">${esc(club(`${c.cq}:${c.D}`))} · ${c.pos.join(' · ')}</p></div>${tier(TI(c.r))}<button type="button" class="iconbtn" id="sheet-close" aria-label="Close">×</button></div>
     <p class="small">${b >= 0 ? `Best here <b>${SH[b].s} ${Math.round(V[b].a)}</b><span class="phone-only">&nbsp;· tap a place, then confirm</span>` : 'Every pitch place is taken: choose a bench place'}</p>
     <div class="sheet-pitch">${pitch(SH, cells, { mode: 'sheet', sm: true, entry: b, label: `Places for ${c.nm}` })}</div>
     <div class="bn sm" role="group" aria-label="Bench places">${Vb.map((x, j) => `<button type="button" class="bs ${x ? 'p' : 'f'} ${t === j + 11 ? 'on' : ''}" data-target="${j + 11}" data-key="t:${j + 11}" ${x ? '' : 'disabled'} aria-label="${x ? `Bench ${j + 1}: ${num(x.a)}, no fit loss` : `Bench ${j + 1}, taken`}"><span class="v">${x ? Math.round(x.a) : '·'}</span><span class="t"><small>B${j + 1}</small></span></button>`).join('')}</div>

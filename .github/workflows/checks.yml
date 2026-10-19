@@ -32,6 +32,7 @@ jobs:
           python -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/football-http.log" 2>&1 &
           node tests/browser/acceptance.cjs --playwright "$RUNNER_TEMP/browser/node_modules/playwright" --output "$RUNNER_TEMP/football-browser-results"
           node tests/browser/clubhouse.cjs --playwright "$RUNNER_TEMP/browser/node_modules/playwright" --output "$RUNNER_TEMP/football-browser-results/clubhouse"
+          node tests/browser/repairs.cjs --playwright "$RUNNER_TEMP/browser/node_modules/playwright" --output "$RUNNER_TEMP/football-browser-results/repairs"
       - name: Preserve browser check results
         if: always()
         uses: actions/upload-artifact@v4

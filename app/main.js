@@ -12,6 +12,8 @@ import { desk, rosterList } from './ui/desk.js';
 import { results, about, season, me, shareText, cardImage, signing, arena, runShareText } from './ui/season.js';
 import { hub, careerShareText, careerCardImage, careerSigning } from './ui/career.js';
 import { mountClubhouse } from './ui/clubhouse.js';
+import { mountPortraits } from './portraits.js';
+import { refreshTransfers } from './ui/transfers.js';
 
 // Browser game controller. Views render from the shared state U (app/ui/kit.js); this module turns
 // events into new states. change(next, msg, o): commit a draft state; o.edit marks a lineup edit
@@ -57,6 +59,7 @@ function render() {
   bar();
   const v = !U.S ? 'intro' : U.S.phase === 'manager' ? 'teams' : U.S.phase === 'results' ? 'results' : 'desk';
   root.innerHTML = v === 'intro' ? intro() : v === 'teams' ? teams() : v === 'results' ? (U.S.mode?.career ? hub() : U.S.g ? arena() : results()) : desk();
+  refreshTransfers(root);
   U.deal = null;
   if (document.body.dataset.screen && document.body.dataset.screen !== v) $('#notice').hidden = true;
   document.body.dataset.screen = v;
@@ -217,6 +220,7 @@ root.addEventListener('change', async e => {
     $(`#up-price-${j}`).innerHTML = n < 1 ? '<p class="warn small">Not enough patience: the board keeps at least 1.</p>' : `<p class="small">Leaves ${n} patience${n <= Rn.B_LOSS(s.lost) ? ': one boss loss would end the run' : ''}.</p>`;
     $(`[data-take="${j}"]`).disabled = n < 1;
   }
+  if (t.matches('[data-career-fa], [data-career-up], [data-fa], [data-up-pick], [data-career-hop-pick], [data-hop-pick], .transfer-pick select')) refreshTransfers(root);
   if (t.id === 'import-replay') {
     const old = { S: U.S, R: U.R, C: U.C, H: U.H, tab: U.tab };
     try {
@@ -273,7 +277,11 @@ document.addEventListener('keydown', e => {
 });
 
 root.addEventListener('click', async e => {
-  const b = e.target.closest('button'); if (!b || b.disabled || U.busy) return;
+  const b = e.target.closest('button'), managerCard = e.target.closest('[data-manager-card]');
+  if (!b && managerCard && !e.target.closest('a, input, select') && !U.busy) {
+    U.insp = Number(managerCard.dataset.managerCard); U.f0 = null; U.focus = '#manager-preview'; render(); return;
+  }
+  if (!b || b.disabled || U.busy) return;
   const { G } = U;
   try {
     if (b.dataset.era) { U.D = b.dataset.era === 'random' ? 'random' : Number(b.dataset.era); render(); root.querySelector(`[data-era="${b.dataset.era}"]`)?.focus(); }
@@ -281,7 +289,7 @@ root.addEventListener('click', async e => {
     else if (b.dataset.startForm) { U.f0 = b.dataset.startForm; U.focus = `sf:${U.f0}`; render(); }
     else if (b.id === 'gauntlet-start') { const g = $('#gauntlet-map').value; U.insp = 0; U.f0 = null; U.seed = $('#seed')?.value ?? U.seed; change(start(U.seed, null, U.cap, g), `${Rn.MAPS[g].nm}: draft from the ${Math.max(1950, Rn.MAPS[g].D[0] - POOL)}s to the ${Math.min(2020, Rn.MAPS[g].D[0] + POOL)}s.`); }
     else if (b.id === 'weekly') { const w = wk(); U.insp = 0; U.f0 = null; change({ ...start(w.seed, w.D, true), wk: w.id }, `Weekly challenge ${w.id}: Salary cap in the ${w.D}s, one club order for everyone.`); }
-    else if (b.dataset.inspect !== undefined) { U.insp = Number(b.dataset.inspect); U.f0 = null; U.focus = '#start-formation'; render(); }
+    else if (b.dataset.inspect !== undefined) { U.insp = Number(b.dataset.inspect); U.f0 = null; U.focus = '#manager-preview'; render(); }
     else if (b.dataset.manager !== undefined || b.dataset.choose !== undefined) {
       const i = Number(b.dataset.manager ?? b.dataset.choose), f = i === U.insp && U.f0 ? U.f0 : undefined, s = choose(G, U.S, i, f);
       U.view = 'squad'; U.focus = '#squad-spin';
@@ -418,4 +426,5 @@ async function boot() {
     $('#data-status').textContent = 'Archive unavailable';
   }
 }
+mountPortraits();
 boot();

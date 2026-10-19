@@ -7,6 +7,7 @@ import { TI, fits } from '../cap.js';
 import { cname, history, named } from '../club.js';
 import { U, esc, num, ord, nm, club, kv, rules } from './kit.js';
 import { xi, breakdown, gauntlet, more } from './season.js';
+import { candidate, marketPreview, upgradePreview } from './transfers.js';
 
 const yr = y => `${y}/${String(y + 1).slice(-2)}`;
 const name = id => esc(cname(U.G, id));
@@ -28,7 +29,7 @@ function offer(o, j, s) {
   const btn = (label, cost) => `<button class="btn" type="button" data-career-take="${j}" ${affordable(s, cost) ? '' : 'disabled'}>${label}</button>`;
   if (o.kind === 'dev' && o.id === 'upg') return `<article class="reward reward--boost"><p class="lbl">Prime-card boost</p><h3>Upgrade the same player</h3>
     <label class="field"><span class="lbl">Player</span><select id="career-up-${j}" data-career-up="${j}">${o.list.map((u, i) => `<option value="${i}">${esc(nm(u.from.p))} · ${Math.round(u.from.r)} → ${Math.round(u.to.r)} · ${esc(club(u.to.k))} · ${price(s, u.cost)} patience</option>`).join('')}</select></label>
-    <p class="small">His original tier charge stays. Player development survives the upgrade.</p>${btn('Upgrade him', o.list[0].cost)}</article>`;
+    <div data-upgrade-preview="${j}" data-transfer-mode="career">${upgradePreview(s,o.list[0])}</div><p class="small">His original tier charge stays. Player development survives the upgrade.</p>${btn('Upgrade him', o.list[0].cost)}</article>`;
   if (o.kind === 'dev') {
     const d = C.CAREER_DEV[o.id];
     return `<article class="reward"><p class="lbl">Development · ${price(s, o.cost)} patience</p><h3>${esc(d.nm)}</h3><p class="small">${esc(d.tx)}</p>
@@ -39,7 +40,7 @@ function offer(o, j, s) {
     return `<article class="reward"><p class="lbl">${o.kind === 'desp' ? 'Desperation offer' : 'Work the phones'}</p><h3>Sign one, release one</h3>
       <label class="field"><span class="lbl">Sign</span><select id="career-fa-${j}" data-career-fa="${j}">${o.list.map((f, i) => `<option value="${i}">${esc(nm(f.p))} · ${esc(club(f.k))} · ${Math.round(f.r)} · ${TI(f.r)} tier</option>`).join('')}</select></label>
       <label class="field"><span class="lbl">Release</span><select id="career-out-${j}" data-career-fa="${j}">${placeOptions(s)}</select></label>
-      <p class="small" id="career-price-${j}">${esc(x.tx)}</p><button class="btn" type="button" data-career-take="${j}" ${x.ok ? '' : 'disabled'}>Sign him</button>
+      <div data-transfer-preview="${j}" data-transfer-mode="career">${marketPreview(s,j)}</div><p class="small" id="career-price-${j}" role="status">${esc(x.tx)}</p><button class="btn" type="button" data-career-take="${j}" ${x.ok ? '' : 'disabled'}>Confirm signing and release</button>
       <p class="small dim">${o.kind === 'desp' ? 'This bargain reduces squad partnership bonuses by 25% until he leaves or receives Player Buy-In.' : 'An S signing loses 3 rating points on the bench; a C signing gains 3 when starting.'}</p>
       ${o.re ? `<div class="row wrap"><button class="btn q sm" type="button" data-career-respin="scout" ${s.pat < min(false) ? 'disabled' : ''}>Scout re-spin · ${1 + u}</button><button class="btn q sm" type="button" data-career-respin="premium" ${s.pat < min(true) ? 'disabled' : ''}>A/S re-spin · ${5 + u}</button></div>` : ''}</article>`;
   }
@@ -48,9 +49,9 @@ function offer(o, j, s) {
 function transfer(s) {
   const H = C.careerHopPools(U.G, s);
   return `<h3>Summer transfers</h3><p class="small">Take one available rival and one player from the decade. Release two different players. These signings cost no patience and keep the S and A cap.</p>
-    <div class="rewards">${[['old', H.old, 'League rivals'], ['neu', H.neu, 'Across the decade']].map(([k, Q, label]) => `<fieldset class="reward"><legend>${label}</legend>${Q.length ? Q.map((f, i) => `<div class="transfer-pick"><label><input type="radio" name="career-hop-${k}" data-career-hop-pick="${k}" value="${i}"> ${esc(nm(f.p))} · ${Math.round(f.r)} · ${TI(f.r)} tier</label><p class="small">${esc(club(f.k))}</p>
+    <div class="rewards transfer-pools">${[['old', H.old, 'League rivals'], ['neu', H.neu, 'Across the decade']].map(([k, Q, label]) => `<fieldset class="reward"><legend>${label}</legend>${Q.length ? Q.map((f, i) => `<div class="transfer-pick"><label><input type="radio" name="career-hop-${k}" data-career-hop-pick="${k}" value="${i}"> ${esc(nm(f.p))} · ${Math.round(f.r)} · ${TI(f.r)} tier</label><div data-arrival-preview>${candidate(f)}</div>
       <label class="field"><span class="lbl">Release</span><select id="career-hop-out-${k}-${i}"><option value="">Choose a squad player</option>${placeOptions(s)}</select></label></div>`).join('') : '<p class="small">No eligible arrival in this pool.</p>'}</fieldset>`).join('')}</div>
-    <button class="btn" id="career-hop" type="button">Confirm summer transfers</button>`;
+    <p class="small" id="career-transfer-window-status" role="status">Choose an arrival from each available pool and different players to release.</p><div id="career-transfer-window-preview"></div><button class="btn" id="career-hop" type="button" disabled>Confirm summer transfers</button>`;
 }
 function preparation(s) {
   return `<h3>Set the lineup</h3><p class="small">Change the formation or swap two squad places before continuing. Boosts and development remain with the player.</p>
