@@ -1,15 +1,19 @@
 import { mk, hs, sh, ft, em, rate, move } from './engine/index.js';
 import { TI, CAP, ck, left } from './cap.js';
-import { validRun } from './run.js';
+import { validRun, MAPS } from './run.js';
 import { staff, nation } from './staff.js';
 
 // G archive; s serializable run; T hydrated team; c card; p person id; D decade;
 // k club-decade key; S formation slots; xi starting eleven; bn four bench cards;
 // s.manager the seeded team {nm, q, a}: manager, club QID, first season of the spell; s.f formation in use.
+// s.g a Gauntlet draft's map: D is the map's first decade and squads come from decades within POOL
+// years of it (Eraball's Gauntlet opening draft); kick-off starts that map instead of the career.
 
 export const VERSION = 4;
 export const STORE = 'football-era-lab-v2';
 export const DECADES = [1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020];
+export const POOL = 20;
+const near = (s, D) => !s.g || Math.abs(D - s.D) <= POOL;
 
 export function seed(x) {
   if (!/^\d{1,10}$/.test(String(x).trim())) throw new Error('Use a whole seed from 0 to 4294967295.');
@@ -18,13 +22,14 @@ export function seed(x) {
   return n;
 }
 
-export function start(s, d, cap = false) {
+export function start(s, d, cap = false, g) {
   s = seed(s);
   if (typeof cap !== 'boolean') throw new Error('Choose Salary cap or Classic draft.');
-  const D = d === 'random' ? DECADES[Math.floor(mk(hs(`${s}:era`))() * 8)] : Number(d);
+  if (g !== undefined && !Object.hasOwn(MAPS, g)) throw new Error('Choose one of the four Gauntlet maps.');
+  const D = g ? MAPS[g].D[0] : d === 'random' ? DECADES[Math.floor(mk(hs(`${s}:era`))() * 8)] : Number(d);
   if (!DECADES.includes(D)) throw new Error('Choose a decade from the eight available eras.');
   return { v: VERSION, seed: s, D, cap, phase: 'manager', managerRoll: 0, manager: null, f: null, spin: 0, picked: 0,
-    squadReroll: 0, combo: null, slots: Array(15).fill(null), history: [], season: false };
+    squadReroll: 0, combo: null, slots: Array(15).fill(null), history: [], season: false, ...(g ? { g } : {}) };
 }
 
 // Version 3 drew from every archive spell, independently of the chosen decade. Keep the old seeded
@@ -151,7 +156,7 @@ export function spin(G, s, reroll = false) {
   // filled (Classic counts against the same allowances but blocks nothing), when any new club can;
   // otherwise any new club that can fill three remaining places.
   const R = room(G, s), t = Object.keys(CAP).find(t => R[t] > 0);
-  const ok = c => !H.has(c.q) && (G.cards[key(c)] || []).filter(p => !I.has(p.p)).length >= 3 && batch(G, s, key(c));
+  const ok = c => near(s, c.D) && !H.has(c.q) && (G.cards[key(c)] || []).filter(p => !I.has(p.p)).length >= 3 && batch(G, s, key(c));
   const c = (t && draw(G, r, c => ok(c) && G.cards[key(c)].some(x => !I.has(x.p) && TI(x.r) === t), s.D)) || draw(G, r, ok, s.D);
   if (!c) throw new Error('No new club can fill three of your remaining tier places.');
   return { ...s, combo: key(c), squadReroll: n, ...(reroll ? { skip: s.combo } : {}) };
@@ -265,10 +270,12 @@ export function valid(G, s0) {
   const run = rn !== undefined ? validRun(G, rn, t, !!s.cap) : undefined;
   if ((md.ci !== undefined || rn !== undefined) && s.phase !== 'results') throw new Error('Challenge modes need a finished squad.');
   if (s.wk !== undefined && !/^\d{4}-W\d{2}$/.test(s.wk)) throw new Error('The saved weekly challenge is invalid.');
+  if (s.g !== undefined && (typeof s.g !== 'string' || !Object.hasOwn(MAPS, s.g) || s.wk !== undefined || s.D !== MAPS[s.g].D[0] || md.ci !== undefined ||
+    [...s.history, ...(s.combo ? [s.combo] : [])].some(k => !near(s, Number(k.split(':')[1]))))) throw new Error('The saved Gauntlet draft is invalid.');
   return { v: s.v, seed: n, D: s.D, cap: !!s.cap, phase: s.phase, managerRoll: s.managerRoll, manager: t, f: t ? s.f : null,
     spin: s.spin, picked: s.picked, squadReroll: s.squadReroll, combo: s.combo,
     slots: s.slots.map(c => c ? { k: c.k, p: c.p } : null), history: s.history.slice(),
     ...(s.skip ? { skip: s.skip } : {}),
-    ...(s.wk ? { wk: s.wk } : {}),
+    ...(s.wk ? { wk: s.wk } : {}), ...(s.g ? { g: s.g } : {}),
     mode: { ...(md.ci !== undefined ? { ci: md.ci } : {}), ...(run !== undefined ? { run } : {}) } };
 }

@@ -130,6 +130,9 @@ legend{padding:0;margin-bottom:10px}
 .weekly{display:flex;align-items:center;gap:24px;max-width:1296px;margin:12px auto 0;padding:18px 24px;border-radius:14px;border:1px solid var(--l1);background:linear-gradient(90deg,color-mix(in srgb,var(--era-1960) 14%,var(--n1)),var(--n1))}
 .weekly .wk{font:800 26px/1.05 var(--fd);text-transform:uppercase;margin:4px 0}
 .weekly .btn{margin-left:auto}
+.gauntlet-entry{background:linear-gradient(90deg,color-mix(in srgb,var(--era-2020) 16%,var(--n1)),var(--n1))}
+.gauntlet-entry .row{margin-left:auto;align-items:flex-end;gap:12px}.gauntlet-entry .row .btn{margin-left:0}.gauntlet-entry select{max-width:100%}
+.run-boss{border-left:3px solid var(--era-2020);padding-left:10px}
 .how{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;max-width:1296px;margin:18px auto 0;padding:0 32px;list-style:none;counter-reset:s}
 .how li{counter-increment:s;display:grid;gap:4px;padding-top:12px;border-top:1px solid var(--l1)}
 .how b{font:800 22px/1 var(--fd);text-transform:uppercase}
@@ -401,6 +404,7 @@ tbody tr:last-child td{border-bottom:0}
 .results-tabs button{min-height:44px;padding:0 14px;border:0;border-bottom:3px solid transparent;background:none;font:600 14px var(--fu);color:var(--ink2);white-space:nowrap}
 .results-tabs button[aria-selected=true]{color:#fff;border-bottom-color:#fff}
 #result-panel{padding:20px 24px}
+.arena{max-width:1392px;margin:0 auto;padding:20px 24px}
 .st{font:800 30px/1 var(--fd);text-transform:uppercase;margin-bottom:12px}
 .res-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,.7fr);gap:22px;align-items:start}
 .res-grid>*,.xi>*,.repo>*,.challenge-grid>*,.rewards>*{min-width:0}
@@ -549,6 +553,7 @@ tbody tr:last-child td{border-bottom:0}
   .land-art{display:none}
   .weekly{flex-direction:column;align-items:flex-start;margin:12px 14px 0;padding:16px}
   .weekly .btn{margin-left:0}
+  .gauntlet-entry .row{margin-left:0;width:100%}.gauntlet-entry .field{width:100%}
   .how{grid-template-columns:1fr 1fr;padding:0 14px}
   .replay{padding:0 14px}
   .teams{padding:14px 12px 24px}.teams .head{flex-direction:column;align-items:flex-start}.teams .head .btn{margin-left:0}
@@ -561,6 +566,7 @@ tbody tr:last-child td{border-bottom:0}
   .form{grid-template-columns:repeat(19,minmax(0,1fr));padding:0 12px}
   .results-tabs{padding:0 12px}
   #result-panel{padding:16px 12px}
+  .arena{padding:16px 12px}
   .res-grid,.fixtures,.challenge-grid,.rewards,.xi,.repo,.repo .xi{grid-template-columns:1fr}
   .share-strip{padding:16px 12px 24px}
   .career-board{margin:14px 12px;padding:16px}.career-comps{margin:0 12px 14px}.career-controls{display:grid;grid-template-columns:1fr;align-items:stretch}.career-controls .field{min-width:0}

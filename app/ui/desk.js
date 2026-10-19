@@ -108,7 +108,7 @@ function review(T, Q) {
     <details class="breakdown"><summary>Your opening-season opposition: ${M.F.length} club squads</summary><div class="tw"><table class="opp"><thead><tr><th>Club</th><th>Shape</th><th class="k">Strength</th></tr></thead>
       <tbody>${M.F.map(c => `<tr><td>${esc(c.nm)}${c.si ? ' · stand-in' : c.src === 'nearby' ? ' · nearby players' : ''}</td><td>${esc(c.T.m.f || '')}</td><td class="k">${num(c.x)}</td></tr>`).join('')}</tbody></table></div>
       <p class="small">Each club plays its best eleven in its own manager's formation; your formation never changes theirs.</p></details>
-    <button class="btn big" type="button" id="simulate" ${U.busy || U.pv ? 'disabled' : ''}>${U.busy ? 'Opening the career…' : 'Start the career →'}</button></div>`;
+    <button class="btn big" type="button" id="simulate" ${U.busy || U.pv ? 'disabled' : ''}>${U.busy ? 'Opening…' : S.g ? 'Start the Gauntlet →' : 'Start the career →'}</button></div>`;
 }
 
 const group = (G, f, rec) => (rec.includes(f) ? 'rec' : /^(2-3-5|WM|Catenaccio)$/.test(f) ? 'hist' : { 4: 'four', 3: 'three', 5: 'five' }[f[0]] || 'four');

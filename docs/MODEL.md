@@ -286,9 +286,9 @@ The earlier release used `tau=3`, concentrating more draws on the strongest squa
 
 ## Era Gauntlet
 
-More modes keeps the Gauntlet's own rules and takes the drafted fifteen through a selected map. Odyssey in Reverse, the default, starts in the 2020s and ends in the 1950s; The Full Odyssey visits all eight decades in order. Original Gauntlet visits the 1960s, 1990s and 2010s; Back in Time reverses that route.
+The start screen's Gauntlet entry drafts for the run: the draft's decade is the map's first, and spins draw only club-decades within 20 years of it (Eraball restricts its opening Gauntlet draft the same way). Draft rules, manager options and the salary cap are otherwise those of the career draft, and kick-off starts the run on that map. More modes also takes a career draft's fifteen through a selected map. Odyssey in Reverse, the default, starts in the 2020s and ends in the 1950s; The Full Odyssey visits all eight decades in order. Original Gauntlet visits the 1960s, 1990s and 2010s; Back in Time reverses that route.
 
-A decade is an act with four six-match rounds. The rounds draw from progressively stronger bands of the sixteen clubs below the field's three bosses. After each round, choose one reward. Then play home and away against a seeded boss from the strongest three clubs. There is no away-goals rule; extra time and penalties decide a level aggregate. A loss restarts all four rounds against a different boss. A non-final win opens the transfer window; beating the map's last boss ends the run.
+A decade is an act with four six-match rounds. The rounds draw from progressively stronger bands of the sixteen clubs below the field's three bosses. Every opponent card plays `a + b j` rating points away from its record, with `a = −8`, `b = 0.2` and `j = 5 × act + round`, the boss tie being round 4; a boss adds `c = −4`. The offset follows Eraball's opposition strength, which rises every segment and never resets between eras, and it is a difficulty setting chosen with `tests/balance.mjs`, not a historical measurement. The last round names the waiting boss and both strengths. After each round, choose one reward. Then play home and away against a seeded boss from the strongest three clubs. There is no away-goals rule; extra time and penalties decide a level aggregate. A loss restarts all four rounds against a different boss. A non-final win opens the transfer window; beating the map's last boss ends the run.
 
 Board patience starts at 8 and is capped at 20. Each six-match round changes it according to points earned:
 
@@ -332,6 +332,8 @@ An S market signing costs 1 less if he starts. An A or S signing without Europea
 | Defending Training | 2 | 4 | Develop Rock for defenders and keepers. |
 | Playmaking Training | 2 | 2 | Develop Maestro for midfield and wide players. |
 | Poacher Training | 2 | 2 | Develop Poacher for attackers and wide players. |
+
+Rounds and boss ties log each of your players' goals, assists, clean sheets and appearances. A won act lists its player (4 goals + 3 assists + 3 clean sheets + 0.1 appearances), top scorer, assist and clean-sheet leaders and biggest round win; a finished or failed run lists them for the whole run. The lineup stage shows each place's rating in the decade left and the decade ahead.
 
 A won boss tie gives its recorded MVP a persistent +1 rating; a lost tie gives the highest-rated outfielder with neither a goal nor an assist −1. These changes and signing terms preserve each card's relative position ratings.
 

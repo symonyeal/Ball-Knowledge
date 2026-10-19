@@ -599,9 +599,49 @@ async function benchKeyboard() {
   } finally { await b.close(); }
 }
 
+// The start screen's Gauntlet entry: a map draft from nearby decades, kick-off into the run, the boss
+// named before the last round, a two-legged tie, and run honours or the transfer window after it.
+async function gauntletEntry(kind) {
+  const { b, p } = await page(kind);
+  try {
+    assert.equal(await p.locator('#gauntlet-map').inputValue(), 'reverse');
+    await p.click('#gauntlet-start'); await settle(p);
+    let s = await st(p); assert.equal(s.g, 'reverse'); assert.equal(s.D, 2020);
+    await p.click('[data-manager="0"]'); await settle(p);
+    for (let n = 0; n < 5; n++) {
+      await p.click('#squad-spin'); await settle(p);
+      assert.ok(Math.abs(Number((await st(p)).combo.split(':')[1]) - 2020) <= 20, 'a Gauntlet squad comes from within two decades of the 2020s');
+      while ((await st(p)).picked < 3 && (await st(p)).combo) await pick(p, kind);
+    }
+    await view(p, kind, 'squad');
+    assert.match(await p.locator('#simulate').innerText(), /Gauntlet/);
+    await p.click('#simulate'); await settle(p);
+    s = await st(p); assert.equal(s.mode.run.map, 'reverse'); assert.equal(s.mode.career, undefined);
+    for (let k = 0; k < 4; k++) {
+      if (k === 3) assert.match(await p.locator('.run-boss').innerText(), /Waiting after this round/);
+      await p.click('#run-round'); await settle(p);
+      if ((await st(p)).mode.run.ph === 'fired') break;
+      const rest = p.locator('[data-rest]');
+      if (await rest.count()) await rest.click(); else await p.locator('[data-take]:not([disabled])').first().click();
+      await settle(p);
+    }
+    const r = (await st(p)).mode.run;
+    if (r.ph === 'boss') { await p.click('#run-boss'); await settle(p); }
+    const r2 = (await st(p)).mode.run;
+    assert.ok(r2.log.filter(e => e.t === 'seg').every(e => Object.values(e.pl).reduce((x, v) => x + v[0], 0) === e.gf), 'logged goals match the rounds');
+    if (r2.ph === 'hop') assert.match(await p.locator('.run').innerText(), /2020s honours/i);
+    if (r2.ph === 'fired') assert.match(await p.locator('.run').innerText(), /Run honours/i);
+    await p.reload(); await settle(p);
+    assert.equal((await st(p)).mode.run.log.length, r2.log.length);
+    assert.equal(await p.locator('.run').count(), 1, 'a reloaded Gauntlet draft returns to its run');
+    await sound(p, 'gauntlet entry'); await p.screenshot({ path: path.join(out, `${kind}-gauntlet-entry.png`), fullPage: true });
+    ok(`${kind}: the start screen's Gauntlet drafts near the 2020s, names the boss, logs honours and survives a reload`);
+  } finally { await b.close(); }
+}
+
 (async () => {
   let failure = null;
-  try { await pendingFormation(); await benchKeyboard(); await full('desktop'); await full('mobile'); await careerControls(); await tablet(); await tablet(true); await motion(); assert.deepEqual(errors, [], 'console or page errors'); }
+  try { await gauntletEntry('desktop'); await gauntletEntry('mobile'); await pendingFormation(); await benchKeyboard(); await full('desktop'); await full('mobile'); await careerControls(); await tablet(); await tablet(true); await motion(); assert.deepEqual(errors, [], 'console or page errors'); }
   catch (e) { failure = String(e.stack || e); }
   const rep = { passed: !failure && !errors.length, url: base, data_build: G.meta.v,
     data_sha256: createHash('sha256').update(raw).digest('hex'), checks, errors, failure };
