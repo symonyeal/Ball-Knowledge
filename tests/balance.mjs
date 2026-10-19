@@ -2,7 +2,7 @@
 //   node tests/balance.mjs season [drafts per decade=40] [cap|classic] [free]
 //   node tests/balance.mjs gauntlet [runs=40] [keep=5] [cap|classic] [free] [map=original]
 // A sensible draft takes the best-graded of the five managers, then for each pick the legal card and
-// open slot with the highest slot-rated, era-adjusted value plus the club links it would earn. Rules
+// open slot with the highest slot-rated, era-adjusted value plus the team chemistry it would add. Rules
 // default to Salary cap, the browser default. With `free`, the finished draft moves to the formation
 // that maximises its overall (Dr.form keeps every card and the bench). In the Gauntlet it takes a boost card only when at
 // least `keep` patience remains after paying, else rests or takes affordable development. Transfers
@@ -27,18 +27,18 @@ function draft(seed, D) {
   if (legacy) s0.v = 3;
   const mo = Dr.opts(G, s0).map((o, i) => { const m = G.managers.find(m => m.nm === o.nm); return [GR[m.ga] + GR[m.gd], i]; });
   let s = Dr.choose(G, s0, mo.sort((a, b) => b[0] - a[0] || a[1] - b[1])[0][1]);
-  const SH = Dr.shape(G, s.f), S = SH.map(x => x.s);
+  const S = Dr.shape(G, s.f).map(x => x.s);
   for (let n = 0; n < 5; n++) {
     s = Dr.spin(G, s);
     for (let j = 0; j < 3; j++) {
       const open = s.slots.map((c, i) => (c ? -1 : i)).filter(i => i >= 0);
       let b = null;
+      const T0 = Dr.team(G, s), c0 = E.chemistry(T0).total;
       for (const c of G.cards[s.combo].filter(c => Dr.can(G, s, c.p))) {
         const h = Dr.hydrate(G, { k: s.combo, p: c.p });
         for (const i of open) {
           let v = h.r * (i < 11 ? 1 - E.ft(h, S[i]).f : 0.92) * E.em(h.D, D, h.tg?.tl || 0);
-          if (i < 11) v += Math.min(2, s.slots.filter((x, k) => x && k < 11 && x.k === s.combo &&
-            Math.hypot(SH[k].x - SH[i].x, SH[k].y - SH[i].y) <= 34).length);
+          if (i < 11) v += E.chemistry({ ...T0, xi: T0.xi.map((x, k) => (k === i ? h : x)) }).total - c0;
           if (!b || v > b.v) b = { v, p: c.p, i };
         }
       }
