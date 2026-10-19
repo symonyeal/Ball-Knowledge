@@ -45,3 +45,25 @@ test('the focus ring and the white selection outline reach 3:1 on every surface 
 test('error notices reach 4.5:1', () => {
   for (const f of [T.ink, T.bad]) at(f, prop('.toast--error', 'background'), 4.5);
 });
+
+test('the match clock and league highlight remain readable in light mode', () => {
+  const light = Object.fromEntries([...rule('body[data-theme=light]').matchAll(/--([\w-]+):(#[0-9A-Fa-f]{6})/g)].map(m => [m[1],m[2]]));
+  const resolve = value => value.replace(/var\(--([^)]*)\)/g, (_,k) => light[k] || T[k]);
+  for (const surface of ['n0','n1','n2','n3']) {
+    at(resolve(prop('body[data-theme=light] #match-clock','color')), light[surface], 4.5);
+    at(resolve(prop('body[data-theme=light] .is-yours','color')), light[surface], 4.5);
+  }
+});
+
+test('shield-card text reaches 4.5:1 across every tier face', () => {
+  const base = rule('.vc');
+  const token = (s,k) => s.match(new RegExp(`--${k}:([^;]+)`))?.[1];
+  for (const skin of [base, ...['S','B','C','D'].map(t => rule(`.vc.t${t}`))]) {
+    const text = token(skin,'vt') || token(base,'vt');
+    const muted = token(skin,'vt2') || token(base,'vt2');
+    const gradient = token(skin,'vf') || token(base,'vf');
+    for (const background of gradient.match(/#[0-9A-Fa-f]{6}/g)) {
+      at(text,background,4.5); at(muted.startsWith('rgba') ? over(muted,background) : muted,background,4.5);
+    }
+  }
+});

@@ -42,7 +42,7 @@ test('a career signing shows incoming and outgoing cards before commitment',()=>
   if(C.careerOffers(G,s).some(o=>o.kind==='market')) break;
  }
  assert.ok(C.careerOffers(G,s).some(o=>o.kind==='market'));
- U.S.mode={career:s}; U.tab='league';
+ U.S.mode={career:s}; U.tab='market';
  const before=JSON.stringify(s), html=hub();
  assert.match(html,/Incoming/); assert.match(html,/Outgoing/);
  assert.match(html,/Rating in place/); assert.match(html,/Chemistry/);

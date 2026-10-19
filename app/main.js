@@ -14,6 +14,7 @@ import { hub, careerShareText, careerCardImage, careerSigning } from './ui/caree
 import { mountClubhouse } from './ui/clubhouse.js';
 import { mountPortraits } from './portraits.js';
 import { refreshTransfers } from './ui/transfers.js';
+import { mountMatchCentre } from './ui/match-centre.js';
 
 // Browser game controller. Views render from the shared state U (app/ui/kit.js); this module turns
 // events into new states. change(next, msg, o): commit a draft state; o.edit marks a lineup edit
@@ -23,7 +24,7 @@ import { refreshTransfers } from './ui/transfers.js';
 const root = document.querySelector('#game'), $ = s => document.querySelector(s);
 const rM = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const phone = () => window.matchMedia?.('(max-width: 767px)').matches;
-let timer, clubhouse;
+let timer, clubhouse, matchCentre;
 
 function notice(msg, error = false) {
   const n = $('#notice'); n.textContent = msg; n.hidden = false;
@@ -53,7 +54,7 @@ function bar() {
   $('#redo').hidden = !edit; $('#redo').disabled = !U.redo.length;
   $('#run-meta').textContent = S ? `${S.wk ? `Weekly ${S.wk} · ` : ''}${rules(S)} · ${S.D}s · seed ${S.seed}` : '';
   $('#steps').innerHTML = S ? steps(S) : '';
-  $('#key-hints').innerHTML = keys(edit ? [['↑+↓', 'Browse'], ['Enter', 'Select'], ['Esc', 'Cancel'], ['/', 'Search'], ['Ctrl+Z', 'Undo']] : S?.phase === 'results' ? [['←+→', 'Change focused tab'], ['Enter', 'Select']] : [['Tab', 'Browse'], ['Enter', 'Select']]);
+  $('#key-hints').innerHTML = keys(edit ? [['↑+↓', 'Browse'], ['Enter', 'Select'], ['Esc', 'Cancel'], ['R', 'Re-spin'], ['/', 'Search'], ['Ctrl+Z', 'Undo']] : S?.phase === 'results' ? [['Q+E', 'Change tab'], ['Enter', 'Select']] : [['Tab', 'Browse'], ['Enter', 'Select']]);
 }
 function render() {
   const a = document.activeElement, key = a?.dataset?.key || (a?.id && root.contains(a) ? `#${a.id}` : null);
@@ -167,7 +168,7 @@ async function play() {
     if (U.S.g) { U.S = { ...U.S, phase: 'results', mode: { ...U.S.mode, run: Rn.runNew(U.S.seed, U.S, U.S.g) } }; U.R = null; }
     else if (U.S.v >= 4) { U.S = { ...U.S, phase: 'results', mode: { ...U.S.mode, career: Cr.careerStart(U.G, U.S) } }; U.R = null; }
     else { U.R = season(); U.S = { ...U.S, phase: 'results' }; }
-    U.tab = 'league'; U.undo = []; U.redo = []; save();
+    U.tab = U.S.mode?.career ? 'home' : 'league'; U.undo = []; U.redo = []; save();
     root.focus(); window.scrollTo({ top: 0, behavior: 'instant' });
   } finally { U.busy = false; render(); }
 }
@@ -199,9 +200,13 @@ root.addEventListener('input', e => {
   if (e.target.id === 'roster-search') { U.q = e.target.value; $('#roster-list').innerHTML = rosterList(); }
   if (e.target.id === 'seed') U.seed = e.target.value;
 });
-root.addEventListener('toggle', e => { if (e.target.id === 'blocked') U.open = e.target.open; }, true);
+root.addEventListener('toggle', e => { if (e.target.id === 'blocked') U.open = e.target.open; if (e.target.id === 'career-setup') U.setup = e.target.open; }, true);
 root.addEventListener('change', async e => {
   const t = e.target;
+  if (t.dataset.transferChoice) {
+    const select = document.getElementById(t.dataset.transferChoice); select.value = t.value;
+    select.dispatchEvent(new Event('change', { bubbles: true })); return;
+  }
   if (t.name === 'draft-rules') U.cap = t.value === 'cap';
   if (t.id === 'roster-sort') { U.sort = t.value; $('#roster-list').innerHTML = rosterList(); }
   if (t.id === 'fit-only') { U.fit = t.checked; $('#roster-list').innerHTML = rosterList(); }
@@ -235,7 +240,7 @@ root.addEventListener('change', async e => {
       const raw = JSON.parse(await f.text());
       if (!['Football Era Draft', 'Football Era Lab'].includes(raw.game)) throw new Error('Choose a Football Era Draft replay file.');
       U.S = restore(U.G, raw.draft); U.R = U.S.phase === 'results' && !U.S.mode?.career && !U.S.g ? season() : null; U.C = null; U.H = null; U.tab = 'league';
-      U.undo = []; U.redo = []; render(); save(); notice('Replay restored with your draft choices.');
+      U.tab = U.S.mode?.career ? 'home' : 'league'; U.undo = []; U.redo = []; render(); save(); notice('Replay restored with your draft choices.');
     } catch (x) { Object.assign(U, old); render(); notice(`Replay could not be restored: ${x.message}`, true); }
   }
 });
@@ -274,10 +279,20 @@ root.addEventListener('keydown', e => {
 });
 document.addEventListener('keydown', e => {
   const typing = e.target.matches?.('input, textarea, select');
+  if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey && !$('dialog[open]')) {
+    if (e.key.toLowerCase() === 'r') {
+      const b = $('#squad-reroll') || $('#manager-reroll'); if (b && !b.disabled) { e.preventDefault(); b.click(); return; }
+    }
+    if (['q','e'].includes(e.key.toLowerCase())) {
+      const tabs = [...root.querySelectorAll('[data-tab]')], at = tabs.findIndex(b => b.getAttribute('aria-selected') === 'true');
+      if (tabs.length) { e.preventDefault(); tabs[(at + (e.key.toLowerCase() === 'e' ? 1 : -1) + tabs.length) % tabs.length].click(); return; }
+    }
+  }
   if (e.key === 'Escape' && U.S && !$('dialog[open]')) {
     if (U.pv) { U.pv = null; U.focus = `f:${U.S.f}`; render(); }
     else if (U.sel) { const p = U.sel; U.sel = null; U.tgt = null; U.focus = `p:${p}`; render(); }
     else if (U.sw !== null) { const i = U.sw; U.sw = null; U.focus = `s:${i}`; render(); }
+    else if (U.pos != null) { const i = U.pos; U.pos = null; U.focus = `s:${i}`; render(); }
   } else if (e.key === '/' && !typing && $('#roster-search')) { e.preventDefault(); $('#roster-search').focus(); }
   else if ((e.ctrlKey || e.metaKey) && !typing && (e.key === 'z' || e.key === 'Z' || e.key === 'y')) { e.preventDefault(); undo(e.key === 'y' || e.shiftKey); }
 });
@@ -290,7 +305,8 @@ root.addEventListener('click', async e => {
   if (!b || b.disabled || U.busy) return;
   const { G } = U;
   try {
-    if (b.dataset.era) { U.D = b.dataset.era === 'random' ? 'random' : Number(b.dataset.era); render(); root.querySelector(`[data-era="${b.dataset.era}"]`)?.focus(); }
+    if (b.id === 'mode-career' || b.id === 'mode-gauntlet') { U.setup = true; const setup = $('#career-setup'); setup.open = true; (b.id === 'mode-gauntlet' ? $('#gauntlet-map') : $('#random-decade')).focus(); setup.scrollIntoView({ block: 'start', behavior: rM ? 'instant' : 'smooth' }); }
+    else if (b.dataset.era) { U.D = b.dataset.era === 'random' ? 'random' : Number(b.dataset.era); render(); root.querySelector(`[data-era="${b.dataset.era}"]`)?.focus(); }
     else if (b.id === 'seed-reroll') { U.seed = String(Math.floor(Math.random() * 4294967296)); U.focus = '#seed-reroll'; render(); }
     else if (b.dataset.startForm) { U.f0 = b.dataset.startForm; U.focus = `sf:${U.f0}`; render(); }
     else if (b.id === 'gauntlet-start') { const g = $('#gauntlet-map').value; U.insp = 0; U.f0 = null; U.seed = $('#seed')?.value ?? U.seed; change(start(U.seed, null, U.cap, g), `${Rn.MAPS[g].nm}: draft from the ${Math.max(1950, Rn.MAPS[g].D[0] - POOL)}s to the ${Math.min(2020, Rn.MAPS[g].D[0] + POOL)}s.`); }
@@ -318,19 +334,21 @@ root.addEventListener('click', async e => {
     else if (b.id === 'form-apply' && U.pv) apply();
     else if (b.id === 'form-cancel') { const f = U.pv; U.pv = null; U.focus = f ? `f:${U.S.f}` : null; render(); }
     else if (b.dataset.line) { U.ln = b.dataset.line; render(); root.querySelector(`[data-line="${b.dataset.line}"]`)?.focus(); }
-    else if (b.id === 'clear-filters') { U.q = ''; U.ln = 'All'; U.fit = false; U.pos = null; U.focus = '#roster-search'; render(); }
+    else if (b.id === 'clear-filters' || b.id === 'clear-position') { U.q = ''; U.ln = 'All'; U.fit = false; U.pos = null; U.focus = '#roster-search'; render(); }
     else if (b.dataset.view) { U.view = b.dataset.view; render(); root.querySelector(`.seg2 [data-view="${U.view}"]`)?.focus(); window.scrollTo({ top: 0, behavior: 'instant' }); }
     else if (b.dataset.cmp) { const p = b.dataset.cmp; U.cmp = U.cmp.includes(p) ? U.cmp.filter(x => x !== p) : [...U.cmp, p].slice(-3); render(); }
     else if (b.id === 'simulate' || b.dataset.act === 'simulate') await play();
-    else if (b.dataset.tab) { U.tab = b.dataset.tab; U.focus = `#tab-${U.tab}`; render(); }
+    else if (b.dataset.tab || b.dataset.hubTab) { U.tab = b.dataset.tab || b.dataset.hubTab; U.focus = `#tab-${U.tab}`; render(); }
     else if (b.id === 'replay') { U.R = U.C = U.H = null; U.seed = String(U.S.seed); change(start(U.S.seed, U.S.D, !!U.S.cap, U.S.g), `Same seed and ${rules(U.S)} rules. A fresh set of choices.`); window.scrollTo({ top: 0, behavior: 'instant' }); }
     else if (b.id === 'share') await copy(resultText(), 'Result copied. Share your career and replay seed.');
     else if (b.id === 'download') download();
     else if (b.id === 'result-card') await card();
     else if (b.id === 'career-half') {
       U.busy = true; render();
-      try { await new Promise(r => setTimeout(r, 30)); setCareer(Cr.careerPlayHalf(G, U.S.mode.career)); }
+      let newMatches, q;
+      try { await new Promise(r => setTimeout(r, 30)); const old = U.S.mode.career, s = Cr.careerPlayHalf(G, old); newMatches = s.S.me.slice(old.S.me.length); q = s.q; U.tab = 'home'; setCareer(s); }
       finally { U.busy = false; render(); }
+      matchCentre.show(newMatches, q);
     }
     else if (b.dataset.careerTake !== undefined) {
       const j = Number(b.dataset.careerTake), o = { pick: Number($(`#career-fa-${j}`)?.value ?? $(`#career-up-${j}`)?.value ?? 0), slot: Number($(`#career-out-${j}`)?.value ?? 0), player: Number($(`#career-dev-${j}`)?.value ?? 0) };
@@ -403,6 +421,7 @@ async function boot() {
     if (!U.G.meta || !U.G.people || !U.G.cards || !U.G.managers || !U.G.formations) throw new Error('The football archive is incomplete.');
     if (U.G.params) E.cfg(U.G.params);
     U.F = fields(U.G);
+    matchCentre = mountMatchCentre();
     clubhouse = mountClubhouse(U, { notice, weekly: w => {
       U.insp = 0; U.f0 = null; U.R = U.C = U.H = null;
       change({ ...start(w.seed, w.D, true), wk: w.id }, `Weekly challenge ${w.id}: Salary cap in the ${w.D}s.`);

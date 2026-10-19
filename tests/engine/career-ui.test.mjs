@@ -23,12 +23,13 @@ function draft() {
   return { ...s, phase: 'results' };
 }
 test('the career opens with the actual league size, season objective and winter action', () => {
-  U.G = G; U.S = draft(); U.S.mode = { career: C.careerStart(G, U.S) }; U.tab = 'league';
+  U.G = G; U.S = draft(); U.S.mode = { career: C.careerStart(G, U.S) }; U.tab = 'home';
   const s = U.S.mode.career, html = hub();
   assert.match(html, /Play to winter/);
   assert.match(html, /Board objective/);
   assert.match(html, new RegExp(`${s.years[0]}/${String(s.years[0] + 1).slice(-2)}`));
-  assert.equal((html.match(/data-club=/g) || []).length, s.S.L.rows.length);
+  U.tab = 'league';
+  assert.equal((hub().match(/data-club=/g) || []).length, s.S.L.rows.length);
   assert.match(html, /More modes/);
   assert.ok(html.includes(named('L', s.lg, s.S.s)), 'the league is named for its historical era');
   assert.doesNotMatch(html, /undefined|NaN/);
@@ -41,6 +42,12 @@ test('career share text reports the current club season and full league denomina
   assert.ok(tx.includes(` / ${s.S.L.rows.length}`));
   assert.ok(tx.includes(`Seed ${s.seed}`));
   assert.match(tx, /Pre-season/);
+});
+
+test('the hub previews the next league opponent from the actual seeded schedule', () => {
+  U.G = G; U.S = draft(); U.S.mode = { career: C.careerStart(G, U.S) }; U.tab = 'home';
+  const next = C.careerPlayHalf(G, U.S.mode.career).S.me.find(m => m.k === 'L');
+  assert.ok(hub().includes(`data-next-op="${next.op}"`));
 });
 test('browser restoration keeps an advanced career and rejects another draft’s career', () => {
   const raw = draft(); raw.mode = { career: C.careerPlayHalf(G, C.careerStart(G, raw)) };

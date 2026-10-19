@@ -5,7 +5,8 @@ import * as C from '../career.js';
 import * as Rn from '../run.js';
 import { TI, fits } from '../cap.js';
 import { cname, history, named } from '../club.js';
-import { U, esc, num, ord, nm, club, kv, rules } from './kit.js';
+import { U, esc, num, ord, nm, club, kv, rules, crest, vcard, portrait, tier } from './kit.js';
+import { hydrate } from '../draft.js';
 import { xi, breakdown, gauntlet, more } from './season.js';
 import { candidate, marketPreview, upgradePreview } from './transfers.js';
 
@@ -19,6 +20,25 @@ const placeOptions = (s, only) => {
 const free = s => s.node?.free > 0;
 const price = (s, c) => free(s) ? 0 : c;
 const affordable = (s, c) => s.pat - price(s, c) >= 1;
+
+function nextFixture(s) {
+  if (s.ph !== 'half') return '';
+  const i = s.S.ord.indexOf(s.q), rounds = E.rr2(s.S.ord.length);
+  for (let md = s.S.L.md; md < rounds.length; md++) {
+    const pair = rounds[md].find(p => p.includes(i));
+    if (!pair) continue;
+    const op = s.S.ord[pair.find(j => j !== i)];
+    return `<div class="next-fixture" data-next-op="${esc(op)}"><p class="lbl">Next league fixture · Matchday ${md + 1} · ${pair[0] === i ? 'Home' : 'Away'}</p><div>${crest(s.q)}<b>${name(s.q)}</b><span>v</span>${crest(op)}<b>${name(op)}</b></div></div>`;
+  }
+  return '';
+}
+
+function choices(refs, select, full = false) {
+  return `<fieldset class="market-choices ${full ? 'targets' : 'departures'}"><legend>${full ? 'Scout targets' : 'Choose who leaves'}</legend>${refs.map((r,i) => {
+    const c = hydrate(U.G,r);
+    return `<label class="market-option"><input type="radio" name="cards-${select}" data-transfer-choice="${select}" value="${i}" ${i === 0 ? 'checked' : ''}><span>${full ? vcard(c) : `${portrait(c.id,c.nm,true)}<b>${Math.round(c.r)}</b><span>${esc(c.nm)}<small>${esc(c.pos.join(' · '))}</small></span>${tier(TI(c.r))}`}</span></label>`;
+  }).join('')}</fieldset>`;
+}
 
 export function careerSigning(s, o, pick = 0, slot = 0) {
   const f = o.list[pick], cost = price(s, o.kind === 'desp' ? f.cost : C.careerPrice(U.G, s, f, slot));
@@ -37,10 +57,11 @@ function offer(o, j, s) {
   }
   if (['market', 'desp'].includes(o.kind)) {
     const x = careerSigning(s, o), u = Math.floor(s.y / 2), min = p => (p ? 5 : 1) + u + (free(s) ? 0 : (p ? 2 : 1) + u) + 1;
-    return `<article class="reward"><p class="lbl">${o.kind === 'desp' ? 'Desperation offer' : 'Work the phones'}</p><h3>Sign one, release one</h3>
+    return `<article class="reward market-reward"><p class="lbl">${o.kind === 'desp' ? 'Desperation offer' : 'Work the phones'}</p><h3>Sign one, release one</h3>
+      ${choices(o.list, `career-fa-${j}`, true)}${choices(s.slots, `career-out-${j}`)}<details class="market-fallback"><summary>Choose from lists</summary>
       <label class="field"><span class="lbl">Sign</span><select id="career-fa-${j}" data-career-fa="${j}">${o.list.map((f, i) => `<option value="${i}">${esc(nm(f.p))} · ${esc(club(f.k))} · ${Math.round(f.r)} · ${TI(f.r)} tier</option>`).join('')}</select></label>
       <label class="field"><span class="lbl">Release</span><select id="career-out-${j}" data-career-fa="${j}">${placeOptions(s)}</select></label>
-      <div data-transfer-preview="${j}" data-transfer-mode="career">${marketPreview(s,j)}</div><p class="small" id="career-price-${j}" role="status">${esc(x.tx)}</p><button class="btn" type="button" data-career-take="${j}" ${x.ok ? '' : 'disabled'}>Confirm signing and release</button>
+      </details><div data-transfer-preview="${j}" data-transfer-mode="career">${marketPreview(s,j)}</div><p class="small" id="career-price-${j}" role="status">${esc(x.tx)}</p><button class="btn" type="button" data-career-take="${j}" ${x.ok ? '' : 'disabled'}>Confirm signing and release</button>
       <p class="small dim">${o.kind === 'desp' ? 'This bargain reduces squad partnership bonuses by 25% until he leaves or receives Player Buy-In.' : 'An S signing loses 3 rating points on the bench; a C signing gains 3 when starting.'}</p>
       ${o.re ? `<div class="row wrap"><button class="btn q sm" type="button" data-career-respin="scout" ${s.pat < min(false) ? 'disabled' : ''}>Scout re-spin · ${1 + u}</button><button class="btn q sm" type="button" data-career-respin="premium" ${s.pat < min(true) ? 'disabled' : ''}>A/S re-spin · ${5 + u}</button></div>` : ''}</article>`;
   }
@@ -106,9 +127,14 @@ function seasonHistory(s) {
 export function hub() {
   const s = U.S.mode.career, S = s.S, r = S.L.rows.find(r => r[0] === s.q), pos = S.L.rows.indexOf(r) + 1;
   const T = C.careerTeam(U.G, s), Q = E.rate(T, s.D), real = history(U.G, s.lg, S.s, s.q);
-  const tabs = [['league', 'League table'], ['fixtures', 'Your matches'], ['cup', 'Competitions'], ['stats', 'Player stats'], ['lineup', 'Your squad'], ['history', 'Career history'], ['more', 'More modes']];
-  const tab = tabs.some(t => t[0] === U.tab) ? U.tab : 'league';
-  const body = { league: () => {
+  const tabs = [['home', 'Club hub'], ['market', 'Transfer market'], ['league', 'League table'], ['fixtures', 'Your matches'], ['cup', 'Competitions'], ['stats', 'Player stats'], ['lineup', 'Your squad'], ['history', 'Career history'], ['more', 'More modes']];
+  const tab = tabs.some(t => t[0] === U.tab) ? U.tab : 'home';
+  const body = { home: () => `<div class="hub-grid"><article class="hub-tile hub-next"><p class="eyebrow">${s.ph === 'half' ? 'Match day' : 'Club schedule'}</p><div class="hub-club">${crest(s.q,'lg')}<div><h2>${name(s.q)}</h2><p class="small">${esc(compName(s,'L'))} · ${yr(S.s)}</p></div></div>${nextFixture(s)}${s.ph === 'half' ? `<p class="hub-callout">${s.half === 0 ? 'The season starts here.' : 'Everything to play for.'}</p>${action(s)}<p class="small dim">Per-match highlights · Skip any time</p>` : `<h2>${s.ph === 'node' ? 'The window is open' : s.ph === 'hop' ? 'Summer arrivals' : s.ph === 'repo' ? 'Ready the squad' : 'Career complete'}</h2><p class="small">${s.ph === 'node' ? `${s.node.left} choices remaining` : 'Review your next step.'}</p><button class="btn" data-hub-tab="market" type="button">${['node','hop'].includes(s.ph) ? 'Enter transfer market' : 'Continue'} →</button>`}</article>
+    <article class="hub-tile hub-league"><p class="eyebrow">League snapshot</p><h2>${S.h ? ord(pos) : 'Pre-season'} <small>of ${S.L.rows.length}</small></h2><ol>${S.L.rows.slice(0,5).map((x,i)=>`<li class="${x[0]===s.q?'is-yours':''}"><span>${i+1} · ${name(x[0])}</span><b>${x[7]}</b></li>`).join('')}</ol><button class="link" data-hub-tab="league" type="button">Full standings →</button></article>
+    <article class="hub-tile hub-squad"><p class="eyebrow">Squad management</p><h2>${esc(s.f)}</h2><p class="hub-number">${num(Q.ovr)} <small>rating</small></p><p class="small">${Q.chem.total}/33 chemistry · fifteen players</p><button class="btn q" data-hub-tab="lineup" type="button">View squad →</button></article>
+    <article class="hub-tile hub-mail"><p class="eyebrow">Board inbox</p><h2>A message from the board</h2><p class="career-owner" role="status">${esc(s.owner)}</p><label class="small">Patience · ${s.pat}/20<progress max="20" value="${s.pat}"></progress></label><p class="small">${s.pat <= 5 ? 'Results need to improve. Keep at least one patience when spending.' : 'Earn trust on the pitch. Spend it on your squad.'}</p></article>
+    <article class="hub-tile hub-objective"><p class="eyebrow">Season objectives</p><h2>Finish ${S.obj.t===1?'first':`in the top ${S.obj.t}`}</h2><p class="small">${S.h ? `Currently ${ord(pos)} · ${r[7]} points` : 'Your league campaign awaits.'}</p><progress aria-label="Season halves completed" max="2" value="${S.h}"></progress><p class="small">${s.trophies.length} career trophies · Season ${s.y+1}/${s.years.length}</p><button class="link" data-hub-tab="cup" type="button">Cup races →</button></article>
+    <article class="hub-tile hub-market"><p class="eyebrow">Scouting department</p><h2>Build your next XI.</h2><p class="small">${['node','hop'].includes(s.ph)?'Targets are available. Compare cards before confirming a departure.':'The next transfer window opens after the half-season.'}</p><button class="btn q" data-hub-tab="market" type="button">Transfer market →</button></article></div>`, market: () => `<section class="career-board" aria-label="Board and transfer window"><p class="career-owner">${esc(s.owner)}</p>${s.ph === 'half' ? '<h2>Scouting in progress</h2><p class="small">Play the next half-season to open the transfer window.</p><button class="btn q" data-hub-tab="home" type="button">Back to match day →</button>' : action(s)}</section>`, league: () => {
     const sources = C.careerSource(U.G, s);
     return `${table(s, sources)}<p class="small">${S.L.rows.length} clubs · home and away · ${S.w} points for a win. Ranked by points, goal difference, goals scored.</p>${real.pos ? `<p class="small dim">Real ${yr(S.s)} record: ${ord(real.pos)} of ${real.n}, ${real.pts} points. Your career results are simulated.</p>` : '<p class="small dim">Your club takes the lowest-placed top-flight club’s place this season.</p>'}${rivals(s, sources)}`;
   },
@@ -116,8 +142,6 @@ export function hub() {
   return `<section class="result-hero career-hero" style="${kv(s.q)}"><div class="rh-pos"><p class="lbl">${yr(S.s)} · ${S.h === 0 ? 'Pre-season' : S.h === 1 ? 'Winter' : 'Full time'}</p><p class="big">${S.h ? pos : '–'}${S.h ? `<sup>${ord(pos).slice(-2)}</sup>` : ''}</p><p class="small">${name(s.q)}</p></div>
     <div class="rh-stats"><div><b>${r[7]}</b><span>Points</span></div><div><b>${r[2]}–${r[3]}–${r[4]}</b><span>W–D–L</span></div><div><b>${s.pat} / 20</b><span>Board patience</span></div><div><b>${s.trophies.length}</b><span>Trophies</span></div></div>
     <div class="rh-team"><p class="lbl">${esc(compName(s, 'L'))} · Season ${s.y + 1} / ${s.years.length}</p><h1>${name(s.q)}</h1><p class="small">${esc(s.m.nm)} · ${esc(s.f)} · ${rules(s)}</p><p class="small"><b>Board objective:</b> finish ${S.obj.t === 1 ? 'first' : `in the top ${S.obj.t}`}.</p></div></section>
-    <section class="career-board" aria-label="Board and transfer window"><p class="career-owner" role="status">${esc(s.owner)}</p>${action(s)}</section>
-    <div class="career-comps">${[{ nm: compName(s, 'L'), ch: S.h === 2 ? S.L.rows[0][0] : null, n: S.ord.length, ent: [s.q], al: [s.q] }, ...Object.values(S.K)].map(K => `<article><p class="lbl">${esc(K.nm)}</p><b>${K.ch ? name(K.ch) : `${K.n} clubs`}</b><span class="small">${K.ch === s.q ? 'Trophy won' : !K.ent.includes(s.q) ? 'Not qualified' : K.ch ? 'Complete' : !K.al.includes(s.q) ? 'Eliminated' : 'In progress'}</span></article>`).join('')}</div>
     <div class="results-tabs" role="tablist" aria-label="Club career">${tabs.map(([v, l]) => `<button type="button" role="tab" data-tab="${v}" aria-selected="${tab === v}" aria-controls="result-panel" id="tab-${v}" tabindex="${tab === v ? 0 : -1}">${l}</button>`).join('')}</div><section id="result-panel" role="tabpanel" aria-labelledby="tab-${tab}">${body[tab]()}</section>
     <div class="share-strip"><p class="small">${rules(s)} · Seed ${s.seed} · career saved in this browser.</p><div class="row wrap"><button class="btn sm" id="share" type="button">Copy career</button><button class="btn q sm" id="result-card" type="button">Result card ↓</button><button class="btn q sm" id="download" type="button">Download replay ↓</button><button class="btn q sm" id="replay" type="button">Replay this seed ↻</button></div></div>`;
 }

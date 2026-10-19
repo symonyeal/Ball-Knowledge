@@ -19,7 +19,18 @@ const KEY = 'football-era-lab-v2', checks = [], errors = [];
 const VP = { desktop: { width: 1440, height: 900 }, tablet: { width: 768, height: 1024 }, mobile: { width: 390, height: 844 } };
 const ok = n => { checks.push(n); process.stdout.write(`ok  ${n}\n`); };
 const st = p => p.evaluate(k => JSON.parse(localStorage.getItem(k)), KEY);
-const settle = p => p.waitForFunction(() => document.body.getAttribute('aria-busy') !== 'true' && !document.querySelector('.loading'));
+// Follow the new menu/window flow; dedicated night-sky checks exercise playback and card controls.
+const settle = async p => {
+  await p.waitForFunction(() => document.body.getAttribute('aria-busy') !== 'true' && !document.querySelector('.loading'));
+  if (await p.locator('#match-centre[open]').count()) await p.click('#match-skip');
+  if (await p.locator('#career-setup:not([open])').count()) await p.click('#career-setup > summary');
+  const phase = await p.evaluate(k => JSON.parse(localStorage.getItem(k) || 'null')?.mode?.career?.ph, KEY);
+  if (await p.locator('.career-hero').count()) {
+    if (['node','hop','repo'].includes(phase) && await p.locator('[data-tab="home"][aria-selected="true"]').count()) await p.click('[data-tab="market"]');
+    if (phase === 'half' && await p.locator('[data-tab="market"][aria-selected="true"]').count()) await p.click('[data-tab="home"]');
+  }
+  await p.locator('.market-fallback').evaluateAll(Q => Q.forEach(e => e.open = true));
+};
 // A sound screen: no horizontal scroll and no repeated element id.
 const sound = async (p, n) => {
   const layout = await p.evaluate(() => {
@@ -320,7 +331,9 @@ async function full(kind) {
     const f0 = (await st(p)).f;
     await p.click('#simulate'); await p.waitForSelector('.result-hero'); await settle(p);
     const career0 = (await st(p)).mode.career;
+    await p.click('[data-tab="league"]');
     assert.equal(await p.locator('[data-club]').count(), career0.S.ord.length);
+    await p.click('[data-tab="home"]');
     assert.equal(career0.years.length, 10); assert.equal(career0.ph, 'half');
     assert.match(await p.locator('.rh-team').innerText(), /Board objective/);
     assert.equal((await st(p)).f, f0);
