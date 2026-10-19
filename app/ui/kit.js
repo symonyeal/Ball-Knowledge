@@ -108,9 +108,10 @@ function token(S, i, c, o) {
   return `<${tag} class="tk f ${s === 'GK' ? 'gk ' : ''}${c.moved ? 'mvd' : ''} ${c.on ? 'on' : ''} ${c.fc ? `fx-${c.fc}` : ''}" style="${pos};${kv(c.q)}" ${at}${tab}><span class="c">${Math.round(c.a)}</span><span class="n">${esc(sn(c.nm))}</span><span class="s">${s} ${tier(c.t, 'sm')}${c.n === undefined ? '' : ` ${chem(c.n)}`}${c.f > 0.02 ? ` <b class="${fitCls(c.f) || 'mild'}">−${pct(c.f)}%</b>` : ''}</span></${tag}>`;
 }
 
-// face(c): special card face after EA FC: in-form (fm > 0), evolved (ev), EA Icon source; otherwise the tier frame.
-export const face = c => (c.fm > 0 ? 'if' : c.ev ? 'evo' : c.src === 'i' ? 'icon' : '');
-export const FACE = { if: 'In-form', evo: 'Evolved', icon: 'Icon' };
+// face(c): special card face after EA FC: in-form (fm > 0), evolved (ev), persistent MVP points (mvp > 0), EA Icon
+// source; otherwise the tier frame.
+export const face = c => (c.fm > 0 ? 'if' : c.ev ? 'evo' : c.mvp > 0 ? 'mvp' : c.src === 'i' ? 'icon' : '');
+export const FACE = { if: 'In-form', evo: 'Evolved', icon: 'Icon', mvp: 'MVP' };
 
 // chem(n): n of 3 chemistry points as filled diamonds.
 export const chem = n => `<i class="chm" title="Chemistry ${n}/3">${'◆'.repeat(n)}${'◇'.repeat(3 - n)}</i>`;
