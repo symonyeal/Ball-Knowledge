@@ -20,7 +20,7 @@ export function mountPortraits(root = document) {
   const paint = (el, p) => {
     if (!el.isConnected) return;
     if (!p) { el.dataset.state = 'missing'; return; }
-    const img = el.querySelector('img'), link = el.querySelector('a');
+    const img = el.querySelector('img'), link = el.querySelector('a, .photo-credit');
     link.href = p.source;
     const credit = [p.credit?.replace(/<[^>]*>/g,''), p.licence].filter(Boolean).join(' · ');
     link.title = credit || 'Photo and licence on Wikimedia Commons';

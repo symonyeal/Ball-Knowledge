@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#070B14">
+  <meta name="theme-color" content="#051230">
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Choose a manager and club from your decade, draft fifteen players across football history, and lead your club through real domestic leagues, cup races and transfer windows with an Eraball-inspired board economy.">
   <title>Football Era Draft</title>
@@ -20,11 +20,12 @@
     <div class="bar-tools"><span id="run-meta" class="run-meta"></span>
       <button class="btn q sm" type="button" id="undo" hidden disabled aria-keyshortcuts="Control+Z">Undo</button>
       <button class="btn q sm" type="button" id="redo" hidden disabled aria-keyshortcuts="Control+Shift+Z">Redo</button>
-      <button class="btn q sm" type="button" id="about-open">How it works</button>
+      <button class="btn q sm" type="button" id="about-open" aria-label="How it works">ⓘ</button>
       <button class="btn q sm" type="button" data-club-open="home">Clubhouse</button>
       <button class="btn q sm" type="button" id="reset-open" hidden>New draft</button></div>
   </header>
   <main id="game" tabindex="-1"><div class="loading"><span class="orb big" aria-hidden="true"></span><h1>Opening the archive</h1><p>52,976 cards from eight decades are on their way.</p></div></main>
+  <div id="key-hints" class="key-hints"></div>
   <div id="notice" class="toast" role="status" aria-live="polite" hidden></div>
   <dialog id="about-dialog" class="dialog"><form method="dialog"><button class="dialog-close" aria-label="Close">×</button></form><div id="about-content"></div></dialog>
   <dialog id="reset-dialog" class="dialog"><h2>Start a new draft?</h2><p>Your current run is saved in this browser. Starting again replaces it.</p><div class="row"><button id="reset-confirm" class="btn" type="button">Start again</button><button id="reset-cancel" class="btn q" type="button">Keep this run</button></div></dialog>

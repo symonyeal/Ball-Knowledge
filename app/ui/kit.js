@@ -105,7 +105,7 @@ function token(S, i, c, o) {
   const tab = o.mode === 'view' ? '' : ` type="button" tabindex="${o.entry === i ? 0 : -1}" aria-label="${esc(c?.label || s)}"${o.lock ? ' disabled' : ''}`;
   if (!c || c.kind === 'e') return `<${tag} class="tk e ${s === 'GK' ? 'gk ' : ''}${c?.on ? 'on' : ''}" style="${pos}" ${at}${tab}><span class="c">${s}</span>${o.sm ? '' : '<span class="n">Open</span>'}</${tag}>`;
   if (c.kind === 'p') return `<${tag} class="tk p ${s === 'GK' ? 'gk ' : ''}${c.best ? 'best' : ''} ${c.on ? 'on' : ''}" style="${pos}" ${at}${tab}><span class="c">${Math.round(c.v)}</span><span class="n">${s}${c.best ? ' · Best' : ''}</span><span class="s ${fitCls(c.f)}">${fitText(c.f)}${c.n === undefined || o.sm ? '' : ` · ${chem(c.n)}`}</span></${tag}>`;
-  return `<${tag} class="tk f ${s === 'GK' ? 'gk ' : ''}${c.moved ? 'mvd' : ''} ${c.on ? 'on' : ''} ${c.fc ? `fx-${c.fc}` : ''}" style="${pos};${kv(c.q)}" ${at}${tab}><span class="c">${Math.round(c.a)}</span><span class="n">${esc(sn(c.nm))}</span><span class="s">${s} ${tier(c.t, 'sm')}${c.n === undefined ? '' : ` ${chem(c.n)}`}${c.f > 0.02 ? ` <b class="${fitCls(c.f) || 'mild'}">−${pct(c.f)}%</b>` : ''}</span></${tag}>`;
+  return `<${tag} class="tk f t${c.t} ${s === 'GK' ? 'gk ' : ''}${c.moved ? 'mvd' : ''} ${c.on ? 'on' : ''} ${c.fc ? `fx-${c.fc}` : ''}" style="${pos};${kv(c.q)}" ${at}${tab}><span class="c"><b>${Math.round(c.a)}</b><small>${s}</small>${c.id ? portrait(c.id, c.nm, true) : ''}</span><span class="n">${esc(sn(c.nm))}</span><span class="s">${tier(c.t, 'sm')}${c.n === undefined ? '' : ` ${chem(c.n)}`}${c.f > 0.02 ? ` <b class="${fitCls(c.f) || 'mild'}">−${pct(c.f)}%</b>` : ''}</span></${tag}>`;
 }
 
 // face(c): special card face after EA FC: in-form (fm > 0), evolved (ev), persistent MVP points (mvp > 0), EA Icon
@@ -145,21 +145,37 @@ export function row(c, o = {}) {
   const fit = o.own ? `<span class="st">${IC.check} In squad</span>` : !o.ok ? '' : gk ? '<b>Bench</b><small>reserve keeper</small>' : o.best ? `<b>${o.best[0]} ${o.best[1]}</b><small>best here</small>` : '';
   const why = o.own ? 'In your squad' : o.why;
   return `<button type="button" class="player-row pr ${cls} ${o.sel ? 'sel' : ''}" data-player="${esc(c.id)}" data-tier="${t}" data-key="p:${esc(c.id)}" tabindex="${o.entry ? 0 : -1}" aria-pressed="${o.sel ? 'true' : 'false'}"${o.ok && !o.own ? '' : ` aria-disabled="true" title="${esc(why)}"`} style="${kv(c.cq)}">
-    <b class="r">${Math.round(c.r)}</b>
+    <span class="strip-face t${t}"><b class="r">${Math.round(c.r)}</b>${portrait(c.id, c.nm, true)}</span>
     <span class="mn"><span class="nm"><span>${esc(c.nm)}</span>${o.sig ? '<i class="tg o">Signature</i>' : ''}${c.src === 'e' ? '<i class="tg o" title="Estimated rating">Est.</i>' : ''}</span>
       ${o.ok || o.own ? `<span class="mt">${o.sel ? '<i class="tg w">Selected</i> ' : ''}${listed.join(' · ')}${note}</span>` : `<span class="why">${o.why?.includes('affordable') ? IC.wait : IC.lock}<span>${esc(o.why)}</span></span>`}</span>
     <span class="fit">${fit}</span>${tier(t)}</button>`;
 }
 
 // Collectible card: metal frame by tier, kit band, rating, best three slots, name, club and decade, source.
-export function portrait(id, name) {
-  return `<span class="portrait" data-portrait="${esc(id)}" data-state="loading"><span class="portrait-fallback" role="img" aria-label="Photo unavailable for ${esc(name)}"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="30" r="19"/><path d="M12 100v-12a38 38 0 0 1 76 0v12z"/></svg></span><img alt="${esc(name)}" decoding="async"><a class="photo-source" href="https://commons.wikimedia.org/" target="_blank" rel="noopener noreferrer" aria-label="Photo source for ${esc(name)}">Photo source</a></span>`;
+export function portrait(id, name, compact = false) {
+  const credit = compact ? '<span class="photo-credit"></span>' : `<a class="photo-source" href="https://commons.wikimedia.org/" target="_blank" rel="noopener noreferrer" aria-label="Photo source for ${esc(name)}">Photo source</a>`;
+  return `<span class="portrait" data-portrait="${esc(id)}" data-state="loading"><span class="portrait-fallback" role="img" aria-label="Photo unavailable for ${esc(name)}"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="30" r="19"/><path d="M12 100v-12a38 38 0 0 1 76 0v12z"/></svg></span><img alt="${esc(name)}" decoding="async">${credit}</span>`;
 }
+// Shield card: tier skin (S special, A rare gold, B gold, C silver, D bronze) or a special face; rating and best
+// slot top left, photo, name, the six face stats where a game database rates them, best three slots, club, decade
+// and nation, and the rating source.
+export const F6 = c => (c.pos?.[0] === 'GK' ? ['DIV', 'HAN', 'KIC', 'REF', 'SPD', 'POS'] : ['PAC', 'SHO', 'PAS', 'DRI', 'DEF', 'PHY']);
 export function vcard(c, o = {}) {
-  const t = TI(c.r), top = rated(c, o.Ds || c.D).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([s, v]) => `${s} ${v}`).join(' · ');
-  const fc = face(c);
-  return `<div class="vc ${o.cls || ''} ${fc ? `fx-${fc}` : ''}" style="--tier:var(--t${t});${kv(c.cq)}"><div class="vi"><span class="rt">${Math.round(c.r)}</span><span class="ps">${top}</span>${tier(t)}${fc ? `<span class="fxl">${FACE[fc]}</span>` : ''}${portrait(c.id, c.nm)}<span class="vn">${esc(c.nm)}</span><span class="cl">${esc(U.G.clubs[c.cq]?.nm || c.cq)} · ${c.D}s${c.nat ? ` · ${esc(c.nat)}` : ''}</span><span class="src">${SRC[c.src] || SRC.e}</span></div>${o.ov ? `<div class="ov ${o.ovc || ''}">${o.ov}</div>` : ''}</div>`;
+  const t = TI(c.r), R = rated(c, o.Ds || c.D).sort((a, b) => b[1] - a[1]), top = R.slice(0, 3).map(([s, v]) => `${s} ${v}`).join(' · ');
+  const fc = face(c), L = F6(c);
+  const six = c.f6?.some(x => x != null) ? `<dl class="v6">${L.map((l, i) => `<div><dt>${l}</dt><dd>${c.f6[i] == null ? '–' : Math.round(c.f6[i])}</dd></div>`).join('')}</dl>` : '';
+  return `<div class="vc t${t} ${o.cls || ''} ${fc ? `fx-${fc}` : ''}" style="--tier:var(--t${t});${kv(c.cq)}"><div class="vi"><div class="vh"><span class="rt">${Math.round(c.r)}</span><span class="vp">${R[0][0]}</span>${tier(t)}</div>${fc ? `<span class="fxl">${FACE[fc]}</span>` : ''}${portrait(c.id, c.nm)}<span class="vn">${esc(c.nm)}</span>${six}<span class="ps">${top}</span><span class="cl">${esc(U.G.clubs[c.cq]?.nm || c.cq)} · ${c.D}s${c.nat ? ` · ${esc(c.nat)}` : ''}</span><span class="src">${SRC[c.src] || SRC.e}</span></div>${o.ov ? `<div class="ov ${o.ovc || ''}">${o.ov}</div>` : ''}</div>`;
 }
+// Info tip: rules text behind an (i). side l | r anchors the bubble near a screen edge.
+export const tip = (text, side = '') => `<details class="tip ${side}"><summary aria-label="About this">i</summary><div>${text}</div></details>`;
+// Key prompts for the controls that work on the current screen.
+export const keys = K => `<p class="keys" aria-hidden="true">${K.map(([k, l]) => `<span>${k.split('+').map(x => `<kbd>${x}</kbd>`).join('')}${l}</span>`).join('')}</p>`;
+// Club crest: a shield in the club's kit colours with its initials.
+export const crest = (q, cls = '') => {
+  const [a, b] = kit(q), n = (U.G.clubs[q]?.nm || q || '?').replace(/^(FC|AC|AS|SS|SL|SC|CF|RC|RCD|CD|SV|VfB|VfL|TSG|1\. FC|FK|AFC|US)\s+/i, '');
+  const ini = n.split(/[\s-]+/).filter(w => /^[A-ZÀ-Ý0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('') || n.slice(0, 2).toUpperCase();
+  return `<span class="crest ${cls}" style="--k1:${a};--k2:${b}" aria-hidden="true"><svg viewBox="0 0 40 46"><path d="M20 1 38 7v14c0 12-8 20-18 24C10 41 2 33 2 21V7z" fill="var(--k1)" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/><path d="M20 1 38 7v14c0 12-8 20-18 24z" fill="var(--k2)" opacity=".55"/></svg><b>${esc(ini)}</b></span>`;
+};
 
 export function capTiles(n, lim = CAP) {
   return `<div class="cap">${Object.keys(CAP).map(t => {

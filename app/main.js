@@ -6,7 +6,7 @@ import * as Rn from './run.js';
 import * as Cr from './career.js';
 import { restore } from './save.js';
 import { wk, code, uncode, h2h } from './play.js';
-import { U, esc, nm, club, kv, rules, vcard } from './ui/kit.js';
+import { U, esc, nm, club, kv, rules, vcard, keys } from './ui/kit.js';
 import { intro, teams } from './ui/lobby.js';
 import { desk, rosterList } from './ui/desk.js';
 import { results, about, season, me, shareText, cardImage, signing, arena, runShareText } from './ui/season.js';
@@ -43,7 +43,7 @@ function change(next, msg, o = {}) {
 
 function steps(S) {
   const k = S.phase === 'manager' ? 1 : S.phase === 'draft' ? 2 : S.phase === 'review' ? 3 : 4;
-  const st = (lab, j) => `<li class="stp ${k === j ? 'on' : k > j ? 'ok' : ''}" ${k === j ? 'aria-current="step"' : ''}><span class="pp">${k > j ? '✓' : j}</span>${lab}${j === 2 ? `<span class="sqp" aria-label="${Math.min(5, S.spin)} of 5 squads drafted">${[0, 1, 2, 3, 4].map(i => `<i class="${i < S.spin ? 'ok' : i === S.spin && k === 2 ? 'on' : ''}"></i>`).join('')}</span>` : ''}</li>`;
+  const st = (lab, j) => `<li class="stp ${k === j ? 'on' : k > j ? 'ok' : ''}" ${k === j ? 'aria-current="step"' : ''}>${lab}${j === 2 ? `<span class="sqp" aria-label="${Math.min(5, S.spin)} of 5 squads drafted">${[0, 1, 2, 3, 4].map(i => `<i class="${i < S.spin ? 'ok' : i === S.spin && k === 2 ? 'on' : ''}"></i>`).join('')}</span>` : ''}</li>`;
   return `<ol>${st('Team', 1)}${st('Squads', 2)}${st('Review', 3)}${st(S.g ? 'Gauntlet' : 'Career', 4)}</ol>`;
 }
 function bar() {
@@ -53,6 +53,7 @@ function bar() {
   $('#redo').hidden = !edit; $('#redo').disabled = !U.redo.length;
   $('#run-meta').textContent = S ? `${S.wk ? `Weekly ${S.wk} · ` : ''}${rules(S)} · ${S.D}s · seed ${S.seed}` : '';
   $('#steps').innerHTML = S ? steps(S) : '';
+  $('#key-hints').innerHTML = keys(edit ? [['↑+↓', 'Browse'], ['Enter', 'Select'], ['Esc', 'Cancel'], ['/', 'Search'], ['Ctrl+Z', 'Undo']] : S?.phase === 'results' ? [['←+→', 'Change focused tab'], ['Enter', 'Select']] : [['Tab', 'Browse'], ['Enter', 'Select']]);
 }
 function render() {
   const a = document.activeElement, key = a?.dataset?.key || (a?.id && root.contains(a) ? `#${a.id}` : null);
