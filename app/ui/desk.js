@@ -13,7 +13,7 @@ import { TI, CAP, ct } from '../cap.js';
 import * as E from '../engine/index.js';
 import { leagueOf, years, field } from '../club.js';
 import { form, team, preview, used, room, lim, can, hydrate, shape } from '../draft.js';
-import { U, esc, num, club, kv, tier, fitText, delta, pitch, links, face, portrait, mini, smap, rated, share, row, capTiles, segs, spell, IC, LINE, SRC, SRT, pct } from './kit.js';
+import { U, esc, num, club, kv, tier, fitText, delta, pitch, links, face, portrait, mini, smap, rated, share, row, capTiles, segs, spell, IC, LINE, SRC, SRT, pct, tip } from './kit.js';
 
 const MED = new Map();
 function opponents(D) {
@@ -52,7 +52,7 @@ export function rosterList() {
   const { G, S } = U, m = G.managers.find(m => m.nm === S.manager.nm), sig = new Set(m.sig), q = U.q.trim().toLowerCase();
   const bo = S.slots.slice(11).some(r => !r);
   const all = pool(), hit = r => (!q || `${r.c.nm} ${r.c.pos.join(' ')} ${r.top.map(t => t[0]).join(' ')}`.toLowerCase().includes(q)) &&
-    (U.ln === 'All' || r.lines.has(U.ln)) && (!U.fit || bo || (r.best && r.best[1] >= 0.95 * r.top[0][1]));
+    (U.ln === 'All' || r.lines.has(U.ln)) && (U.pos == null || E.ft(r.c, shape(G, S.f)[U.pos].s).f < 0.075) && (!U.fit || bo || (r.best && r.best[1] >= 0.95 * r.top[0][1]));
   const L = all.filter(hit).sort(SORT[U.sort] || SORT.fit), A = L.filter(r => r.ok), B = L.filter(r => !r.ok && !r.own), O = L.filter(r => r.own);
   const first = (U.sel && L.find(r => r.c.id === U.sel)) || A[0] || L[0];
   const one = r => row(r.c, { ok: r.ok, own: r.own, why: r.why, best: r.best, sig: sig.has(r.c.id), sel: U.sel === r.c.id, entry: r === first, Ds: S.D });
@@ -151,11 +151,11 @@ export function desk() {
   const VS = P ? SP : SH, VQ = P ? QP : Q;
   const cells = VS.map((x, i) => {
     const p = VQ.xi[i];
-    if (p.c) return { kind: 'f', nm: p.c.nm, a: p.a, t: TI(p.c.r), q: p.c.cq, f: p.f, n: p.n, fc: face(p.c), on: U.sw === i, moved: P ? moved.includes(p.c.id) : U.moved.has(p.c.id),
+    if (p.c) return { kind: 'f', id: p.c.id, nm: p.c.nm, a: p.a, t: TI(p.c.r), q: p.c.cq, f: p.f, n: p.n, fc: face(p.c), on: U.sw === i, moved: P ? moved.includes(p.c.id) : U.moved.has(p.c.id),
       label: `${x.s}, ${p.c.nm}, adjusted ${num(p.a)}, ${fitText(p.f)}, chemistry ${p.n} of 3${p.b ? `, +${p.b} partnership` : ''}. ${U.sw === i ? 'Selected: choose another place.' : 'Select to move or swap.'}` };
     const v = !P && V[i];
     if (v) return { kind: 'p', v: v.a, f: v.f, b: v.b, n: v.n, best: i === b, label: `${x.s}, open. ${c.nm} would rate ${num(v.a)}: fit loss ${pct(v.f)}%, era loss ${pct(1 - v.e)}%, chemistry ${v.n} of 3, +${v.b} partnership. Team chemistry ${v.chem}/33. Squad overall ${num(v.ovr)}.${v.up ? ' Manager signature bonus active.' : ''}` };
-    return { kind: 'e', label: `${x.s}, open.${c ? '' : ' Select a squad player first.'}` };
+    return { kind: 'e', on: U.pos === i, label: `${x.s}, open.${c ? '' : ' Select to find players for this position.'}` };
   });
   const ghosts = P ? moved.map(p => { const i = was.get(p), r = Q.xi[i]; return { x: SH[i].x, y: SH[i].y, a: r.a, nm: r.c.nm, q: r.c.cq }; }) : [];
   const arrows = P ? moved.map(p => [SH[was.get(p)].x, SH[was.get(p)].y, SP[now.get(p)].x, SP[now.get(p)].y]) : [];
@@ -164,20 +164,20 @@ export function desk() {
     const i = j + 11, r = Q.bn[j], v = Vb[j];
     const lab = x ? `Bench ${j + 1}, ${x.nm}, ${num(r.a)}. ${U.sw === i ? 'Selected: choose another place.' : 'Select to move or swap.'}` : v ? `Bench ${j + 1}, open. ${c.nm} would rate ${num(v.a)}: no fit loss on the bench, era loss ${pct(1 - v.e)}%, no chemistry on the bench. Squad overall ${num(v.ovr)}.` : `Bench ${j + 1}, open.`;
     return `<button type="button" class="bs ${x ? 'f' : v ? 'p' : ''} ${U.sw === i ? 'on' : ''}" data-slot="${i}" data-key="s:${i}" aria-label="${esc(lab)}" ${lock || P ? 'disabled' : ''} style="${x ? kv(x.cq) : ''}">
-      <span class="v">${x ? Math.round(r.a) : v ? Math.round(v.a) : '+'}</span><span class="t"><b>${x ? esc(x.nm) : `Bench ${j + 1}`}</b><small>${x ? `${tier(TI(x.r), 'sm')} ${esc(x.pos.join(' · '))}` : v ? 'No fit loss' : 'Open'}</small></span></button>`;
+      ${x ? portrait(x.id, x.nm, true) : ''}<span class="v">${x ? Math.round(r.a) : v ? Math.round(v.a) : '+'}</span><span class="t"><b>${x ? esc(x.nm) : `Bench ${j + 1}`}</b><small>${x ? `${tier(TI(x.r), 'sm')} ${esc(x.pos.join(' · '))}` : v ? 'No fit loss' : 'Open'}</small></span></button>`;
   }).join('');
   const n = S.slots.filter(Boolean).length;
   const ins = c ? `<strong>${esc(c.nm)} · ${TI(c.r)} tier · ${num(c.r)} base</strong> selected. Choose a place; the values include position fit, era, chemistry and partnerships.${T.m.sig.includes(c.id) ? ' A signature player: drafting him raises both manager grades.' : ''}`
     : U.sw !== null ? 'Choose another place to move or swap, or the same place to cancel.'
       : P ? 'Previewing a formation: apply it or keep your current one.'
-        : rv ? 'Your fifteen are drafted. Swap places or change formation, then kick off.' : 'Select a squad player, then a place. Select two places to swap them.';
+        : rv ? 'Your fifteen are drafted. Swap places or change formation, then kick off.' : U.pos != null ? `Finding players for ${SH[U.pos].s}. Select a card, then confirm its place.` : 'Choose an open position or a player. Select two filled places to swap.';
   const pvb = P ? `<div class="pvb" id="form-status" tabindex="-1" role="status"><div><b>Preview ${esc(P.f)} · ${moved.length} player${moved.length === 1 ? ' moves' : 's move'}</b>
       <small>Overall ${num(Q.ovr)} → ${num(QP.ovr)} · attack ${delta(QP.A - Q.A)} · midfield ${delta(QP.M - Q.M)} · defence ${delta(QP.Dd - Q.Dd)}</small></div>
       <button class="btn q sm" type="button" id="form-cancel">Keep ${esc(S.f)}</button><button class="btn sm" type="button" id="form-apply">Apply ${esc(P.f)}</button></div>` : '';
   return `<div class="ws ${rv ? 'rv' : ''}" data-view="${U.view}">
     <div class="seg2 mob" role="tablist" aria-label="Workspace view"><button type="button" role="tab" data-view="squad" aria-selected="${U.view === 'squad'}">${rv ? 'Review' : `Squad${S.combo ? ` · ${counts().All}` : ''}`}</button><button type="button" role="tab" data-view="lineup" aria-selected="${U.view === 'lineup'}">Lineup · ${n}/15</button></div>
-    <section class="col squad pn" id="squad" aria-label="${rv ? 'Lineup review' : 'Squad'}" tabindex="-1">${rv ? review(T, Q) : squad()}</section>
-    <section class="col lineup" id="pitch" aria-label="Lineup" tabindex="-1">${bar(T, Q, lock)}${pvb}
+    <section class="col squad pn" id="squad" aria-label="${rv ? 'Lineup review' : 'Squad'}" tabindex="-1">${U.pos != null ? `<div class="position-filter"><b>${SH[U.pos].s} shortlist</b><button class="link" id="clear-filters" type="button">Show all players</button></div>` : ''}${rv ? review(T, Q) : squad()}</section>
+    <section class="col lineup" id="pitch" aria-label="Lineup" tabindex="-1"><div class="squad-metrics"><span><b>${n ? num(Q.ovr) : '–'}</b> Rating</span><span><b>${Q.chem.total}<small>/33</small></b> Chemistry</span><span><b>${n}<small>/15</small></b> Squad</span>${tip('Ratings include position fit, era, chemistry and partnerships. Choose an empty position to shortlist suitable players.', 'r')}</div>${bar(T, Q, lock)}${pvb}
       <div class="pitch-wrap">${pitch(VS, cells, { mode: 'play', links: links(VS, VQ.xi.map(p => p.c)), ghosts, arrows, entry, lock: lock || !!P, label: `Your ${VS === SH ? S.f : P.f}` })}</div>
       <div class="bn" role="group" aria-label="Bench">${bench}</div>
       <p class="ins" id="lineup-instruction" role="status">${ins}</p></section>

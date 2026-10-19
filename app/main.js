@@ -37,7 +37,7 @@ function save() {
 }
 function change(next, msg, o = {}) {
   if (o.edit) { U.undo.push({ f: U.S.f, slots: U.S.slots }); U.redo = []; } else { U.undo = []; U.redo = []; }
-  U.S = next; U.sel = o.keepSel ? U.sel : null; U.sw = null; U.tgt = null; U.pv = null; U.moved = o.moved || new Set();
+  U.S = next; U.sel = o.keepSel ? U.sel : null; U.sw = null; U.tgt = null; U.pos = null; U.pv = null; U.moved = o.moved || new Set();
   save(); render(); if (msg) notice(msg);
 }
 
@@ -82,7 +82,8 @@ function select(b) {
   if (b.getAttribute('aria-disabled') === 'true') return notice(b.title || 'This player cannot be picked.');
   if (U.pv) return notice('Apply or keep the previewed formation first.');
   U.sel = U.sel === p ? null : p; U.sw = null; U.tgt = null;
-  let i = U.sel ? best() : -1;
+  let i = U.sel ? (U.pos ?? best()) : -1;
+  if (phone() && U.sel && U.pos != null) U.tgt = U.pos;
   if (U.sel && i < 0) i = U.S.slots.findIndex((r, i) => i >= 11 && !r);
   U.focus = !U.sel ? `p:${p}` : i < 0 ? `p:${p}` : phone() ? `t:${i}` : `s:${i}`;
   render();
@@ -107,7 +108,11 @@ function slot(i) {
     return change(swap(S, a, i), S.slots[a] && S.slots[i] ? 'Places swapped.' : 'Player moved.', { edit: true });
   }
   if (S.slots[i]) { U.sw = i; U.focus = `s:${i}`; return render(); }
-  notice('Choose a player from the squad first.');
+  if (i < 11 && S.combo) {
+    U.pos = U.pos === i ? null : i; U.q = ''; U.ln = 'All'; U.fit = false; U.view = 'squad'; U.focus = '#roster-search'; render();
+    return notice(U.pos == null ? 'Showing all players.' : `Choose a player for ${shape(U.G, S.f)[i].s}.`);
+  }
+  notice('Draw a squad, then choose a player.');
 }
 function apply() {
   const S = U.S, f = U.pv, next = form(U.G, S, f), i0 = new Map(S.slots.slice(0, 11).map((r, i) => [r?.p, i]));
@@ -130,7 +135,7 @@ function walkout(k) {
   if (!['S', 'A'].includes(TI(c.r))) return;
   const o = document.createElement('div');
   o.className = `walkout t${TI(c.r)}`; o.setAttribute('aria-hidden', 'true');
-  o.innerHTML = `<div class="wo"><span class="wo-1">${esc(c.nat || 'Nation unrecorded')}</span><span class="wo-2" style="${kv(c.cq)}">${esc(club(k))}</span><div class="wo-3">${vcard(c)}</div></div>`;
+  o.innerHTML = `<div class="wo"><span class="wo-1">${esc(c.nat || 'Nation unrecorded')} · ${esc(c.pos[0])}</span><span class="wo-2" style="${kv(c.cq)}">${esc(club(k))}</span><div class="wo-3">${vcard(c)}</div></div>`;
   document.body.append(o); setTimeout(() => o.remove(), 2600);
 }
 
@@ -313,7 +318,7 @@ root.addEventListener('click', async e => {
     else if (b.id === 'form-apply' && U.pv) apply();
     else if (b.id === 'form-cancel') { const f = U.pv; U.pv = null; U.focus = f ? `f:${U.S.f}` : null; render(); }
     else if (b.dataset.line) { U.ln = b.dataset.line; render(); root.querySelector(`[data-line="${b.dataset.line}"]`)?.focus(); }
-    else if (b.id === 'clear-filters') { U.q = ''; U.ln = 'All'; U.fit = false; U.focus = '#roster-search'; render(); }
+    else if (b.id === 'clear-filters') { U.q = ''; U.ln = 'All'; U.fit = false; U.pos = null; U.focus = '#roster-search'; render(); }
     else if (b.dataset.view) { U.view = b.dataset.view; render(); root.querySelector(`.seg2 [data-view="${U.view}"]`)?.focus(); window.scrollTo({ top: 0, behavior: 'instant' }); }
     else if (b.dataset.cmp) { const p = b.dataset.cmp; U.cmp = U.cmp.includes(p) ? U.cmp.filter(x => x !== p) : [...U.cmp, p].slice(-3); render(); }
     else if (b.id === 'simulate' || b.dataset.act === 'simulate') await play();
