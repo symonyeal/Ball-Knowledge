@@ -95,18 +95,18 @@ node tests/career-balance.mjs 4 both 5 --output "/path/to/persistent/results/car
 
 | Rules | Careers completed / attempted | Dismissed | Seasons played | Board objectives met | League titles |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Salary cap | 32 / 32 | 0 | 300 | 292 / 300 | 283 / 300 |
-| Classic | 31 / 32 | 1 | 299 | 293 / 299 | 293 / 299 |
+| Salary cap | 32 / 32 | 0 | 300 | 291 / 300 | 273 / 300 |
+| Classic | 32 / 32 | 0 | 300 | 290 / 300 | 281 / 300 |
 
-Sixty-three of the sixty-four careers reached their available final season. Classic Real Madrid in the 2020s, seed 1002, was dismissed after missing the title objective in its second, third and fourth seasons. League results were much easier for this policy than the older fictional-season benchmark. Eight halves under each rule set lost patience, out of 600 capped and 598 Classic halves. The 2020s remained the least forgiving decade: fourteen of twenty capped objectives and thirteen league titles, and fourteen objectives and fourteen titles in nineteen Classic seasons. Rewards and same-player upgrades can strengthen a squad as the career advances.
+All sixty-four careers reached their available final season. League results were much easier for this policy than the older fictional-season benchmark. Thirteen capped halves and ten Classic halves lost patience, out of six hundred halves per rule set. The 2020s remained the least forgiving decade: fifteen of twenty capped objectives and seven league titles, and twelve objectives and eleven titles under Classic.
 
-This small sample uses the strongest offered manager grades and covers six leagues, with no Portuguese club drawn. Four seeds per decade do not establish results for every club, league, formation, reward strategy or human player. The experiment measured continuation and difficulty; no difficulty tuning was applied, and these high completion and title rates do not establish a balanced challenge. The report records every career, settings, season finishes and the current bundle's SHA-256 fingerprint.
+This small sample uses the strongest offered manager grades and covers six leagues, with no Portuguese club drawn. Four seeds per decade do not establish results for every club, league, formation, reward strategy or human player. The experiment measured continuation and difficulty; the spin retune [below](#the-spin-settings-trade-variety-against-strength) targets the season benchmark, and these high completion and title rates do not establish a balanced challenge. The report records every career, settings, season finishes and the current bundle's SHA-256 fingerprint.
 
 ## Draft difficulty varies by decade
 
 This is the retained version 3 fictional twenty-club Era League benchmark, measured before the club career. It keeps the original all-era manager options and cannot be read as a career title rate. Add `legacy` to reproduce that manager pool with the current harness.
 
-One automatic drafting policy played one hundred seeds per decade, 1000 through 1099, under each set of rules, with `tau=20` and `rho=1.5`. It kept the best-graded manager among the five offered and his first recorded formation. At each pick it selected, among the cards the rules allowed, the highest position- and era-adjusted value in an open place, adding the team chemistry that placement would add; bench candidates received a 0.92 weight.
+One automatic drafting policy played one hundred seeds per decade, 1000 through 1099, under each set of rules, with `tau=60` and `rho=2`. It kept the best-graded manager among the five offered and his first recorded formation. At each pick it selected, among the cards the rules allowed, the highest position- and era-adjusted value in an open place, adding the team chemistry that placement would add; bench candidates received a 0.92 weight.
 
 This is a declared computer policy, not a measurement of human players. It does not plan ahead for the cap, optimize manager re-spins, squad re-spins or duo partnerships. Reproduce it with:
 
@@ -119,31 +119,31 @@ Under the salary cap:
 
 | Decade | Median finish | Titles / 100 | Top four / 100 | Median points | Unbeaten / 100 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 1950s | 2 | 43 | 91 | 91 | 1 |
-| 1960s | 3 | 15 | 68 | 79 | 0 |
-| 1970s | 4 | 21 | 54 | 73 | 0 |
-| 1980s | 8 | 2 | 19 | 64 | 0 |
-| 1990s | 8 | 0 | 6 | 61 | 0 |
-| 2000s | 13 | 0 | 1 | 50 | 0 |
-| 2010s | 11 | 0 | 3 | 53 | 0 |
-| 2020s | 9 | 1 | 3 | 57 | 0 |
+| 1950s | 2 | 30 | 89 | 87 | 0 |
+| 1960s | 3 | 14 | 64 | 78 | 0 |
+| 1970s | 5 | 15 | 45 | 70 | 0 |
+| 1980s | 8 | 0 | 10 | 61 | 0 |
+| 1990s | 9 | 0 | 9 | 61 | 0 |
+| 2000s | 13 | 0 | 1 | 48 | 0 |
+| 2010s | 11 | 0 | 4 | 52 | 0 |
+| 2020s | 10 | 0 | 0 | 53 | 0 |
 
 Under Classic:
 
 | Decade | Median finish | Titles / 100 | Top four / 100 | Median points | Unbeaten / 100 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 1950s | 1 | 59 | 97 | 94 | 6 |
-| 1960s | 2 | 20 | 83 | 83 | 1 |
-| 1970s | 2 | 35 | 69 | 79 | 1 |
-| 1980s | 6 | 12 | 44 | 71 | 0 |
-| 1990s | 5 | 2 | 34 | 71 | 0 |
-| 2000s | 10 | 2 | 11 | 57 | 0 |
-| 2010s | 8 | 0 | 17 | 61 | 0 |
-| 2020s | 7 | 1 | 19 | 65 | 0 |
+| 1950s | 2 | 38 | 93 | 92 | 1 |
+| 1960s | 3 | 18 | 74 | 81 | 0 |
+| 1970s | 3 | 28 | 59 | 75 | 0 |
+| 1980s | 6 | 4 | 31 | 68 | 0 |
+| 1990s | 6 | 3 | 29 | 67 | 0 |
+| 2000s | 11 | 0 | 6 | 54 | 0 |
+| 2010s | 10 | 0 | 8 | 54 | 0 |
+| 2020s | 8 | 0 | 14 | 62 | 0 |
 
-The policy won 82 of 800 capped seasons, or 10.3%, and 131 of 800 Classic seasons, or 16.4%. The capped rate is within the chosen 5% to 15% title target; the Classic rate is above it, a consequence of chemistry measured [below](#chemistry-made-every-measured-policy-stronger). Classic produced eight unbeaten seasons, six of them in the 1950s; the capped policy produced one. With an even sample size, the harness reports the lower of the two middle observations in the sorted list as its median.
+The policy won 59 of 800 capped seasons, or 7.4%, and 91 of 800 Classic seasons, or 11.4%. Both aggregates are within the chosen 5% to 15% title target. Classic produced one unbeaten season, in the 1950s; the capped policy produced none. With an even sample size, the harness reports the lower of the two middle observations in the sorted list as its median.
 
-All but three capped titles came in the 1950s to 1970s; two came in the 1980s and one in the 2020s. The capped squad's median rating stayed between 86.1 and 87.2 in every decade, while the median of the nineteen opponents rose from 79.4 in the 1950s to 86.1 to 90.8 from the 1980s onwards. Classic squads reached 88.1 to 89.3. Zero titles in one hundred drafts of a decade does not establish that the decade cannot be won. Better selections, deliberate partnerships or use of re-spins remain outside what this policy measures.
+Every capped title came in the 1950s to 1970s. The capped squad's median rating stayed between 85.2 and 86.8 in every decade, while the median of the nineteen opponents rose from 79.4 in the 1950s to 86.1 to 90.8 from the 1980s onwards. Classic squads reached 87.1 to 88.7. Zero titles in one hundred drafts of a decade does not establish that the decade cannot be won. Better selections, deliberate partnerships or use of re-spins remain outside what this policy measures.
 
 Repeating the same seeds with `free` chooses the highest-overall formation after drafting. Every candidate is applied through the game's formation function, which keeps all fifteen cards and the bench. It does not optimize picks for a future formation or choose by season outcome.
 
@@ -154,10 +154,10 @@ node tests/balance.mjs season 100 classic free legacy
 
 | Rules | Initial formation, titles / 800 | Free formation, titles / 800 |
 | --- | ---: | ---: |
-| Salary cap | 82 (10.3%) | 83 (10.4%) |
-| Classic | 131 (16.4%) | 147 (18.4%) |
+| Salary cap | 59 (7.4%) | 60 (7.5%) |
+| Classic | 91 (11.4%) | 94 (11.8%) |
 
-Free formation raised median squad overall by 0.0 to 0.2 points across the decades. The capped rate stayed within the chosen target and the Classic rate moved further above it; no engine parameter was changed. This comparison measures this policy on these seeds, not the best possible play.
+Free formation raised median squad overall by 0.0 to 0.2 points across the decades. Both title rates stayed within the chosen target. This comparison measures this policy on these seeds, not the best possible play.
 
 ## The spin settings trade variety against strength
 
@@ -170,11 +170,24 @@ Lower `tau` sends more spins to the strongest squads, which makes a team stronge
 | `tau=20`, one combined draw, tier guarantee (adopted) | 11 | 20 | 71 | Barcelona, 8.3% |
 | `tau=40`, one combined draw, tier guarantee | 6 | 17 | 83 | Barcelona, 7.5% |
 
-`tau=20` is the flattest tested setting that kept both rule sets inside the title target. Over the full 320 drafts at that setting, 94 different clubs appeared under the cap and 91 under Classic, Barcelona was the most frequent at 8.6% of spins, and 57% of capped spins came from a club ranked in its decade's top ten, against 95% under the previous weighting. Barcelona and Real Madrid remain the most frequent because they hold 22 of the archive's 82 S-tier cards, and every capped squad needs two.
+`tau=20` was then the flattest tested setting that kept both rule sets inside the title target. Over the full 320 drafts at that setting, 94 different clubs appeared under the cap and 91 under Classic, Barcelona was the most frequent at 8.6% of spins, and 57% of capped spins came from a club ranked in its decade's top ten, against 95% under the previous weighting. Barcelona and Real Madrid remain the most frequent because they hold 22 of the archive's 82 S-tier cards, and every capped squad needs two.
+
+Chemistry later pushed Classic above the target ([below](#chemistry-made-every-measured-policy-stronger)), so the two settings were searched again with the season benchmark on two seed sets, 1000–1099 and 2000–2099: 1,600 drafts per rule set and setting. A setting's score is the smaller distance of its capped and Classic title rates from the nearer edge of the 5% to 15% band. Raising the rating a chemistry point adds, to 1.5 or 2, scored worse than spreading the draw, so chemistry stays at one rating point per point.
+
+| `tau`, `rho` | Capped titles | Classic titles | Score |
+| --- | ---: | ---: | ---: |
+| 20, 1.5 (previous) | 9.6% | 16.6% | −1.6 |
+| 60, 1.5 | 7.8% | 14.3% | 0.8 |
+| 60, 2 (adopted) | 7.3% | 12.1% | 2.3 |
+| 60, 3 | 6.1% | 10.8% | 1.1 |
+| 100, 1.5 | 7.4% | 13.0% | 2.0 |
+| 100, 2 | 6.8% | 11.6% | 1.8 |
+
+The standard error of one rate over 800 drafts is about 1.2 percentage points, and the two seed sets differed by up to 2 points, so neighbouring settings are not distinguishable. `tau=60, rho=2` stayed inside the band on each seed set separately: 7.4% and 11.4%, then 7.1% and 12.9%. The flatter draw also spreads the spins. A club ranked in its decade's top ten now supplies 18% to 21% of unrestricted draws, against 40% to 44% at `tau=20`, and 30% to 34% of draws stay in the season's own decade, against 35% to 47%.
 
 ## Capped drafts always finished
 
-Four pick policies each completed 320 capped drafts, one per seed and decade: the highest-rated legal card, the lowest-rated, the lowest tier first, which saves the S places for last, and a random legal card. None of the 1,280 drafts got stuck, and in all 6,400 spins the squad offered a player from the best tier still needed. On the same seed, each of the other three policies met the same club as the highest-rated policy on every first draw, 71% of second draws, 18% of third draws and 8% of fifth draws. The [salary cap rules](MODEL.md#the-salary-cap-limits-stars-across-the-whole-squad) give the supplier-club margin behind this result.
+Four pick policies each completed 320 capped drafts, one per seed and decade (seeds 1000 to 1039): the highest-rated legal card, the lowest-rated, the lowest tier first, which saves the S places for last, and a random legal card. None of the 1,280 drafts got stuck, and in all 6,400 spins the squad offered a player from the best tier still needed. On the same seed, each of the other three policies met the same club as the highest-rated policy on every first draw, 71% of second draws, 13% of third draws and 4% of fifth draws. The [salary cap rules](MODEL.md#the-salary-cap-limits-stars-across-the-whole-squad) give the supplier-club margin behind this result.
 
 ## Gauntlet survival depends on reward choices
 
@@ -189,10 +202,10 @@ The final argument selects the map; `back`, `odyssey` and `reverse` are also sup
 
 | Decades cleared | 0 | 1 | 2 | 3 |
 | --- | ---: | ---: | ---: | ---: |
-| Salary cap runs | 9 | 28 | 3 | 0 |
-| Classic runs | 4 | 31 | 3 | 2 |
+| Salary cap runs | 12 | 26 | 2 | 0 |
+| Classic runs | 5 | 31 | 4 | 0 |
 
-Both rule sets cleared a median of one decade and played a median of three boss ties. Median points per six-match round were ten under the salary cap and eleven under Classic. No capped run and two Classic runs cleared all three decades.
+Both rule sets cleared a median of one decade and played a median of three boss ties. Median points per six-match round were ten under both rule sets. No run cleared all three decades.
 
 Capped runs earn 1.5 times the score, as in Eraball. The opening capped draft carries three C-tier and two D-tier players; later signings can change those counts within the S- and A-tier limits. Fatigue and absences bring substitutes into matches. These results describe one reward and transfer policy on the shortest three-decade map under the current patience and opposition rules. They do not establish human success rates, the difficulty of the other maps, or the results of planning transfers, rearranging the lineup or choosing different rewards.
 
@@ -209,7 +222,7 @@ Commit `92cdd97` replaced proximity links with Ultimate Team chemistry. A link g
 | Capped career objectives / league titles, of 300 seasons | 279 / 269 | 291 / 279 |
 | Classic career objectives / league titles, of 300 seasons | 292 / 291 | 298 / 298 |
 
-Chemistry favoured the drafted fifteen in every measurement. The tables above then use the current policy, which values the chemistry a placement adds, and the current code, in which career rivals' managers also count towards chemistry. Under them, capped season titles rose to 82 and Classic titles to 131, above the 5% to 15% target. No engine parameter has been retuned for chemistry; that remains an open design decision.
+Chemistry favoured the drafted fifteen in every measurement. With the current policy, which values the chemistry a placement adds, and with career rivals' managers also counting towards chemistry, capped season titles reached 82 and Classic titles 131 of 800, above the 5% to 15% target. The spin settings were retuned to `tau=60` and `rho=2` to restore it; the tables above are measured under them.
 
 ## Identifying the evidence and its limits
 
