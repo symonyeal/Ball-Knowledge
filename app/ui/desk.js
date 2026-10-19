@@ -13,7 +13,7 @@ import { TI, CAP, ct } from '../cap.js';
 import * as E from '../engine/index.js';
 import { leagueOf, years, field } from '../club.js';
 import { form, team, preview, used, room, can, hydrate, shape } from '../draft.js';
-import { U, esc, num, club, kv, tier, fitText, delta, pitch, links, face, mini, smap, rated, share, row, capTiles, segs, spell, IC, LINE, SRC, SRT, RANGE, pct } from './kit.js';
+import { U, esc, num, club, kv, tier, fitText, delta, pitch, links, face, mini, smap, rated, share, row, capTiles, segs, spell, IC, LINE, SRC, SRT, pct } from './kit.js';
 
 const MED = new Map();
 function opponents(D) {
@@ -217,7 +217,7 @@ function dash(T, Q, c, V, b, pv) {
   } else if (c) body = inspector(c, V, b);
   else if (S.phase === 'review') body = `${lines}${table(T, Q)}`;
   // Chemistry progress: the largest group of each kind and the count its next point needs (E.THRESHOLDS).
-  const lab = { club: q => G.clubs[q]?.nm || q, nation: x => x.replace(/^./, a => a.toUpperCase()), league: x => `${x} league` };
+  const lab = { club: q => G.clubs[q]?.nm || q, nation: x => x, league: x => `${x} league` };
   const prog = Object.entries(E.THRESHOLDS).map(([k, t]) => {
     const [v, x] = Object.entries(C.groups[k]).sort((a, b) => b[1] - a[1])[0] || [];
     const nx = t.find(y => y > (x || 0));

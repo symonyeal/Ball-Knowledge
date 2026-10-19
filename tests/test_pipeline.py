@@ -7,7 +7,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from pipeline import cm0102, engines, legends, positions, ratings, squads, stats
+from pipeline import cm0102, engines, export, legends, positions, ratings, squads, stats
 
 SR = list(np.full(15, 70.0))
 
@@ -249,3 +249,14 @@ class Leagues(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Nations(unittest.TestCase):
+    def test_a_person_takes_one_football_nation_from_his_p1532_labels(self):
+        Pl = {"Q145": "United Kingdom", "Q25": "Wales", "Q713750": "West Germany", "Q183": "Germany", "Q29999": "Kingdom of the Netherlands"}
+        self.assertEqual(export.nation({"Q145", "Q25"}, Pl), "Wales")
+        self.assertEqual(export.nation({"Q713750"}, Pl), "Germany")
+        self.assertEqual(export.nation({"Q713750", "Q183"}, Pl), "Germany")
+        self.assertEqual(export.nation({"Q29999"}, Pl), "Netherlands")
+        self.assertEqual(export.nation({"Q145"}, Pl), "")
+        self.assertEqual(export.nation(set(), Pl), "")

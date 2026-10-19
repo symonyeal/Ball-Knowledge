@@ -6,7 +6,7 @@
 //           qid of the card), tg (tags: tal, rock, mae, poa 1|2 tiers; bg European Cups won; tl
 //           Timeless tier), duo (ids of partners)
 //   T       team: m (manager: nm, ga, gd grades, sig ids), S (11 slots {s, x, y}), xi (11 cards),
-//           bn (4 cards); Gauntlet development may add lk (link multiplier) and gs (grade steps)
+//           bn (4 cards); developments may add lk (partnership multiplier) and gs (grade steps)
 //   Ds      simulation decade
 //   W       slot weights into [attack, midfield, defence]; each row sums to 1
 //   W0      the same sums for a reference 4-4-2, so a line's manpower is read relative to it

@@ -14,6 +14,8 @@ Legend
                 club-decades (at), else only by exact name anywhere, so a namesake is never chosen
   DF     default formation by decade for clubs without a curated manager
   K      club kit colours (pipeline/kits.py); a club missing from the table takes the neutral pair N
+  NATION P1532 label -> FIFA team name (mirrors app/staff.js); the United Kingdom fields no team
+  nation(ids, Pl)  a person's football nation: the first name, alphabetically, among his mapped labels
   out(...)      write data/game.json and data/manifest.json
 """
 import datetime as dt
@@ -28,6 +30,14 @@ SRC = {"fifa": "f", "cm": "c", "icon": "i", "fifa-near": "n", "cm-near": "m", "e
 n_sq = 15
 DF = {1950: "WM", 1960: "4-2-4", 1970: "4-3-3", 1980: "4-4-2", 1990: "4-4-2", 2000: "4-4-2", 2010: "4-2-3-1", 2020: "4-3-3"}
 LV = ["S", "A", "B", "C", "D"]
+NATION = {"West Germany": "Germany", "Kingdom of the Netherlands": "Netherlands",
+          "Socialist Federal Republic of Yugoslavia": "Yugoslavia", "Federal Republic of Yugoslavia": "Yugoslavia",
+          "United Kingdom": ""}
+
+
+def nation(ids, Pl):
+    N = sorted({NATION.get(Pl.get(i, ""), Pl.get(i, "")) for i in ids} - {""})
+    return N[0] if N else ""
 
 
 def ecw(ST, E):
@@ -152,7 +162,7 @@ def out(Q, P, Pl, U, M, duo, rep, ccode, labels, miss, frozen_cards=None):
     for p in sorted({c["p"] for v in cards.values() for c in v}):
         x = P[p]
         people[p] = dict(nm=x["name"], by=int(x["dob"][:4]) if x.get("dob") and x["dob"][0] != "-" else None,
-                         nat=Pl.get(sorted(x["nat"])[0], "") if x["nat"] else "", duo=duo.get(p, []))
+                         nat=nation(x["nat"], Pl), duo=duo.get(p, []))
     opp = {}
     for D in DS:
         z = sorted((c for c in combos if c["D"] == D and c["n"] >= 15 and c["gk"] >= 1), key=lambda c: c["k"])[:N_opp]

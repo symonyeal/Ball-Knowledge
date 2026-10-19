@@ -1,7 +1,7 @@
 import { mk, hs, sh, ft, em, rate, move } from './engine/index.js';
 import { TI, CAP, ck, left } from './cap.js';
 import { validRun } from './run.js';
-import { staff } from './staff.js';
+import { staff, nation } from './staff.js';
 
 // G archive; s serializable run; T hydrated team; c card; p person id; D decade;
 // k club-decade key; S formation slots; xi starting eleven; bn four bench cards;
@@ -187,7 +187,7 @@ export function hydrate(G, r) {
   const c = G.cards[r.k]?.find(c => c.p === r.p);
   if (!c || !G.people[c.p]) throw new Error('A saved player is no longer in the dataset.');
   const [cq, D] = r.k.split(':');
-  return { ...c, id: c.p, nm: G.people[c.p].nm, D: Number(D), cq, lg:G.clubs?.[cq]?.cc||'', nat:G.people[c.p].nat||'', src: c.s, duo: G.people[c.p].duo || [] };
+  return { ...c, id: c.p, nm: G.people[c.p].nm, D: Number(D), cq, lg:G.clubs?.[cq]?.cc||'', nat:nation(G.people[c.p].nat), src: c.s, duo: G.people[c.p].duo || [] };
 }
 
 export function shape(G, n) {
