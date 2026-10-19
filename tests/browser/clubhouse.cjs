@@ -36,6 +36,7 @@ const sound=async p=>{
       const d=await Promise.all([p.waitForEvent('download'),p.click('#sandbox-export')]);const file=await d[0].path();assert.equal(JSON.parse(fs.readFileSync(file)).sandbox.slots.length,15);
       await p.click('#sandbox-clear');await p.setInputFiles('#sandbox-import',file);await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k)).sandbox.slots.every(Boolean),KEY);ok(`${kind}: sandbox formation, simulation, separate records and squad round trip`);
       await section(p,'sbc');assert.equal(await p.locator('.challenge-card').count(),11);await sound(p);
+      assert.deepEqual((await p.locator('.challenge-card .lbl').allTextContents()).filter(t=>t.startsWith('Weekly')).map(t=>/^Weekly · \d{4}-W\d{2}$/.test(t)),[true,true,true]);
       await p.locator('[data-sbc-build="first"]').click();await p.locator('.sbc-panel').waitFor();assert.equal(await p.locator('.sbc-panel li').count(),2);
       assert.equal(await p.locator('#sbc-submit').isEnabled(),await p.locator('.sbc-panel li.no').count()===0);
       await p.click('#sbc-leave');assert.equal(await p.locator('.sbc-panel').count(),0);assert.equal((await profile(p)).events.length,0);ok(`${kind}: squad challenges list, requirement panel and submission state`);

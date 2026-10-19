@@ -7,13 +7,15 @@
 //            lg ≥ n from league v; club ≥ n from one club; dec ≥ n cards of decade v; nats ≥ n nations;
 //            s ≤ n S-tier cards
 //   CORE     permanent challenges [id, name, requirements, reward pool]
-//   weekly(G, A, w)  three challenges for ISO week w, drawn from the archive so each pool is large
+//   weekly(G, A, w)  three challenges for ISO week id w ('YYYY-Www'), drawn from the archive so each pool is large
+//   challenges(G, A, t)  CORE and the weekly three of date t, in the Weekly Challenge's UTC ISO week (play.js wk)
 //   reward(A, ch)    the reward card: a seeded draw from the A-tier cards of the challenge's pool
 //   check(G, s, ch)  each requirement with its value and whether it holds
 
 import { rate, mk, hs, sh } from './engine/index.js';
 import { freeTeam } from './archive.js';
 import { TI } from './cap.js';
+import { wk } from './play.js';
 
 const count = (xi, f) => xi.filter(f).length;
 const tally = (Q, f) => { const m = new Map(); for (const c of Q) { const v = f(c); if (v) m.set(v, (m.get(v) || 0) + 1); } return m; };
@@ -52,6 +54,8 @@ export function weekly(G, A, w) {
     { id: `${w}:dec`, wk: w, nm: `The ${D}s`, req: [['dec', 7, D], ['chem', 18], ['s', 2]], pool: { dec: D } },
   ];
 }
+
+export const challenges = (G, A, t = new Date()) => [...CORE, ...weekly(G, A, wk(t).id)];
 
 export function reward(A, ch) {
   const P = pool(A, ch.pool), Q = P.filter(c => TI(c.r) === 'A');
