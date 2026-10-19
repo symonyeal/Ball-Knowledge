@@ -501,6 +501,17 @@ export function validCareer(G, s, manager, cap) {
     if (e.t === 'hop') e.out.forEach(p => { delete U[p]; });
   }
   if (Object.keys(U).length !== Object.keys(s.up).length || Object.entries(U).some(([p, k]) => s.up[p] !== k)) throw new Error('The saved career upgrade charge is invalid.');
+  // Evolutions replay from the log: evo starts one, evd completes the running one, a departure ends both.
+  let V = null;
+  const X = {}, bad = () => { throw new Error('The saved career evolution is invalid.'); };
+  for (const e of s.log) {
+    if (e.t === 'evo') { if (V) bad(); V = [e.p, e.id]; }
+    if (e.t === 'evd') { if (V?.[0] !== e.p || V[1] !== e.id) bad(); X[e.p] = [...(X[e.p] || []), e.id]; V = null; }
+    for (const p of e.t === 'sign' ? [e.out] : e.t === 'hop' ? e.out : []) { delete X[p]; if (V?.[0] === p) V = null; }
+  }
+  const evd = s.evd || {};
+  if (!eq(V, s.evo ? [s.evo.p, s.evo.id] : null) || Object.keys(X).length !== Object.keys(evd).length ||
+    Object.entries(X).some(([p, ids]) => !eq(ids, evd[p]))) bad();
   if (cap) ck(G, careerBill(G, s), GCAP);
   return s;
 }

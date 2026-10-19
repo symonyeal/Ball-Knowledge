@@ -68,3 +68,34 @@ test('saves reject forged evolutions and accept saves made before evolutions', (
   const old = { ...s0 }; delete old.evo; delete old.evd;
   assert.deepEqual(C.validCareer(G, old, d.manager, d.cap), old);
 });
+
+test('saves reject evolutions that the log does not record', () => {
+  const x = C.evoOptions(G, s0)[0];
+  assert.throws(() => C.validCareer(G, { ...s0, evd: { [x.p]: [x.id] } }, d.manager, d.cap), /invalid/);
+  assert.throws(() => C.validCareer(G, { ...s0, evo: { p: x.p, id: x.id, b: 0 } }, d.manager, d.cap), /invalid/);
+  const s = C.careerEvo(G, s0, x.p, x.id);
+  assert.throws(() => C.validCareer(G, { ...s, evo: null, evd: { [x.p]: [x.id] } }, d.manager, d.cap), /invalid/);
+});
+
+test('an evolving career resumes from its save to the same half', () => {
+  const x = C.evoOptions(G, s0)[0], s = C.careerEvo(G, s0, x.p, x.id);
+  const t = C.validCareer(G, JSON.parse(JSON.stringify(s)), d.manager, d.cap);
+  assert.deepEqual(C.careerPlayHalf(G, t), C.careerPlayHalf(G, s));
+});
+
+test('a new season starts without the last season’s in-forms', () => {
+  let s = s0;
+  while (s.y === 0) {
+    if (s.ph === 'half') s = C.careerPlayHalf(G, s);
+    else if (s.ph === 'node') s = C.careerTake(G, s, C.careerOffers(G, s).findIndex(o => ['rest', 'dev'].includes(o.kind)));
+    else if (s.ph === 'hop') { const H = C.careerHopPools(G, s), n = Math.min(1, H.old.length) + Math.min(1, H.neu.length);
+      s = C.careerHop(G, s, { old: H.old.length ? [0] : [], neu: H.neu.length ? [0] : [], out: [12, 13].slice(0, n) }); }
+    else {
+      if (s.half === 2) { const p = s.slots[9].p; s = { ...s, S: { ...s.S, me: [...s.S.me, { k: 'L', gf: 3, ga: 0, sc: [[1, 1, p, null], [2, 1, p, null], [3, 1, p, null]] }] } }; assert.ok(C.inForms(s)[p] > 0); }
+      s = C.careerNext(G, s);
+    }
+    assert.notEqual(s.ph, 'fired');
+  }
+  assert.deepEqual(C.inForms(s), {});
+  assert.ok([...C.careerTeam(G, s).xi, ...C.careerTeam(G, s).bn].every(c => (c.fm || 0) === Math.max(0, s.mv[c.id] || 0)));   // only the persistent MVP point remains
+});
