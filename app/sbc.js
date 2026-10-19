@@ -9,11 +9,15 @@
 //   CORE     permanent challenges [id, name, requirements, reward pool]
 //   weekly(G, A, w)  three challenges for ISO week id w ('YYYY-Www'), drawn from the archive so each pool is large
 //   challenges(G, A, t)  CORE and the weekly three of date t, in the Weekly Challenge's UTC ISO week (play.js wk)
-//   reward(A, ch)    the reward card: a seeded draw from the A-tier cards of the challenge's pool
+//   X(A)     per-archive cache: weekly candidates (N nations with 600+ cards, L leagues with 2,000+, D decades),
+//            card lists by nation, league and decade, and the reward ledger (used cards, M by challenge id, t the
+//            next week to draw)
+//   reward(G, A, ch) the reward card, distinct across the game: CORE draws first, then every week from W0 in order;
+//            each is a seeded draw from the A-tier cards of its pool not yet given, else from its pool
 //   check(G, s, ch)  each requirement with its value and whether it holds
 
 import { rate, mk, hs, sh } from './engine/index.js';
-import { freeTeam } from './archive.js';
+import { freeTeam, refid } from './archive.js';
 import { TI } from './cap.js';
 import { wk } from './play.js';
 
@@ -43,11 +47,37 @@ export const CORE = [
   ['perfect', 'Perfect chemistry', [['chem', 33]], {}],
 ].map(([id, nm, req, pool]) => ({ id, nm, req, pool }));
 
-const pool = (A, o) => A.filter(c => (!o.nat || c.nat === o.nat) && (!o.lg || c.lg === o.lg) && (!o.dec || c.D === o.dec));
+export const W0 = Date.UTC(2026, 9, 19);   // Monday of 2026-W43, the first week with challenges
+const XS = new WeakMap();
+function X(A) {
+  if (XS.has(A)) return XS.get(A);
+  const top = (f, n) => [...tally(A, f)].filter(([, k]) => k >= n).map(([v]) => v).sort();
+  const by = f => { const m = new Map(); for (const c of A) { if (!m.has(f(c))) m.set(f(c), []); m.get(f(c)).push(c); } return m; };
+  const x = { N: top(c => c.nat, 600), L: top(c => c.lg, 2000), D: top(c => String(c.D), 1),
+    nat: by(c => c.nat), lg: by(c => c.lg), dec: by(c => c.D), P: new Map(), used: new Set(), M: new Map(), t: W0 };
+  XS.set(A, x);
+  for (const ch of CORE) give(A, x, ch);
+  return x;
+}
+const pool = (A, o) => {
+  const x = X(A), P = o.nat ? x.nat.get(o.nat) : o.lg ? x.lg.get(o.lg) : o.dec ? x.dec.get(o.dec) : A;
+  return (P || []).filter(c => (!o.nat || c.nat === o.nat) && (!o.lg || c.lg === o.lg) && (!o.dec || c.D === o.dec));
+};
+const give = (A, x, ch) => {
+  const k = JSON.stringify(ch.pool), Z = X(A);   // pools by key: [A-tier cards, all cards]
+  if (!Z.P.has(k)) { const P = pool(A, ch.pool); Z.P.set(k, [P.filter(c => TI(c.r) === 'A'), P]); }
+  const [P1, P] = Z.P.get(k), fresh = Q => Q.filter(c => !x.used.has(refid(c)));
+  let Q = fresh(P1);
+  if (!Q.length) Q = fresh(P);
+  if (!Q.length) Q = P;
+  const c = sh(mk(hs(`${ch.id}:reward`)), Q)[0], ref = { k: c.k, p: c.p };
+  x.used.add(refid(ref)); x.M.set(ch.id, ref);
+  return ref;
+};
 
 export function weekly(G, A, w) {
-  const r = mk(hs(`${w}:sbc`)), top = (f, n) => [...tally(A, f)].filter(([, k]) => k >= n).map(([v]) => v).sort();
-  const N = sh(r, top(c => c.nat, 600))[0], L = sh(r, top(c => c.lg, 2000))[0], D = Number(sh(r, top(c => String(c.D), 1))[0]);
+  const r = mk(hs(`${w}:sbc`)), x = X(A);
+  const N = sh(r, x.N)[0], L = sh(r, x.L)[0], D = Number(sh(r, x.D)[0]);
   return [
     { id: `${w}:nat`, wk: w, nm: `${N} week`, req: [['nat', 5, N], ['chem', 20]], pool: { nat: N } },
     { id: `${w}:lg`, wk: w, nm: `${G.lg?.[L]?.nm || L} top flight`, req: [['lg', 8, L], ['ovr', 80]], pool: { lg: L } },
@@ -57,10 +87,12 @@ export function weekly(G, A, w) {
 
 export const challenges = (G, A, t = new Date()) => [...CORE, ...weekly(G, A, wk(t).id)];
 
-export function reward(A, ch) {
-  const P = pool(A, ch.pool), Q = P.filter(c => TI(c.r) === 'A');
-  const c = sh(mk(hs(`${ch.id}:reward`)), Q.length ? Q : P)[0];
-  return { k: c.k, p: c.p };
+export function reward(G, A, ch) {
+  const x = X(A), w0 = wk(new Date(W0)).id;
+  if (x.M.has(ch.id)) return x.M.get(ch.id);
+  if (ch.wk < w0) return give(A, { used: new Set(CORE.map(c => refid(x.M.get(c.id)))), M: new Map() }, ch);
+  for (; wk(new Date(x.t)).id <= ch.wk; x.t += 7 * 864e5) for (const c of weekly(G, A, wk(new Date(x.t)).id)) give(A, x, c);
+  return x.M.get(ch.id);
 }
 
 export function check(G, s, ch) {
