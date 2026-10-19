@@ -6,6 +6,18 @@ Football Era Draft is a draft game about building a team across generations. Mar
 
 ![Lineup review before kick-off: fifteen drafted players, salary-cap allowances and formation controls.](docs/images/football-era-draft.png)
 
+## Choose your mode
+
+Career, Era Gauntlet, Weekly and Clubhouse have their own menu tiles. Open Career or Gauntlet setup to choose the decade, rules and replay seed. The night-sky palette takes its blue, gray and ecru tones from Sanzo Wada combinations; the shield cards and club crests use original styling.
+
+On the draft screen, choose an empty pitch position to shortlist players who fit it, or select a player first and compare his possible places. The pitch and substitutes use compact cards; the header shows squad rating and chemistry. Arrow keys browse players and positions, Escape cancels a selection, R re-spins when available, and Ctrl+Z undoes a lineup edit. Q/E changes career tabs.
+
+The career hub brings together the next league fixture, standings, squad, board inbox, objectives and transfer market. Winter targets and outgoing players can be selected as cards; the comparison shows the effect before a signing is confirmed. Summer arrivals retain their card comparisons and distinct departure requirements.
+
+Each half-season opens a match centre with the saved goal times, scorers and assists. Pause, advance to full time, continue to the next match, or skip playback. Results are saved before playback starts, so skipping or reloading keeps the same season. Reduced motion shows each final score immediately. “Your standout” reflects recorded goals and assists; it grants no extra award. Gauntlet rounds retain their score summaries because those records contain no goal times.
+
+![Career hub with the next league fixture, board inbox and season objectives.](docs/images/football-era-career.png)
+
 ## Five clubs supply your fifteen players
 
 The **Clubhouse** button opens the account-free extras from any stage of the game. Browse all 52,976 club-era cards by player, club, decade, position, tier or tag; inspect their rating sources and pin up to three versions for comparison. Sandbox lets you choose any fifteen distinct players, change their formation, manager and simulation era, fill empty places automatically and play a league and European Cup. Export a sandbox squad or send its Classic team code to a friend.

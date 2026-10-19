@@ -17,12 +17,14 @@ export function intro() {
   const { G, D, cap } = U, w = wk();
   const cards = ART.filter(([p, k]) => G.cards[k]?.some(c => c.p === p))
     .map(([p, k, a], i) => `<div class="fan" style="--a:${a}deg;--i:${i}">${vcard(hydrate(G, { k, p }))}</div>`).join('');
-  return `<section class="land">
-    <div class="land-copy">
-      <p class="eyebrow">A draft through eight decades</p>
-      <h1>Build an<br>era XI.</h1>
-      <p class="lede">Choose a manager at one of his clubs. Draw five historical squads, take three players from each and set your formation as the draft unfolds. Then lead your club through the decade in its real league, chasing cups and earning the board's trust.</p>
-      <form id="start-form" class="start" novalidate>
+  return `<section class="land mode-hero"><div class="land-copy"><p class="eyebrow">Football Era Draft · 1950—2020</p><h1>Greatness.<br>Across eras.</h1><p class="lede">Your manager. Your fifteen. A decade to make history.</p><p class="small">Draft football's past into your next great team.</p></div><div class="land-art" aria-hidden="true" inert><div class="land-pitch">${pitch(G.formations['4-3-3'].slots.map(([s,x,y])=>({s,x,y})),[],{mode:'view',sm:true})}</div><div class="fans">${cards}</div></div></section>
+  <section class="mode-menu" aria-label="Choose a mode">
+    <button class="mode-tile mode-career" id="mode-career" type="button"><span class="eyebrow">01 · The long game</span><strong>Career</strong><span>Choose your era. Build a club. Chase the decade.</span><b aria-hidden="true">↗</b></button>
+    <button class="mode-tile mode-gauntlet" id="mode-gauntlet" type="button"><span class="eyebrow">02 · Survive the eras</span><strong>Era Gauntlet</strong><span>Four rounds. One boss. A new decade awaits.</span><b aria-hidden="true">↗</b></button>
+    <button class="mode-tile mode-weekly" id="weekly" type="button"><span class="eyebrow">03 · ${esc(w.id)}</span><strong>Weekly</strong><span>${w.D}s · One seed. Your choices.</span><b aria-hidden="true">↗</b></button>
+    <button class="mode-tile mode-clubhouse" data-club-open="home" type="button"><span class="eyebrow">04 · Your football home</span><strong>Clubhouse</strong><span>Build freely. Collect cards. Solve daily puzzles.</span><b aria-hidden="true">↗</b></button>
+  </section>
+  <details class="career-setup" id="career-setup" ${U.setup ? 'open' : ''}><summary>Career &amp; Gauntlet setup <span>Decade · Rules · Seed</span></summary><div class="setup-body"><form id="start-form" class="start" novalidate>
         <fieldset class="eras"><legend class="lbl">Career decade · your league and rivals come from here</legend>
           <div class="era-tools"><button id="random-decade" type="button" class="btn q sm" data-era="random" aria-pressed="${D === 'random'}">Random decade</button><small class="small">${D === 'random' ? 'Your seed chooses the decade.' : 'Choose an era or let the seed decide.'}</small></div>
           <div class="tiles">${DECADES.map(d => `<button type="button" class="tile" data-era="${d}" aria-pressed="${D === d}" style="--era:var(--era-${d})"><b>${d}s</b><small>${ERA[d]}</small></button>`).join('')}</div>
@@ -36,21 +38,11 @@ export function intro() {
           <button class="btn big" type="submit">Enter the draft →</button>
         </div>
       </form>
-    </div>
-    <div class="land-art" aria-hidden="true" inert><div class="land-pitch">${pitch(G.formations['4-3-3'].slots.map(([s, x, y]) => ({ s, x, y })), [], { mode: 'view', sm: true })}</div><div class="fans">${cards}</div></div>
-  </section>
   <section class="weekly gauntlet-entry" aria-label="Era Gauntlet"><div><p class="lbl">Era Gauntlet · a roguelike run</p><p class="wk">Draft, then survive decade after decade</p>
     <p class="small">Draft fifteen from the decades near your map's first stop, then play four six-match rounds and a two-legged boss in every decade, with rewards, transfers and board patience between. Uses the rules and seed above.</p></div>
     <div class="row wrap"><label class="field"><span class="lbl">Map</span><select id="gauntlet-map">${Object.entries(MAPS).map(([k, m]) => `<option value="${k}" ${k === 'reverse' ? 'selected' : ''}>${esc(m.nm)} · ${m.D[0]}s first · draft ${Math.max(1950, m.D[0] - POOL)}s–${Math.min(2020, m.D[0] + POOL)}s</option>`).join('')}</select></label>
     <button class="btn" id="gauntlet-start" type="button">Start the Gauntlet draft →</button></div></section>
-  <section class="weekly" aria-label="Weekly challenge"><div><p class="lbl">This week · ${esc(w.id)}</p><p class="wk">${w.D}s season · one seed for everyone</p>
-    <p class="small">Same managers and first squad for every player this week, under Salary cap. Your picks steer which clubs follow.</p></div>
-    <button class="btn q" id="weekly" type="button">Play the weekly challenge</button></section>
-  <section class="club-entry" aria-label="Explore more football"><div><p class="eyebrow">Beyond the draft</p><h2>Your football clubhouse</h2><p class="small">Free squad building, daily puzzles and a personal history across the eras.</p></div><div class="row wrap"><button class="btn q sm" type="button" data-club-open="sandbox">Sandbox</button><button class="btn q sm" type="button" data-club-open="database">Player database</button><button class="btn q sm" type="button" data-club-open="minis">Mini-games</button><button class="btn q sm" type="button" data-club-open="weekly">Weekly archive</button><button class="btn sm" type="button" data-club-open="home">Open clubhouse</button></div></section>
-  <ol class="how" aria-label="How a draft works"><li><b>Team</b><span>A manager at one of his clubs sets grades and signature players.</span></li>
-    <li><b>Five squads</b><span>Three players from each historical club squad, inside the salary cap.</span></li>
-    <li><b>Lineup</b><span>Any formation, any placement; ratings follow each player's position fit.</span></li>
-    <li><b>Career</b><span>Real league seasons and cup races across the decade, with transfer windows between halves.</span></li></ol>
+  </div></details>
   <p class="replay"><label>Have a saved replay? <input id="import-replay" type="file" accept="application/json,.json"></label></p>`;
 }
 
