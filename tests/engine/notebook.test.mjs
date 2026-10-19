@@ -37,3 +37,12 @@ test("without a formation setting the notebook starts in the manager's first rec
   const R = JSON.parse(p.stdout);
   assert.equal(R.formation, R.manager.f[0]);
 });
+
+test('the notebook reports partnership points and chemistry separately, as the rating adds them', () => {
+  const p = run({ seed: 20261006, decade: 1990, cap: true });
+  assert.equal(p.status, 0, p.stderr);
+  for (const x of JSON.parse(p.stdout).starters) {
+    assert.ok(Number.isInteger(x.chemistry) && x.chemistry >= 0 && x.chemistry <= 3);
+    assert.ok(Math.abs(x.base_rating * (1 - x.position_loss) * x.era_multiplier + x.partnership_points + x.chemistry - x.adjusted_rating) < 1e-9);
+  }
+});
