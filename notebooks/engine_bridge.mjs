@@ -124,7 +124,7 @@ function execute(x) {
       positions: c.pos.join(', '), base_rating: c.r, tier: TI(c.r), source: c.src, tags: JSON.stringify(c.tg) })),
     starters: R.xi.map(p => ({ slot: p.s, id: p.c.id, player: p.c.nm, base_rating: p.c.r,
       source: p.c.src, card_decade: p.c.D, fit_label: p.lab, position_loss: p.f,
-      era_multiplier: p.e, chemistry_points: p.b, adjusted_rating: p.a })),
+      era_multiplier: p.e, partnership_points: p.b, chemistry: p.n, adjusted_rating: p.a })),
     bench: R.bn.filter(Boolean).map(p => ({ id: p.c.id, player: p.c.nm, base_rating: p.c.r,
       source: p.c.src, card_decade: p.c.D, position_loss: 0, era_multiplier: p.e, adjusted_rating: p.a })),
     lines: { attack: R.A, midfield: R.M, outfield_defence: R.Dd, keeper: R.K,
