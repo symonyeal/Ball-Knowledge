@@ -10,7 +10,8 @@
 //               carries no penalty (the reference game's rule)
 //   LN     line of each slot: G keeper, D defence, M midfield, A attack (for grouping in the UI)
 //   ft(c,s)  fit of card c in slot s: when the card carries slot ratings sr (EA's per-position
-//            ratings, or CM attributes put on EA's scale) the loss is 1 - sr[s]/r; otherwise fit().
+//            ratings, or CM attributes put on EA's scale) the loss is 1 - sr[s]/r, and in a slot he
+//            does not list at least fit(); flat or missing sr falls back to fit().
 //            A Versatility tag tg.vs (Gauntlet development) keeps VS[vs] of an outfield loss.
 //   lb(f)  label for a loss read from slot ratings
 
@@ -58,10 +59,15 @@ export const VS = [1, 0.5, 0];
 export const shift = (c, d) => d ? { ...c, r: c.r + d,
   ...(c.sr ? { sr: c.sr.map(a => a * (c.r + d) / c.r) } : {}) } : c;
 
+// Listed positions are where a player plays. Slot ratings only ever lower that: an unlisted slot loses at
+// least the pitch-graph penalty, so a converted rating (a CM full-back rated as a winger) or a flat one (the
+// same number in every slot, goal included) cannot make an unlisted slot a natural one.
+const flat = sr => Math.max(...sr) - Math.min(...sr) < 1;
 const ft0 = (c, s) => {
   const j = SL.indexOf(s);
-  if (c && Array.isArray(c.sr) && c.sr.length === SL.length && j >= 0 && c.r > 0) {
-    const f = Math.min(0.9, Math.max(0, 1 - c.sr[j] / c.r));
+  if (c && Array.isArray(c.sr) && c.sr.length === SL.length && j >= 0 && c.r > 0 && !flat(c.sr)) {
+    let f = Math.min(0.9, Math.max(0, 1 - c.sr[j] / c.r));
+    if (c.pos?.length && !c.pos.includes(s)) f = Math.max(f, fit(c.pos, s).f);
     return { f, lab: lb(f) };
   }
   return fit(c?.pos, s);

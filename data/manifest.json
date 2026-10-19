@@ -60,6 +60,13 @@
    "fifa-near": 6667,
    "cm-near": 6803,
    "estimated": 19831
+  },
+  "nations": {
+   "cit": 7226,
+   "home": 1912,
+   "sport": 7,
+   "team": 1725,
+   "missing": 33
   }
  },
  "unresolved": {

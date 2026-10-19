@@ -190,12 +190,30 @@ export function swap(s, a, b) {
   return { ...s, slots };
 }
 
+// A person's career in the archive: his club spells [[club, first season, last season]], adjacent spells at one
+// club merged. Built once per archive; chemistry reads it for teammates and shared clubs.
+const HIST = new WeakMap();
+export function career(G, p) {
+  if (!HIST.has(G)) {
+    const M = new Map();
+    for (const [k, Q] of Object.entries(G.cards)) { const q = k.split(':')[0]; for (const c of Q) if (c.a != null) { if (!M.has(c.p)) M.set(c.p, []); M.get(c.p).push([q, c.a, c.b ?? c.a]); } }
+    for (const [p, S] of M) {
+      S.sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : x[1] - y[1]));
+      const out = [];
+      for (const z of S) { const o = out.at(-1); if (o && o[0] === z[0] && z[1] <= o[2] + 1) o[2] = Math.max(o[2], z[2]); else out.push(z.slice()); }
+      M.set(p, out.sort((x, y) => x[1] - y[1] || (x[0] < y[0] ? -1 : 1)));
+    }
+    HIST.set(G, M);
+  }
+  return HIST.get(G).get(p) || [];
+}
+
 export function hydrate(G, r) {
   if (!r) return null;
   const c = G.cards[r.k]?.find(c => c.p === r.p);
   if (!c || !G.people[c.p]) throw new Error('A saved player is no longer in the dataset.');
   const [cq, D] = r.k.split(':');
-  return { ...c, id: c.p, nm: G.people[c.p].nm, D: Number(D), cq, lg:G.clubs?.[cq]?.cc||'', nat:nation(G.people[c.p].nat), src: c.s, duo: G.people[c.p].duo || [] };
+  return { ...c, id: c.p, nm: G.people[c.p].nm, D: Number(D), cq, lg:G.clubs?.[cq]?.cc||'', nat:nation(G.people[c.p].nat), src: c.s, duo: G.people[c.p].duo || [], h: career(G, c.p) };
 }
 
 export function shape(G, n) {

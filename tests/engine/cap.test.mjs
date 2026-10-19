@@ -115,8 +115,8 @@ test('placement preview includes partnership, chemistry and a signature manager 
   s = Dr.place(H, s, Q[0].p, 9);
   const v = Dr.preview(H, s, Q[1].p, 10);
   assert.equal(v.b, 3); // the listed partner
-  assert.equal(v.n, 2); // club: 2 starters ≥ 2; league: 2 starters + the ENG manager ≥ 3
-  assert.equal(v.a, 97); // 92 base + 3 partnership + 2 chemistry in a natural ST slot, at home in 1990.
+  assert.equal(v.n, 3); // club: 2 teammates ≥ 2; league: 2 starters + the ENG manager ≥ 3; coached: the manager's club
+  assert.equal(v.a, 98); // 92 base + 3 partnership + 3 chemistry in a natural ST slot, at home in 1990.
   assert.equal(v.gA, 'A');
   assert.equal(v.up, true);
   const n = Dr.place(H, s, Q[1].p, 10), R = E.rate(Dr.team(H, n), n.D);

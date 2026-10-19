@@ -121,31 +121,31 @@ Under the salary cap:
 
 | Decade | Median finish | Titles / 100 | Top four / 100 | Median points | Unbeaten / 100 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 1950s | 2 | 30 | 89 | 87 | 0 |
-| 1960s | 3 | 14 | 64 | 78 | 0 |
-| 1970s | 5 | 15 | 45 | 70 | 0 |
-| 1980s | 8 | 0 | 10 | 61 | 0 |
-| 1990s | 9 | 0 | 9 | 61 | 0 |
-| 2000s | 13 | 0 | 1 | 48 | 0 |
-| 2010s | 11 | 0 | 4 | 52 | 0 |
-| 2020s | 10 | 0 | 0 | 53 | 0 |
+| 1950s | 2 | 30 | 89 | 89 | 0 |
+| 1960s | 3 | 12 | 58 | 76 | 0 |
+| 1970s | 5 | 12 | 44 | 70 | 0 |
+| 1980s | 8 | 0 | 11 | 63 | 0 |
+| 1990s | 8 | 0 | 9 | 62 | 0 |
+| 2000s | 13 | 0 | 3 | 46 | 0 |
+| 2010s | 11 | 0 | 0 | 51 | 0 |
+| 2020s | 10 | 0 | 0 | 55 | 0 |
 
 Under Classic:
 
 | Decade | Median finish | Titles / 100 | Top four / 100 | Median points | Unbeaten / 100 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 1950s | 2 | 38 | 93 | 92 | 1 |
-| 1960s | 3 | 18 | 74 | 81 | 0 |
-| 1970s | 3 | 28 | 59 | 75 | 0 |
-| 1980s | 6 | 4 | 31 | 68 | 0 |
-| 1990s | 6 | 3 | 29 | 67 | 0 |
-| 2000s | 11 | 0 | 6 | 54 | 0 |
-| 2010s | 10 | 0 | 8 | 54 | 0 |
-| 2020s | 8 | 0 | 14 | 62 | 0 |
+| 1950s | 1 | 50 | 94 | 92 | 1 |
+| 1960s | 2 | 20 | 79 | 81 | 0 |
+| 1970s | 3 | 24 | 61 | 74 | 0 |
+| 1980s | 6 | 3 | 35 | 69 | 0 |
+| 1990s | 7 | 1 | 24 | 69 | 0 |
+| 2000s | 10 | 2 | 16 | 56 | 0 |
+| 2010s | 9 | 0 | 11 | 57 | 0 |
+| 2020s | 8 | 0 | 11 | 60 | 0 |
 
-The policy won 59 of 800 capped seasons, or 7.4%, and 91 of 800 Classic seasons, or 11.4%. Both aggregates are within the chosen 5% to 15% title target. Classic produced one unbeaten season, in the 1950s; the capped policy produced none. With an even sample size, the harness reports the lower of the two middle observations in the sorted list as its median.
+The policy won 54 of 800 capped seasons, or 6.8%, and 100 of 800 Classic seasons, or 12.5%. Before the 2026-10-19 chemistry and position changes (commit `0d751f9`) the same seeds gave 59, or 7.4%, and 91, or 11.4%. Both aggregates are within the chosen 5% to 15% title target. Classic produced one unbeaten season, in the 1950s; the capped policy produced none. With an even sample size, the harness reports the lower of the two middle observations in the sorted list as its median.
 
-Every capped title came in the 1950s to 1970s. The capped squad's median rating stayed between 85.2 and 86.8 in every decade, while the median of the nineteen opponents rose from 79.4 in the 1950s to 86.1 to 90.8 from the 1980s onwards. Classic squads reached 87.1 to 88.7. Zero titles in one hundred drafts of a decade does not establish that the decade cannot be won. Better selections, deliberate partnerships or use of re-spins remain outside what this policy measures.
+Every capped title came in the 1950s to 1970s. The capped squad's median rating stayed between 85.6 and 87.0 in every decade, while the median of the nineteen opponents rose from 79.4 in the 1950s to 86.0 to 90.2 from the 1980s onwards. Classic squads reached 87.0 to 89.2. Zero titles in one hundred drafts of a decade does not establish that the decade cannot be won. Better selections, deliberate partnerships or use of re-spins remain outside what this policy measures.
 
 Repeating the same seeds with `free` chooses the highest-overall formation after drafting. Every candidate is applied through the game's formation function, which keeps all fifteen cards and the bench. It does not optimize picks for a future formation or choose by season outcome.
 
@@ -236,6 +236,20 @@ Commit `92cdd97` replaced proximity links with Ultimate Team chemistry. A link g
 | Classic career objectives / league titles, of 300 seasons | 292 / 291 | 298 / 298 |
 
 Chemistry favoured the drafted fifteen in every measurement. With the current policy, which values the chemistry a placement adds, and with career rivals' managers also counting towards chemistry, capped season titles reached 82 and Classic titles 131 of 800, above the 5% to 15% target. The spin settings were retuned to `tau=60` and `rho=2` to restore it; the tables above are measured under them.
+
+## Career chemistry and listed positions changed the rival squads more than yours
+
+On 2026-10-19 chemistry began counting former teammates, shared clubs and the manager who coached a player, the bundle gained a football nation for 10,870 more people, an unlisted position stopped rating as natural, and rival squads gained a line quota ([MODEL.md](MODEL.md#teammates-formation-and-the-manager)). The season tables above are re-measured with those rules; the formation-search, Gauntlet and career measurements in this document predate them and were not repeated.
+
+| Measurement | Before (`0d751f9`) | After |
+| --- | ---: | ---: |
+| Capped season titles / 800 | 59 | 54 |
+| Classic season titles / 800 | 91 | 100 |
+| Rival chemistry, mean over decades' sides, 1980s to 2020s | 18.9 to 26.4 | 28.9 to 30.3 |
+| Rival sides with a starter two or more positions out of place, 1980s to 2020s | 2 | 12 |
+| Rival sides with such a starter, 1950s to 1970s | 55 | 40 |
+
+The rival chemistry rows compare every archive club-decade side the career can field. Real squads were teammates by construction, so most now sit near the maximum of 33, against means of 12 to 15 for twelve drafts per decade picked by best placement and 13 to 19 for drafts that chased bonds. The chemistry thresholds stay EA's: lowering them raised the bond-seeking drafts by only one to one and a half points, because five draws of three picks limit how many teammates a draft can hold. The out-of-place count from the 1980s rose although the quota added defenders: before the position floor, flat and converted position ratings let forwards and midfielders play at the back at full strength, so the measure did not count them.
 
 ## Identifying the evidence and its limits
 

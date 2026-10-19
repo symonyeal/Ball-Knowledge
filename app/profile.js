@@ -78,7 +78,7 @@ export function achievements(P) {
 }
 
 export function validateProfile(G, A, raw) {
-  if (!raw || raw.v!==1 || !Array.isArray(raw.events) || raw.events.length>20000 || !raw.sessions || typeof raw.sessions!=='object' || Array.isArray(raw.sessions) || Object.keys(raw.sessions).length>5000) throw new Error('Choose a valid Football Era Draft profile.');
+  if (!raw || raw.v!==1 || !Array.isArray(raw.events) || raw.events.length>20000 || !raw.sessions || typeof raw.sessions!=='object' || Array.isArray(raw.sessions) || Object.keys(raw.sessions).length>5000) throw new Error('Choose a valid Ball Knowledge profile.');
   // b844ee4 (published 2026-10-19, UTC ISO week 2026-W43) stored a weekly challenge's week as '[object Object]'.
   const events=raw.events.map(e0=>{
     const e=e0?.kind==='sbc'&&e0.week==='[object Object]'?{...e0,week:'2026-W43'}:e0;

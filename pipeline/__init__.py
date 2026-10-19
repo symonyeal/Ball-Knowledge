@@ -1,1 +1,1 @@
-"""Data pipeline for Football Era Draft: results, squads, ratings and managers to game JSON."""
+"""Data pipeline for Ball Knowledge: results, squads, ratings and managers to game JSON."""

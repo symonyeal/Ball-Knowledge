@@ -25,5 +25,5 @@ export const MANAGER_PEOPLE = {
 export function staff(G, m, q = null, D = 1990) {
   const full = G.managers.find(x=>x.nm===m.nm) || m, p = G.people?.[MANAGER_PEOPLE[m.nm]];
   q ||= m.cq || full.t?.find(([,a,b])=>a<=D+9&&b>=D)?.[0] || full.t?.[0]?.[0];
-  return {...m,cq:q||'',lg:G.clubs?.[q]?.cc||m.lg||'',nat:m.nat||(p?.nm===m.nm?nation(p.nat):'')};
+  return {...m,cq:q||'',lg:G.clubs?.[q]?.cc||m.lg||'',nat:m.nat||(p?.nm===m.nm?nation(p.nat):''),t:m.t||full.t||[]};
 }

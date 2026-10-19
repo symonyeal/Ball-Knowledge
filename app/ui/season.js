@@ -25,7 +25,7 @@ const clubName = id => (id === 'your-club' ? 'Your Era XI' : U.F[U.S.D].find(c =
 
 export function xi(T, Q, Ds, label) {
   const S = T.S, cells = Q.xi.map((p, i) => (p.c ? { kind: 'f', id: p.c.id, nm: p.c.nm, a: p.a, t: TI(p.c.r), q: p.c.cq, f: p.f, n: p.n, fc: face(p.c) } : null));
-  return `<div class="xi"><div class="xi-pitch">${pitch(S, cells, { mode: 'view', links: links(S, Q.xi.map(p => p.c)), label })}</div>
+  return `<div class="xi"><div class="xi-pitch">${pitch(S, cells, { mode: 'view', links: links(Q), label })}</div>
     <div class="bn view">${Q.bn.map((p, j) => (p ? `<div class="bs f" style="${kv(p.c.cq)}">${portrait(p.c.id,p.c.nm,true)}<span class="v">${Math.round(p.a)}</span><span class="t"><b>${esc(p.c.nm)}</b><small>${tier(TI(p.c.r), 'sm')} Bench ${j + 1}</small></span></div>` : '')).join('')}</div></div>`;
 }
 
@@ -202,7 +202,7 @@ export function arena() {
 }
 export function runShareText() {
   const S = U.S, s = S.mode.run, sc = Rn.score(s);
-  return `Football Era Draft · Era Gauntlet · ${Rn.MAPS[s.map].nm} · ${rules(S)}
+  return `Ball Knowledge · Era Gauntlet · ${Rn.MAPS[s.map].nm} · ${rules(S)}
 ${sc.acts} of ${Rn.MAPS[s.map].D.length} decades cleared · ${sc.w}W ${sc.d}D ${sc.l}L · score ${num(sc.score)}
 ${teamLine(S)}
 Seed ${S.seed} · ${location.href.split('?')[0]}`;
@@ -235,7 +235,7 @@ export function about() {
   <h3>Five different clubs</h3><p>Any of the archive's clubs can be drawn; squads nearer your season and stronger squads are more likely. No club repeats across your five squads, and each squad includes a player from the best tier your fifteen have not yet filled (2 S, 4 A, 4 B, 3 C, 2 D), when any remaining club has one. Take three players from each and place them anywhere. One squad re-spin per draft, before your first pick from a squad.</p>
   <h3>A budget for all fifteen</h3><p>Salary cap is the default: 2 S-tier, 4 A-tier, 4 B-tier, 3 C-tier and 2 D-tier players, bench included. Tiers use base rating: S 90+, A 85–89.9, B 80–84.9, C 75–79.9, D below 75. Cards are blocked when their tier is full or taking them would prevent you finishing a squad's three picks; blocked cards stay listed with the reason. Classic removes these limits.</p>
   <h3>Positions and formations</h3><p>A player's rating in every slot comes from his game card where one exists: EA's per-position ratings, or Championship Manager attributes on EA's scale. Otherwise the loss grows with distance from his listed positions: one step 10%, two steps 22%, further 35%, and 75% for a keeper outfield or an outfielder in goal. The bench has no position loss. A formation change keeps every card, the bench and your cap charges; starters keep their role where the new shape has it, then take the places that cost the least rating, then move the least distance. Preview a formation before applying it, and undo lineup changes until your next pick.</p>
-  <h3>Shape, chemistry and managers</h3><p>Formation shape moves strength between attack, midfield and defence. Chemistry follows EA FC Ultimate Team: each starter in a natural position earns 0–3 points from players sharing his club (2/4/7), nation (2/5/8) or league (3/5/8); the manager counts once towards his nation and league. Each point adds one rating point; the team maximum is 33. Famous duos who both start add a separate partnership bonus. The pitch draws club links in club colours.</p>
+  <h3>Shape, chemistry and managers</h3><p>Formation shape moves strength between attack, midfield and defence. Chemistry uses EA FC Ultimate Team's scale: each starter in a listed position earns 0–3 points. Former teammates (the same club in the same seasons, anywhere in their careers) count fully towards the club total and players who shared a club in other seasons count half (2/4/7); the same football nation (2/5/8) and league (3/5/8) count as in EA FC, with the manager counting once towards his nation and league; a manager who coached the player adds a point. Each point adds one rating point; the team maximum is 33. The pitch draws teammates solid, a shared club dashed and a shared nation dotted, and the draft screen shows the win chance chemistry adds. Famous duos who both start add a separate partnership bonus.</p>
   <h3>Keyboard</h3><p>Arrow keys move through the squad list and around the pitch; Enter selects or places; Escape cancels; / jumps to search; Ctrl+Z undoes a lineup change and Ctrl+Shift+Z redoes it.</p>
   <h3>A decade at your club</h3><p>Your fifteen take the chosen club's place in its real league for every available season of the decade. Rival squads use players recorded at that club in that season, nearby-season players when needed, or labelled stand-ins. Play to winter, choose a reward and set the lineup, then play the run-in. Results against expectations change board patience; meeting the season objective earns a bonus. Win cups, develop players, upgrade a player to his best card, make summer transfers and continue until the decade ends or the board sacks you. A win in which a player has three goal involvements, or every five clean sheets for a keeper, earns an in-form: +1 rating from the next half, up to +3, until the season ends. One Evolution at a time sets a player rated 86 or below a target, such as 10 goals; completing it adds 2 rating points and, for most, a new natural position. Domestic cups and European places follow the country and era, with simplified formats.</p>
   <h3>Era Gauntlet</h3><p>The start screen's Gauntlet entry drafts from the decades near a map's first stop, then plays it: four six-match rounds and a two-legged boss in every decade, with rewards, transfers and board patience. The draft mostly draws each decade's strongest squads and allows up to 3 S-tier and 6 A-tier players; that limit holds for the whole run. Odyssey in Reverse, from the 2020s to the 1950s, is the default map.</p>
@@ -246,7 +246,7 @@ export function about() {
 // Text and image for sharing a season.
 export function shareText() {
   const { R, S } = U, i = R.L.tab.findIndex(c => c.me), t = R.L.tab[i];
-  return `Football Era Draft · ${S.wk ? `Weekly ${S.wk} · ` : ''}${rules(S)} · ${S.D}s\n${ord(i + 1)} / 20 · ${t.Pts} points · ${t.W}W ${t.D}D ${t.L}L\nEuropean Cup: ${R.K.champ === 'your-club' ? 'WINNERS' : R.K.champN}\n${teamLine(S)}\nSeed ${S.seed} · ${location.href.split('?')[0]}?seed=${S.seed}&era=${S.D}&cap=${S.cap ? 1 : 0}`;
+  return `Ball Knowledge · ${S.wk ? `Weekly ${S.wk} · ` : ''}${rules(S)} · ${S.D}s\n${ord(i + 1)} / 20 · ${t.Pts} points · ${t.W}W ${t.D}D ${t.L}L\nEuropean Cup: ${R.K.champ === 'your-club' ? 'WINNERS' : R.K.champN}\n${teamLine(S)}\nSeed ${S.seed} · ${location.href.split('?')[0]}?seed=${S.seed}&era=${S.D}&cap=${S.cap ? 1 : 0}`;
 }
 
 const METAL = { S: '#C9B6FF', A: '#E7B54A', B: '#C5CFDB', C: '#CD8D5C', D: '#8A94A6' };
@@ -262,7 +262,7 @@ export async function cardImage() {
   const bg = g.createRadialGradient(600, -80, 60, 600, 200, 900); bg.addColorStop(0, '#2A3352'); bg.addColorStop(1, '#070B14');
   g.fillStyle = bg; g.fillRect(0, 0, 1200, 900);
   g.fillStyle = k1; g.fillRect(0, 0, 840, 10); g.fillStyle = k2; g.fillRect(840, 0, 360, 10);
-  tx('FOOTBALL ERA DRAFT', 56, 76, 46, '#F2F5FB', 'Barlow Condensed', 800);
+  tx('BALL KNOWLEDGE', 56, 76, 46, '#F2F5FB', 'Barlow Condensed', 800);
   tx(`${S.wk ? `WEEKLY ${S.wk} · ` : ''}${rules(S).toUpperCase()} · ${S.D}s SEASON`, 58, 112, 20, '#B7C2D9', 'Barlow', 600);
   tx(`${i + 1}`, 52, 270, 170, '#FFFFFF', 'Barlow Condensed', 800, 300); tx(ord(i + 1).slice(-2).toUpperCase(), 52 + g.measureText(`${i + 1}`).width + 8, 170, 46, '#FFFFFF', 'Barlow Condensed', 800);
   tx('LEAGUE FINISH', 58, 300, 18, '#8E9BB8', 'Barlow', 600);
