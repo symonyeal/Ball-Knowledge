@@ -13,11 +13,11 @@ import * as E from '../app/engine/index.js';
 import * as Dr from '../app/draft.js';
 import * as Rn from '../app/run.js';
 import { fields } from '../app/data.js';
-import { ct, TI, GCAP } from '../app/cap.js';
+import { ct, TI, RCAP } from '../app/cap.js';
 
 const G = JSON.parse(readFileSync(new URL('../data/game.json', import.meta.url), 'utf8'));
 if (G.params) E.cfg(G.params);
-if (process.env.OPP) Object.assign(Rn.OPP, JSON.parse(process.env.OPP));
+if (process.env.DW) Object.assign(Dr.DW, JSON.parse(process.env.DW));
 const F = fields(G), GR = { S: 0.04, A: 0.03, B: 0.015, C: 0, D: -0.015, F: -0.03 };
 const A = process.argv.slice(2), cap = !A.includes('classic'), free = A.includes('free'), legacy = A.includes('legacy');
 const rules = `${cap ? 'Salary cap' : 'Classic'}${free ? ', free formation' : ''}`;
@@ -89,7 +89,7 @@ if (mode === 'season') {
         const old = low(H.old), neu = low(H.neu), ins = [...old.map(i => H.old[i]), ...neu.map(i => H.neu[i])];
         const Q = Rn.bill(G, s), C = ct(G, Q), out = [];
         for (const t of ['S', 'A']) {
-          const need = cap ? Math.max(0, C[t] + ins.filter(f => TI(f.r) === t).length - GCAP[t]) : 0;
+          const need = cap ? Math.max(0, C[t] + ins.filter(f => TI(f.r) === t).length - RCAP[t]) : 0;
           out.push(...Q.map((r, i) => i).filter(i => TI(Dr.hydrate(G, Q[i]).r) === t).slice(0, need));
         }
         const lowOut = Q.map((r, i) => i).filter(i => !out.includes(i)).sort((i, j) => Dr.hydrate(G, Q[i]).r - Dr.hydrate(G, Q[j]).r);

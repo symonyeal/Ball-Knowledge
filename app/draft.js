@@ -1,5 +1,5 @@
 import { mk, hs, sh, ft, em, rate, move } from './engine/index.js';
-import { TI, CAP, ck, left } from './cap.js';
+import { TI, CAP, RCAP, ck, left } from './cap.js';
 import { validRun, MAPS } from './run.js';
 import { staff, nation } from './staff.js';
 
@@ -7,7 +7,8 @@ import { staff, nation } from './staff.js';
 // k club-decade key; S formation slots; xi starting eleven; bn four bench cards;
 // s.manager the seeded team {nm, q, a}: manager, club QID, first season of the spell; s.f formation in use.
 // s.g a Gauntlet draft's map: D is the map's first decade and squads come from decades within POOL
-// years of it (Eraball's Gauntlet opening draft); kick-off starts that map instead of the career.
+// years of it (Eraball's Gauntlet opening draft) under the Gauntlet cap RCAP; kick-off starts that
+// map instead of the career.
 
 export const VERSION = 4;
 export const STORE = 'football-era-lab-v2';
@@ -111,18 +112,20 @@ export const key = c => `${c.q}:${c.D}`;
 // drawn with probability weight / (sum of eligible weights), and a club ruled out by one player's
 // picks leaves every other draw on that seed unchanged. DW holds the two declared settings: larger
 // tau spreads spins across more clubs; smaller rho keeps more spins near the season's decade
-// (Infinity = uniform). Current measurements live in docs/VALIDATION.md (tests/balance.mjs).
-export const DW = { tau: 60, rho: 2 };
+// (Infinity = uniform); tg replaces tau in a Gauntlet draft, which mostly draws its decades' strongest
+// squads. Current measurements live in docs/VALIDATION.md (tests/balance.mjs).
+export const DW = { tau: 60, rho: 2, tg: 4 };
 
-export function draw(G, r, ok, Ds) {
+export function draw(G, r, ok, Ds, tau = DW.tau) {
   const wd = D => (Ds && Number.isFinite(DW.rho) ? Math.exp(-Math.abs(D - Ds) / (10 * DW.rho)) : 1);
-  const wk = c => (Number.isFinite(DW.tau) ? Math.exp(-((Number.isFinite(c.k) ? c.k : 1) - 1) / DW.tau) : 1);
+  const wk = c => (Number.isFinite(tau) ? Math.exp(-((Number.isFinite(c.k) ? c.k : 1) - 1) / tau) : 1);
   const Q = G.combos.map(c => [c, -Math.log(1 - r()) / (wd(c.D) * wk(c))]).sort((a, b) => a[1] - b[1]);
   for (const [c] of Q) if (ok(c)) return c;
   return null;
 }
 
-export const room = (G, s) => left(G, s.slots);
+export const lim = s => (s.g ? RCAP : CAP);
+export const room = (G, s) => left(G, s.slots, lim(s));
 
 // Enough distinct, affordable people must remain for the rest of this three-pick batch.
 function batch(G, s, k, p = null) {
@@ -157,7 +160,7 @@ export function spin(G, s, reroll = false) {
   // otherwise any new club that can fill three remaining places.
   const R = room(G, s), t = Object.keys(CAP).find(t => R[t] > 0);
   const ok = c => near(s, c.D) && !H.has(c.q) && (G.cards[key(c)] || []).filter(p => !I.has(p.p)).length >= 3 && batch(G, s, key(c));
-  const c = (t && draw(G, r, c => ok(c) && G.cards[key(c)].some(x => !I.has(x.p) && TI(x.r) === t), s.D)) || draw(G, r, ok, s.D);
+  const c = (t && draw(G, r, c => ok(c) && G.cards[key(c)].some(x => !I.has(x.p) && TI(x.r) === t), s.D, s.g ? DW.tg : DW.tau)) || draw(G, r, ok, s.D, s.g ? DW.tg : DW.tau);
   if (!c) throw new Error('No new club can fill three of your remaining tier places.');
   return { ...s, combo: key(c), squadReroll: n, ...(reroll ? { skip: s.combo } : {}) };
 }
@@ -168,7 +171,7 @@ export function place(G, s, p, i) {
   if (used(s).has(p)) throw new Error('This person is already in your squad, even in a different decade.');
   if (!G.cards[s.combo].some(c => c.p === p)) throw new Error('Choose a player from the revealed squad.');
   if (s.cap) {
-    ck(G, [...s.slots.filter(Boolean), { k: s.combo, p }]);
+    ck(G, [...s.slots.filter(Boolean), { k: s.combo, p }], lim(s));
     if (!can(G, s, p)) throw new Error('This pick would leave too few affordable players to finish the three picks.');
   }
   const slots = s.slots.slice();
@@ -234,7 +237,7 @@ export function valid(G, s0) {
     s.managerRoll < 0 || s.managerRoll > 2 || s.squadReroll < 0 || s.squadReroll > 1 ||
     s.spin < 0 || s.spin > 5 || s.picked < 0 || s.picked > 2) throw new Error('The saved draft counters are invalid.');
   if (!Array.isArray(s.slots) || s.slots.length !== 15 || !Array.isArray(s.history) || s.history.length !== s.spin) throw new Error('The saved squad is incomplete.');
-  if (s.cap) ck(G, s.slots);
+  if (s.cap) ck(G, s.slots, lim(s));
   const ids = new Set();
   for (const c of s.slots) {
     if (!c) continue;
