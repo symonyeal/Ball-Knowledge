@@ -12,7 +12,7 @@ import { TI, fits } from '../cap.js';
 import { team, POOL } from '../draft.js';
 import * as Rn from '../run.js';
 import { code } from '../play.js';
-import { U, esc, num, ord, nm, club, kv, tier, rules, pitch, links, face, capTiles, teamLine, spell } from './kit.js';
+import { U, esc, num, ord, nm, club, kv, tier, rules, pitch, links, face, capTiles, teamLine, spell, portrait } from './kit.js';
 import { candidate, marketPreview, upgradePreview } from './transfers.js';
 
 export const me = () => { const T = team(U.G, U.S); return { id: 'your-club', nm: 'Your Era XI', T, x: E.rate(T, U.S.D).ovr, me: true }; };
@@ -24,9 +24,9 @@ export function season() {
 const clubName = id => (id === 'your-club' ? 'Your Era XI' : U.F[U.S.D].find(c => c.id === id)?.nm || id);
 
 export function xi(T, Q, Ds, label) {
-  const S = T.S, cells = Q.xi.map((p, i) => (p.c ? { kind: 'f', nm: p.c.nm, a: p.a, t: TI(p.c.r), q: p.c.cq, f: p.f, n: p.n, fc: face(p.c) } : null));
+  const S = T.S, cells = Q.xi.map((p, i) => (p.c ? { kind: 'f', id: p.c.id, nm: p.c.nm, a: p.a, t: TI(p.c.r), q: p.c.cq, f: p.f, n: p.n, fc: face(p.c) } : null));
   return `<div class="xi"><div class="xi-pitch">${pitch(S, cells, { mode: 'view', links: links(S, Q.xi.map(p => p.c)), label })}</div>
-    <div class="bn view">${Q.bn.map((p, j) => (p ? `<div class="bs f" style="${kv(p.c.cq)}"><span class="v">${Math.round(p.a)}</span><span class="t"><b>${esc(p.c.nm)}</b><small>${tier(TI(p.c.r), 'sm')} Bench ${j + 1}</small></span></div>` : '')).join('')}</div></div>`;
+    <div class="bn view">${Q.bn.map((p, j) => (p ? `<div class="bs f" style="${kv(p.c.cq)}">${portrait(p.c.id,p.c.nm,true)}<span class="v">${Math.round(p.a)}</span><span class="t"><b>${esc(p.c.nm)}</b><small>${tier(TI(p.c.r), 'sm')} Bench ${j + 1}</small></span></div>` : '')).join('')}</div></div>`;
 }
 
 export function breakdown(Q) {

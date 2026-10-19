@@ -46,6 +46,7 @@ export function windowPreview(s, selection, career = true) {
   } catch(e) { return {ok:false,tx:e.message,html:''}; }
 }
 export function refreshTransfers(root) {
+ root.querySelectorAll('[data-transfer-choice]').forEach(input => { input.checked = root.querySelector(`#${input.dataset.transferChoice}`)?.value === input.value; });
  for (const career of [true,false]) {
   const mode=career ? 'career' : 'run', s=U.S?.mode?.[mode];
   if (!s) continue;

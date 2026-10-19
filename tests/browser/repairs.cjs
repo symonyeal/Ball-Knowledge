@@ -5,7 +5,12 @@ const {chromium}=require(arg('--playwright')||'playwright');
 const out=arg('--output');if(!out)throw Error('Pass --output.');
 fs.mkdirSync(path.join(out,'runtime'),{recursive:true});process.env.TEMP=process.env.TMP=path.resolve(out,'runtime');
 const base=arg('--url')||'http://127.0.0.1:8765/', KEY='football-era-lab-v2', checks=[];
-const ready=p=>p.waitForFunction(()=>document.body.getAttribute('aria-busy')==='false'&&!document.querySelector('.loading'));
+const ready=async p=>{
+ await p.waitForFunction(()=>document.body.getAttribute('aria-busy')==='false'&&!document.querySelector('.loading'));
+ if(await p.locator('#career-setup:not([open])').count())await p.click('#career-setup > summary');
+ if(await p.locator('.career-hero').count())await p.click('[data-tab="market"]');
+ await p.locator('.market-fallback').evaluateAll(Q=>Q.forEach(e=>e.open=true));
+};
 const state=p=>p.evaluate(k=>JSON.parse(localStorage.getItem(k)),KEY);
 const sound=async(p,label='')=>{
  const bad=await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth ? [] : [...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>innerWidth+1).slice(0,15).map(e=>({tag:e.tagName,cls:e.className,right:e.getBoundingClientRect().right,width:innerWidth})));
@@ -50,13 +55,14 @@ const sound=async(p,label='')=>{
     d.mode={career:s,run};localStorage.setItem(key,JSON.stringify(d));
    },KEY);
    await p.reload();await ready(p);await p.waitForSelector('[data-career-fa]');
-   await p.click('[data-tab="more"]');await ready(p);
-   assert.ok(await p.locator('[data-transfer-mode="career"]').count());
+   await p.click('[data-tab="more"]');
    assert.ok(await p.locator('[data-transfer-mode="run"]').count());
    const runPreview=p.locator('[data-transfer-mode="run"][data-transfer-preview]').first();
    const runJ=await runPreview.getAttribute('data-transfer-preview');
    await p.selectOption(`#fa-slot-${runJ}`,'14');
    assert.equal(await runPreview.locator('.transfer-pair').getAttribute('data-outgoing'),(await state(p)).mode.run.slots[14].p,'Gauntlet preview uses the Gauntlet squad alongside a career');
+   await p.click('[data-tab="market"]');await ready(p);
+   assert.ok(await p.locator('[data-transfer-mode="career"]').count());
    const j=await p.locator('[data-career-fa]').first().getAttribute('data-career-fa');
    const prior=await state(p);
    await p.selectOption(`#career-fa-${j}`,'1');await p.selectOption(`#career-out-${j}`,'12');

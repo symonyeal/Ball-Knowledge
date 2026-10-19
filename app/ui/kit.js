@@ -21,7 +21,7 @@ import { SL, ft, em, W } from '../engine/index.js';
 
 export const U = {
   G: null, S: null, F: null, R: null, C: null, H: null, D: 1980, cap: true, seed: '',
-  sel: null, sw: null, tgt: null, q: '', sort: 'fit', ln: 'All', fit: false, tab: 'league', view: 'squad',
+  sel: null, sw: null, tgt: null, pos: null, q: '', sort: 'fit', ln: 'All', fit: false, tab: 'home', view: 'squad',
   pv: null, undo: [], redo: [], moved: new Set(), insp: 0, f0: null, cmp: [], ev: 12, busy: false, focus: null,
 };
 
