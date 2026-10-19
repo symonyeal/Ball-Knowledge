@@ -440,10 +440,13 @@ async function full(kind) {
     assert.equal((await st(p)).phase, 'results'); assert.equal((await st(p)).cap, true);
     ok(`${kind}: invalid replays are rejected and a downloaded replay restores exact placements`);
     await p.click('#reset-open'); await p.click('#reset-confirm'); await settle(p);
-    await p.setInputFiles('#import-replay', { name: 'legacy-name.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ ...saved, game: 'Football Era Lab' })) });
-    await p.waitForSelector('.result-hero'); await settle(p);
-    assert.deepEqual((await st(p)).slots, saved.draft.slots);
-    ok(`${kind}: replays exported under the former name retain exact placements`);
+    for (const [i, game] of ['Football Era Draft', 'Football Era Lab'].entries()) {
+      if (i) { await p.click('#reset-open'); await p.click('#reset-confirm'); await settle(p); }
+      await p.setInputFiles('#import-replay', { name: `former-name-${i}.json`, mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ ...saved, game })) });
+      await p.waitForSelector('.result-hero'); await settle(p);
+      assert.deepEqual((await st(p)).slots, saved.draft.slots, `a replay saved as ${game} restores its placements`);
+    }
+    ok(`${kind}: replays exported under either former name retain exact placements`);
     const v2 = { ...saved, draft: { ...saved.draft, v: 2, manager: { nm: 'legacy' } } };
     await p.click('#reset-open'); await p.click('#reset-confirm'); await settle(p);
     await p.setInputFiles('#import-replay', { name: 'v2.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(v2)) });

@@ -13,7 +13,7 @@ import urllib.request
 
 from .config import CACHE
 
-UA = "FootballEraDraft/0.2 (https://github.com/symonyeal/Football-Era-Draft)"
+UA = "BallKnowledge/0.2 (https://github.com/symonyeal/Ball-Knowledge)"
 
 
 def fetch(u, p, n=4):

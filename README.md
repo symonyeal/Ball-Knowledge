@@ -2,9 +2,9 @@
 
 Ball Knowledge (formerly Football Era Draft) is a draft game about building a team across generations. Maradona's Napoli card can play alongside Messi's Barcelona card, but you still have to find a goalkeeper, fill your chosen formation, leave four useful substitutes on the bench and stay inside a salary cap that allows only two S-tier stars. Your fifteen then take your chosen club's place in its real domestic league for the available seasons of the decade, with cup races, transfer windows and a board that rewards or punishes your results.
 
-[Play in your browser](https://symonyeal.github.io/Football-Era-Draft/). The game uses bundled data and needs no account, API key, package installation or separate source downloads.
+[Play in your browser](https://symonyeal.github.io/Ball-Knowledge/). The game uses bundled data and needs no account, API key, package installation or separate source downloads.
 
-![Lineup review before kick-off: fifteen drafted players, salary-cap allowances and formation controls.](docs/images/football-era-draft.png)
+![Lineup review before kick-off: fifteen drafted players, salary-cap allowances and formation controls.](docs/images/ball-knowledge.png)
 
 ## Choose your mode
 
@@ -110,7 +110,7 @@ An EA or CM rating is that game's assessment. An estimated historical card is a 
 
 ## Inspect the choices in the notebook
 
-The [Jupyter notebook](Football%20Era%20Draft.ipynb) shares the browser's JavaScript rating and match functions. Its existing experiment plays one fictional twenty-club Era League and sixteen-club European Cup, using decade-wide club squads. It does not reproduce the browser's real-league career, season-specific opponents, qualification or transfer economy. Python displays the data and results: source coverage, a real card's position ratings, the chosen squad, rating adjustments, team strengths, fixtures, Cup ties and player awards.
+The [Jupyter notebook](Ball%20Knowledge.ipynb) shares the browser's JavaScript rating and match functions. Its existing experiment plays one fictional twenty-club Era League and sixteen-club European Cup, using decade-wide club squads. It does not reproduce the browser's real-league career, season-specific opponents, qualification or transfer economy. Python displays the data and results: source coverage, a real card's position ratings, the chosen squad, rating adjustments, team strengths, fixtures, Cup ties and player awards.
 
 You can supply your own fifteen players, choose a manager and formation, change the season decade, or compare the same lineup with different placements. The default demonstration drafts under the salary cap: it draws five club squads and automatically picks three allowed players from each. In the browser, every selection and placement is yours. The notebook also prints the data hash and both random seeds, then checks that unchanged settings produce the same result.
 
@@ -122,7 +122,7 @@ The [notebook settings reference](docs/MODEL.md#notebook-settings) explains how 
 | --- | --- |
 | [index.html](index.html), [app/](app/main.js) | The static browser game and its interface. |
 | [app/engine/](app/engine/index.js), [app/club.js](app/club.js), [app/career.js](app/career.js) | Rating and match calculations, real club-season competitions and the career economy. |
-| [Football Era Draft.ipynb](Football%20Era%20Draft.ipynb), [notebooks/engine_bridge.mjs](notebooks/engine_bridge.mjs) | Editable squad experiments and the connection to the JavaScript engine. |
+| [Ball Knowledge.ipynb](Ball%20Knowledge.ipynb), [notebooks/engine_bridge.mjs](notebooks/engine_bridge.mjs) | Editable squad experiments and the connection to the JavaScript engine. |
 | [data/game.json](data/game.json) | The bundled cards, people, clubs, managers, match settings and real league records. |
 | [docs/DATA.md](docs/DATA.md) | Squad inclusion, source labels, coverage, attribution and rebuilding. |
 | [docs/MODEL.md](docs/MODEL.md) | Rating calculations, match rules, mode rules and notebook settings. |
@@ -141,7 +141,7 @@ For the notebook, install Node 20 or later and Python 3.11 or later, then run:
 
 ```text
 py -3.14 -m pip install -r requirements.txt
-py -3.14 -m jupyterlab "Football Era Draft.ipynb"
+py -3.14 -m jupyterlab "Ball Knowledge.ipynb"
 ```
 
 These commands use the Windows development machine's system Python 3.14. Elsewhere, replace `py -3.14` with your Python command. Set `NODE` in the notebook's setup cell if Node is not on PATH.
@@ -158,6 +158,6 @@ py -3.14 -m pytest -q
 
 GitHub's workflow also executes the notebook. Browser checks and balance commands are in [VALIDATION.md](docs/VALIDATION.md); rebuilding data is a separate task described in [DATA.md](docs/DATA.md).
 
-The [v1 tag](https://github.com/symonyeal/Football-Era-Draft/tree/v1) preserves the earlier Python game, notebook, career, rooms, mini-games and reports. Its saves and competitive profiles have a different format and no automatic migration. Its test commands apply to that version.
+The [v1 tag](https://github.com/symonyeal/Ball-Knowledge/tree/v1) preserves the earlier Python game, notebook, career, rooms, mini-games and reports. Its saves and competitive profiles have a different format and no automatic migration. Its test commands apply to that version.
 
 The [code licence](LICENSE) is MIT. Bundled Barlow fonts use the [SIL Open Font License](app/fonts/OFL.txt). Source data retains its own terms; [DATA.md](docs/DATA.md#source-attribution-and-terms) and [data/manifest.json](data/manifest.json) record them. Raw rating archives, CM databases and GPL results files remain local. Publisher declarations do not establish rights to every underlying game asset. Featured player and manager portraits are bundled from Wikimedia Commons, with [author and licence credits](docs/PORTRAITS.md). Other player portraits load on demand; unavailable photographs show a silhouette. Photographs may show a different age or club from the historical card. No EA card artwork or club badges are bundled. This independent project is unaffiliated with Eraball, EA, FIFA, Konami, Wikidata or the data publishers.
