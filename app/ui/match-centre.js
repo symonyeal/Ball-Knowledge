@@ -17,7 +17,8 @@ export function mountMatchCentre() {
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.dataset.effects === 'false';
   const stop = () => { clearInterval(timer); timer = null; };
   const returnFocus = () => (document.getElementById('tab-home') || document.getElementById('game')).focus();
-  const close = () => { stop(); d.close(); };
+  // Focus moves in the same task: the close event is queued, so a hidden Skip button would otherwise keep focus.
+  const close = () => { stop(); d.close(); returnFocus(); };
   const paint = () => {
     const m = matches[at], f = frame(m, minute), n = id => esc(cname(U.G, id)), focused = document.activeElement?.id;
     const comp = m.k === 'L' ? 'League' : U.S.mode.career.S.K[m.k]?.nm || m.k;
