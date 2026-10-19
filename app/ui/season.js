@@ -94,7 +94,7 @@ function runSquad(s) {
     }).join('')}</tbody></table></div></details>`;
 }
 const left = (s, c) => { const n = s.pat - c; return n < 1 ? '<p class="warn small">Not enough patience: the board keeps at least 1.</p>' : `<p class="small">Leaves ${n} patience${n <= Rn.B_LOSS(s.lost) ? ': one boss loss would end the run' : ''}.</p>`; };
-const mapChoice = () => `<label class="field"><span class="lbl">Gauntlet map</span><select id="run-map">${Object.entries(Rn.MAPS).map(([k, m]) => `<option value="${k}">${esc(m.nm)} · ${m.D.map(d => `${d}s`).join(' → ')}</option>`).join('')}</select></label>`;
+const mapChoice = () => `<label class="field"><span class="lbl">Gauntlet map</span><select id="run-map">${Object.entries(Rn.MAPS).map(([k, m]) => `<option value="${k}" ${k === 'reverse' ? 'selected' : ''}>${esc(m.nm)} · ${m.D.map(d => `${d}s`).join(' → ')}</option>`).join('')}</select></label>`;
 function squadOptions(s, only) {
   const T = Rn.runTeam(U.G, s);
   return s.slots.map((r, i) => (only && !only.includes(i) ? '' : `<option value="${i}">${i < 11 ? T.S[i].s : `Bench ${i - 10}`} · ${esc(nm(r.p))} · ${charged(s, r.p)} charge</option>`)).join('');

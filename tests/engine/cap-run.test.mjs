@@ -15,7 +15,7 @@ G.cards['q1:2000'] = [{ p: 'p13', r: 95, pos: ['ST'], tg: {} }, ...[91, 87, 82, 
 })];
 G.cards['q1:1960'] = G.cards['q1:2000'].filter(c => c.p.startsWith('f'));
 const d = { manager: { nm: 'Manager', q: 'q0', a: 1990 }, f: '4-4-2', cap: true, slots: rs.map((r, i) => ({ k: 'q0:1990', p: `p${i}` })) };
-const reward = seed => ({ ...Rn.runNew(seed, d), ph: 'node', rd: 0, pat: 20 });
+const reward = seed => ({ ...Rn.runNew(seed, d, 'original'), ph: 'node', rd: 0, pat: 20 });
 
 test('an earned prime boost retains the original tier charge and cannot erase cap mode', () => {
   let s, O, j;
@@ -61,14 +61,14 @@ test('capped B and C signings can replace any tier, and a Classic run has no cap
     const H = at(r), { s, O, j } = signing(H, reward);
     assert.equal(Rn.take(H, {}, s, j, { pick: 0, slot }).slots[slot].p, O[j].list[0].p, `${r} over slot ${slot}`);
   }
-  const H = at(95), { s, O, j } = signing(H, seed => ({ ...Rn.runNew(seed, { ...d, cap: false }), ph: 'node', rd: 0, pat: 20 }));
+  const H = at(95), { s, O, j } = signing(H, seed => ({ ...Rn.runNew(seed, { ...d, cap: false }, 'original'), ph: 'node', rd: 0, pat: 20 }));
   assert.equal(Rn.take(H, {}, s, j, { pick: 0, slot: 6 }).slots[6].p, O[j].list[0].p);
 });
 
 test('MVP points and signing terms change slot-rated strength while preserving position fit', () => {
   const H = structuredClone(G);
   for (const Q of Object.values(H.cards)) for (const c of Q) c.sr = E.SL.map(s => s === 'CB' ? c.r * 0.65 : c.r);
-  const s = Rn.runNew(0, d), p = s.slots[0].p;
+  const s = Rn.runNew(0, d, 'original'), p = s.slots[0].p;
   const c = Rn.runTeam(H, { ...s, mv: { [p]: 1 } }).xi[0];
   assert.equal(E.av(c, 'ST', 1990), 95);
   assert.ok(Math.abs(E.av(c, 'CB', 1990) - 61.75) < 1e-9);

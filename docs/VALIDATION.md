@@ -191,7 +191,7 @@ Four pick policies each completed 320 capped drafts, one per seed and decade (se
 
 ## Gauntlet survival depends on reward choices
 
-This retained version 3 measurement uses the original all-era manager pool; the Gauntlet's rules remain available under More modes. The same drafting policy played forty Gauntlets under each set of rules, using seeds 500 through 539 and cycling the draft decades. Every run used Original Gauntlet, the default and shortest map: the 1960s, 1990s and 2010s. It took a prime-card boost only when at least five patience would remain after payment; otherwise it rested, or took an affordable development at full patience. After a won boss tie, it chose the two lowest-rated transfer offers from each decade. It released players as needed to free cap charges, then the lowest-rated remaining players, and never rearranged the lineup. It did not use free-agent rewards or market re-spins.
+This retained version 3 measurement uses the original all-era manager pool; the Gauntlet's rules remain available under More modes. The same drafting policy played forty Gauntlets under each set of rules, using seeds 500 through 539 and cycling the draft decades. Every run used Original Gauntlet, the shortest map: the 1960s, 1990s and 2010s. It took a prime-card boost only when at least five patience would remain after payment; otherwise it rested, or took an affordable development at full patience. After a won boss tie, it chose the two lowest-rated transfer offers from each decade. It released players as needed to free cap charges, then the lowest-rated remaining players, and never rearranged the lineup. It did not use free-agent rewards or market re-spins.
 
 ```text
 node tests/balance.mjs gauntlet 40 5 cap original legacy
@@ -206,6 +206,8 @@ The final argument selects the map; `back`, `odyssey` and `reverse` are also sup
 | Classic runs | 5 | 31 | 4 | 0 |
 
 Both rule sets cleared a median of one decade and played a median of three boss ties. Median points per six-match round were ten under both rule sets. No run cleared all three decades.
+
+Odyssey in Reverse, the browser default since 2026-10-18, is much harder for this policy because its first act is the 2020s. Under the current cards, chemistry and spin settings, `node tests/balance.mjs gauntlet 40 5 cap reverse` cleared no decade in 36 of 40 runs, one in 3 and two in 1, with a median of 7 points per round; the same command on `original` cleared none in 8 runs, one in 27 and two in 5. Drafting every squad for the 2020s career decade, instead of cycling decades, raised Reverse to 16 of 40 runs clearing at least one decade. Eraball restricts the Gauntlet's opening draft to decades within two of the first act; this game's Gauntlet reuses the career draft, which is open to every decade.
 
 Capped runs earn 1.5 times the score, as in Eraball. The opening capped draft carries three C-tier and two D-tier players; later signings can change those counts within the S- and A-tier limits. Fatigue and absences bring substitutes into matches. These results describe one reward and transfer policy on the shortest three-decade map under the current patience and opposition rules. They do not establish human success rates, the difficulty of the other maps, or the results of planning transfers, rearranging the lineup or choosing different rewards.
 

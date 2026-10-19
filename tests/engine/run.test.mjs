@@ -79,7 +79,7 @@ function step(s) {
 test('four rounds each require a reward before the boss tie and replay identically', () => {
   const d = draft(11, 1970);
   const go = () => {
-    let s = { ...Rn.runNew(11, d), pat: 20 };
+    let s = { ...Rn.runNew(11, d, 'original'), pat: 20 };
     const out = [];
     for (let k = 0; k < 9; k++) {
       s = step(s);
@@ -97,7 +97,7 @@ test('four rounds each require a reward before the boss tie and replay identical
 });
 
 test('a lost boss tie restarts the act against another boss and charges run-wide loss costs', () => {
-  const s = { ...Rn.runNew(5, draft(5, 1990)), ph: 'boss', rd: 4, pat: 20 };
+  const s = { ...Rn.runNew(5, draft(5, 1990), 'original'), ph: 'boss', rd: 4, pat: 20 };
   const H = { ...F, 1960: F[1960].map((c, i) => i < 3 ? club(`strong${i}`, 150, 1960) : c) };
   const t = Rn.runPlayBoss(G, H, s), e = t.log.at(-1);
   assert.equal(e.won, false);
@@ -116,7 +116,7 @@ test('a lost boss tie restarts the act against another boss and charges run-wide
 });
 
 test('a won boss tie opens four free transfers before the next decade and the last boss ends the map', () => {
-  const s = { ...Rn.runNew(5, draft(5, 1990)), ph: 'boss', rd: 4, pat: 8 };
+  const s = { ...Rn.runNew(5, draft(5, 1990), 'original'), ph: 'boss', rd: 4, pat: 8 };
   const H = Object.fromEntries(Object.entries(F).map(([D, Q]) => [D, Q.map((c, i) => i < 3 ? club(`weak${i}`, 20, Number(D)) : c)]));
   const t = Rn.runPlayBoss(G, H, s), e = t.log.at(-1);
   assert.equal(e.won, true);
@@ -145,7 +145,7 @@ test('a won boss tie opens four free transfers before the next decade and the la
 
 test('a boost card upgrades the same person to his best version and charges the tier cost', () => {
   const d = draft(3, 2010);
-  let s = { ...Rn.runNew(3, d), ph: 'node', pat: 20, rd: 0 };
+  let s = { ...Rn.runNew(3, d, 'original'), ph: 'node', pat: 20, rd: 0 };
   let found = null;
   for (let t = 0; t < 40 && !found; t++) {
     const O = Rn.offers(G, F, { ...s, tries: s.tries.map((x, i) => (i === 0 ? t : x)) });
@@ -163,7 +163,7 @@ test('a boost card upgrades the same person to his best version and charges the 
 
 test('rewards never spend the last point of patience', () => {
   const d = draft(9, 1980);
-  const s = { ...Rn.runNew(9, d), ph: 'node', pat: 2, rd: 0 };
+  const s = { ...Rn.runNew(9, d, 'original'), ph: 'node', pat: 2, rd: 0 };
   const O = Rn.offers(G, F, s);
   O.forEach((o, j) => {
     if (o.kind === 'dev' && o.cost >= 2) assert.throws(() => Rn.take(G, F, s, j, { pick: 0, slot: 14 }), /patience/);
@@ -177,8 +177,24 @@ test('rewards never spend the last point of patience', () => {
   assert.equal(t.slots[slot].p, o.p);
 });
 
+// Eraball: only spending patience resets rest (+2, +1, 0); a free desperation signing does not.
+test('a free desperation signing keeps the rest sequence; a paid one resets it', () => {
+  const d = draft(9, 1980);
+  for (const [pat, rest] of [[2, 2], [4, 0]]) {
+    const s = { ...Rn.runNew(9, d, 'original'), ph: 'node', pat, rd: 0, rest: 2 }, O = Rn.offers(G, F, s), j = O.findIndex(o => o.kind === 'desp');
+    const o = O[j].list[0], slot = s.slots.findIndex((_, i) => !s.cap || Rn.TI(Dr.hydrate(G, s.slots[i]).r) === Rn.TI(o.r));
+    assert.equal(Rn.take(G, F, s, j, { slot }).rest, rest);
+  }
+});
+
+test('Odyssey in Reverse is the default map', () => {
+  const s = Rn.runNew(9, draft(9, 2020));
+  assert.equal(s.map, 'reverse');
+  assert.equal(Rn.D_of(s), 2020);
+});
+
 test('saved Gauntlets reject malformed fields before a mode can use them', () => {
-  const d = { ...draft(21, 1990), phase: 'results' }, r = Rn.runNew(21, d);
+  const d = { ...draft(21, 1990), phase: 'results' }, r = Rn.runNew(21, d, 'original');
   const bad = [
     { m: null }, { m: { ...r.m, nm: 'missing' } }, { f: 'missing' }, { f: null }, { v: 99 }, { seed: -1 },
     { tags: null }, { tags: [] }, { tags: { [r.slots[0].p]: { tal: '<img>' } } },
@@ -195,7 +211,7 @@ test('saved Gauntlets reject malformed fields before a mode can use them', () =>
 
 test('saved Gauntlets resume rounds, rewards, transfers and the final state', () => {
   const d = { ...draft(11, 1970), phase: 'results' };
-  let s = Rn.runNew(11, d);
+  let s = Rn.runNew(11, d, 'original');
   for (let k = 0; k < 300; k++) {
     const restored = Dr.valid(G, { ...d, mode: { run: JSON.parse(JSON.stringify(s)) } }).mode.run;
     assert.deepEqual(restored, s);
@@ -207,7 +223,7 @@ test('saved Gauntlets resume rounds, rewards, transfers and the final state', ()
 });
 
 test('v1 saves migrate to the eight-decade map without accepting malformed legacy fields', () => {
-  const d = { ...draft(11, 1970), phase: 'results' }, r = Rn.runNew(11, d);
+  const d = { ...draft(11, 1970), phase: 'results' }, r = Rn.runNew(11, d, 'original');
   const old = { v: 1, seed: 11, cap: false, m: { nm: r.m.nm, f: d.f }, slots: r.slots, act: 2, seg: 1, ph: 'reward',
     pat: 9, rest: 1, tries: [0, 0, 1, 0, 0, 0, 0, 0], tags: { [r.slots[0].p]: { rock: 2 } }, up: {},
     log: [{ t: 'boss', D: 1970, act: 2, op: 'Legacy boss', n: 1, won: false, gx: 0, gy: 1, et: false, pw: null, dp: -4 }] };
@@ -234,13 +250,13 @@ test('v1 saves migrate to the eight-decade map without accepting malformed legac
 });
 
 test('persistent boss points remain loadable beyond twenty attempts', () => {
-  const d = { ...draft(11, 1970), phase: 'results' }, r = Rn.runNew(11, d);
+  const d = { ...draft(11, 1970), phase: 'results' }, r = Rn.runNew(11, d, 'original');
   const s = { ...r, mv: { [r.slots[0].p]: -21, [r.slots[1].p]: 21 } };
   assert.deepEqual(Dr.valid(G, { ...d, mode: { run: s } }).mode.run.mv, s.mv);
 });
 
 test('successive rounds climb the field and exclude its three bosses', () => {
-  const s = Rn.runNew(11, draft(11, 1970));
+  const s = Rn.runNew(11, draft(11, 1970), 'original');
   for (const [rd, a, b] of [[0, 13, 19], [1, 9, 15], [2, 6, 12], [3, 3, 9]]) {
     const O = Rn.roundOps(F, { ...s, rd });
     assert.equal(O.length, 6);
@@ -262,7 +278,7 @@ test('run score penalizes act retries and rewards capped clean runs', () => {
 });
 
 test('between decades the Gauntlet may change formation; cards, charges and the bench stay', () => {
-  const s = { ...Rn.runNew(5, draft(5, 1990)), ph: 'boss', rd: 4, pat: 8 };
+  const s = { ...Rn.runNew(5, draft(5, 1990), 'original'), ph: 'boss', rd: 4, pat: 8 };
   const H = Object.fromEntries(Object.entries(F).map(([D, Q]) => [D, Q.map((c, i) => i < 3 ? club(`weak${i}`, 20, Number(D)) : c)]));
   const u = Rn.hop(G, Rn.runPlayBoss(G, H, s), { old: [0, 1], neu: [0, 1], out: [11, 12, 13, 14] });
   assert.throws(() => Rn.runForm(G, s, '3-5-2'), /transfer window/i);
@@ -279,7 +295,7 @@ test('between decades the Gauntlet may change formation; cards, charges and the 
 test('a version 2 save resumes its draft and Gauntlet in the formation its manager option named', () => {
   const d = { ...draft(11, 1970), phase: 'results' }, o = Dr.opts2(G, Dr.start(11, 1970))[0];
   const d2 = { ...d, v: 2, manager: { nm: o.nm, f: o.f } }; delete d2.f;
-  const r2 = { ...Rn.runNew(11, d), v: 2, m: { nm: o.nm, f: o.f } }; delete r2.f;
+  const r2 = { ...Rn.runNew(11, d, 'original'), v: 2, m: { nm: o.nm, f: o.f } }; delete r2.f;
   const t = Dr.valid(G, { ...d2, mode: { run: r2 } });
   assert.equal(t.f, o.f);
   assert.equal(t.mode.run.v, 3);

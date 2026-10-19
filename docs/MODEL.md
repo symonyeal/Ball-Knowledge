@@ -286,7 +286,7 @@ The earlier release used `tau=3`, concentrating more draws on the strongest squa
 
 ## Era Gauntlet
 
-More modes keeps the Gauntlet's own rules and takes the drafted fifteen through a selected map. Original Gauntlet, the default, visits the 1960s, 1990s and 2010s; Back in Time reverses that route. The Full Odyssey visits all eight decades in order; Odyssey in Reverse starts in the 2020s and ends in the 1950s.
+More modes keeps the Gauntlet's own rules and takes the drafted fifteen through a selected map. Odyssey in Reverse, the default, starts in the 2020s and ends in the 1950s; The Full Odyssey visits all eight decades in order. Original Gauntlet visits the 1960s, 1990s and 2010s; Back in Time reverses that route.
 
 A decade is an act with four six-match rounds. The rounds draw from progressively stronger bands of the sixteen clubs below the field's three bosses. After each round, choose one reward. Then play home and away against a seeded boss from the strongest three clubs. There is no away-goals rule; extra time and penalties decide a level aggregate. A loss restarts all four rounds against a different boss. A non-final win opens the transfer window; beating the map's last boss ends the run.
 
@@ -313,7 +313,7 @@ The run ends at zero patience. Reward prices add an act surcharge: +1 per comple
 | Prime-card boost | Upgrade an existing player to that person's highest-rated card; retain his original cap charge. | 1 within a tier, 2 for one tier gained, 3 for two, 4 for more; add 1 for entering S, then cap the base price at 4. |
 | Transfer market | Choose one of up to three C-tier-or-better players from different clubs in this decade, and release one of your fifteen. | Base price 1 for C/B, 2 for A, 3 for S, with negotiation below. |
 | Development | Upgrade a player or the squad using the catalogue below. | Base price 2 to 4. |
-| Rest | Recover patience. | +2, then +1, then zero for consecutive rests; another reward resets the sequence. |
+| Rest | Recover patience. | +2, then +1, then zero for consecutive rests; a reward that spends patience resets the sequence, a free desperation signing does not. |
 | Desperation | Sign an offered A- or S-tier player, replacing one squad player. | 1 at 3 or 4 patience, free at 1 or 2; no act surcharge. |
 
 The salary cap continues as at most two S-tier and four A-tier charges among all fifteen; B, C and D are unrestricted. Classic remains uncapped. A boost keeps the drafted or signed charge; releasing and re-signing that person establishes a new charge.

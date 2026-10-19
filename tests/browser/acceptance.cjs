@@ -111,7 +111,7 @@ async function stageRun(p, target) {
     const { fields } = await import(new URL('./app/data.js', location.href));
     const g = await (await fetch(new URL('./data/game.json', location.href))).json(), F = fields(g), draft = JSON.parse(localStorage.getItem(key));
     for (let seed = 1; seed <= 100; seed++) {
-      let s = { ...R.runNew(seed, draft), pat: 20 };
+      let s = { ...R.runNew(seed, draft, 'original'), pat: 20 };
       if (target === 'hop') {
         for (let rd = 0; rd < 4; rd++) {
           s = R.runRound(g, F, s);
