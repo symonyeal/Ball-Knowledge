@@ -117,7 +117,7 @@ export function runTeam(G, s) {
   const Q = s.slots.map((r, i) => {
     const c = hydrate(G, r), t = s.tags[r.p], d = (s.mv?.[r.p] || 0) + term(s, r.p, i);
     const x = shift(t ? { ...c, tg: { ...c.tg, ...t } } : c, d);
-    return s.mv?.[r.p] > 0 ? { ...x, fm: s.mv[r.p] } : x;
+    return s.mv?.[r.p] > 0 ? { ...x, mvp: s.mv[r.p] } : x;
   });
   return { m, S: shape(G, s.f), xi: Q.slice(0, 11), bn: Q.slice(11), lk: s.badge?.glue ? 1.5 : 1, gs: s.badge?.mgr || 0 };
 }

@@ -84,7 +84,7 @@ export function careerTeam(G, s) {
     const v = s.skills[c.id] || {}, X = (s.evd?.[c.id] || []).map(k => EVO[k]), f = F[c.id] || 0;
     const bonus = ['touch', 'composure', 'buyin'].reduce((a, k) => a + (v[k] || 0), 0) + X.reduce((a, e) => a + e.r, 0) + f;
     const x = X.reduce((c, e) => e.pos ? learn(c, e.pos) : c, c);
-    return { ...shift(x, bonus), ...(f || c.fm ? { fm: (c.fm || 0) + f } : {}), ...(X.length ? { ev: X.length } : {}) };
+    return { ...shift(x, bonus), ...(f ? { fm: f } : {}), ...(X.length ? { ev: X.length } : {}) };
   };
   // A bargain star disrupts established partnerships until he leaves or receives Player Buy-In.
   return { ...T, xi: T.xi.map(extra), bn: T.bn.map(extra),

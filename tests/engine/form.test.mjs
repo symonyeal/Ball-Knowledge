@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import * as E from '../../app/engine/index.js';
 import * as Dr from '../../app/draft.js';
 import * as C from '../../app/career.js';
+import { face } from '../../app/ui/kit.js';
 
 const G = JSON.parse(readFileSync(new URL('../../data/game.json', import.meta.url), 'utf8'));
 if (G.params) E.cfg(G.params);
@@ -97,5 +98,15 @@ test('a new season starts without the last season’s in-forms', () => {
     assert.notEqual(s.ph, 'fired');
   }
   assert.deepEqual(C.inForms(s), {});
-  assert.ok([...C.careerTeam(G, s).xi, ...C.careerTeam(G, s).bn].every(c => (c.fm || 0) === Math.max(0, s.mv[c.id] || 0)));   // only the persistent MVP point remains
+  assert.ok([...C.careerTeam(G, s).xi, ...C.careerTeam(G, s).bn].every(c => !c.fm));
+});
+
+test('a season MVP point shows its own face; an in-form takes precedence while it lasts', () => {
+  const p = s0.slots[9].p, s = { ...s0, mv: { [p]: 1 } }, c = card(s, p);
+  assert.equal(c.mvp, 1);
+  assert.equal(c.fm, undefined);
+  assert.equal(face(c), 'mvp');
+  const S = { ...s.S, me: [{ k: 'L', gf: 3, ga: 0, sc: [[5, 1, p, null], [6, 1, p, null], [7, 1, p, null]] }] };
+  assert.equal(face(card({ ...s, S }, p)), 'if');
+  assert.equal(card({ ...s0, mv: { [p]: -1 } }, p).mvp, undefined);
 });
