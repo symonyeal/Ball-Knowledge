@@ -274,11 +274,11 @@ Saved drafts, replays, team codes, the Weekly Challenge and Head to Head carry t
 Each spin draws one club squad. Its relative weight is the product of two factors:
 
 ```text
-decade weight   = exp(-|squad decade - season decade| / (10 × 1.5))
-strength weight = exp(-(strength rank in its decade - 1) / 20)
+decade weight   = exp(-|squad decade - season decade| / (10 × 2))
+strength weight = exp(-(strength rank in its decade - 1) / 60)
 ```
 
-Rank 1 is the decade's strongest club. The denominators are the balance settings `rho=1.5` and `tau=20`: lower values concentrate draws nearer the chosen era and nearer the strongest clubs. Every club and every decade keeps a chance. Without other restrictions, 35.1% of draws stay in a 1990s season's own decade and 35.3% in a 1980s one, rising to 44.5% for the 1950s and 46.7% for the 2020s.
+Rank 1 is the decade's strongest club. The denominators are the balance settings `rho=2` and `tau=60`: lower values concentrate draws nearer the chosen era and nearer the strongest clubs. They were raised from 1.5 and 20 after chemistry made the measured Classic policy win too often; [VALIDATION.md](VALIDATION.md#the-spin-settings-trade-variety-against-strength) gives the search. Every club and every decade keeps a chance. Without other restrictions, 30.1% of draws stay in a 1990s season's own decade and 29.6% in a 1980s one, rising to 33.0% for the 1950s and 33.5% for the 2020s; a club ranked in its decade's top ten supplies 18% to 21% of draws.
 
 The seed puts every squad in a random order in which a squad's chance of coming first is proportional to its weight. The draw takes the first squad in that order that meets the rules: at least fifteen cards with a goalkeeper, a club not already drafted or re-spun away, three picks possible within your remaining places, and, where possible, a player from your best open tier. Two players on the same seed therefore meet the same squad unless their own earlier picks rule it out.
 
@@ -351,7 +351,7 @@ Squad Building Challenges adapt EA FC's SBCs to the sandbox. Each sets requireme
 
 Drawing a squad deals its cards into the list. When the squad's best card is S or A tier, a walkout shows his nation, his club, then the card, as in an EA FC pack opening. The overlay is visual only; it respects reduced motion and the effects setting. Icon-sourced cards carry an ivory face.
 
-The Weekly Challenge chooses one seed and decade for the whole ISO week, Monday to Sunday in UTC, and always uses the salary cap. Everyone sees the same manager options and the same first squad. Later squads come from the same seeded order, but each must suit the tiers that player still needs, so different picks lead to different clubs. Over 320 test seeds, pairs of drafts following different strategies met the same club on 71% of second draws, 18% of third draws and 8% of fifth draws. These modes have no server-held leaderboard or authenticated competition record.
+The Weekly Challenge chooses one seed and decade for the whole ISO week, Monday to Sunday in UTC, and always uses the salary cap. Everyone sees the same manager options and the same first squad. Later squads come from the same seeded order, but each must suit the tiers that player still needs, so different picks lead to different clubs. Over 320 test seeds, pairs of drafts following different strategies met the same club on 71% of second draws, 13% of third draws and 4% of fifth draws. These modes have no server-held leaderboard or authenticated competition record.
 
 ## Notebook settings
 

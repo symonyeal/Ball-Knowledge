@@ -107,7 +107,7 @@ export const key = c => `${c.q}:${c.D}`;
 // picks leaves every other draw on that seed unchanged. DW holds the two declared settings: larger
 // tau spreads spins across more clubs; smaller rho keeps more spins near the season's decade
 // (Infinity = uniform). Current measurements live in docs/VALIDATION.md (tests/balance.mjs).
-export const DW = { tau: 20, rho: 1.5 };
+export const DW = { tau: 60, rho: 2 };
 
 export function draw(G, r, ok, Ds) {
   const wd = D => (Ds && Number.isFinite(DW.rho) ? Math.exp(-Math.abs(D - Ds) / (10 * DW.rho)) : 1);

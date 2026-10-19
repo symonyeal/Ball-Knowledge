@@ -69,7 +69,7 @@ if (B.params) E.cfg(B.params);
 const delBosque = (seed, D, f) => ({ ...Dr.start(seed, D, true), phase: 'draft', manager: { nm: 'Vicente del Bosque', q: 'Q8682', a: 1999 }, f });
 
 test('Zidane keeps his slot ratings through a change of shape: CAM 90, then a CM slot at 90', () => {
-  let s = Dr.spin(B, delBosque(447, 2000, '4-2-3-1'));
+  let s = Dr.spin(B, delBosque(7, 2000, '4-2-3-1'));   // seed 7 draws Real Madrid's 2000s squad
   assert.equal(s.combo, 'Q8682:2000');
   const j = Dr.shape(B, s.f).findIndex(x => x.s === 'CAM');
   assert.equal(Math.round(Dr.preview(B, s, 'Q1835', j).a), 90);  // his first listed position alone (CM) would cost 10%: 81
