@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import * as Dr from '../../app/draft.js';
 import * as Rn from '../../app/run.js';
 import * as E from '../../app/engine/index.js';
+import { TI, RCAP } from '../../app/cap.js';
 
 const S = ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'].map((s, i) => [s, 10 + i * 7, 50]);
 const G = { people: {}, cards: {}, combos: [{ q: 'q0', D: 1990, k: 1 }, { q: 'q1', D: 2000, k: 2 }, { q: 'q1', D: 1960, k: 1 }],
@@ -46,13 +47,22 @@ const signing = (H, run) => {
   throw new Error('signing never offered');
 };
 
-test('a capped S or A signing must keep the fifteen within 2 S-tier and 4 A-tier players', () => {
-  for (const [r, bad, good] of [[91, 2, 0], [87, 6, 2], [87, 0, 3]]) {
-    const H = at(r), { s, O, j } = signing(H, reward);
-    assert.throws(() => Rn.take(H, {}, s, j, { pick: 0, slot: bad }), /tier|cap/i, `${r} over slot ${bad}`);
-    const n = Rn.take(H, {}, s, j, { pick: 0, slot: good });
+// The draft holds 2 S and 4 A; signings over C and D places fill the run's RCAP, then one more is refused
+// unless it replaces a player of the same tier.
+test('a capped S or A signing must keep the fifteen within the Gauntlet cap', () => {
+  const low = [14, 13, 12, 11, 10];
+  for (const [r, t, n0] of [[91, 'S', 2], [87, 'A', 4]]) {
+    const H = at(r);
+    let { s, O, j } = signing(H, reward);
+    for (let k = 0; k < RCAP[t] - n0; k++) {
+      s = { ...Rn.take(H, {}, s, j, { pick: 0, slot: low[k] }), ph: 'node', rd: 0 };
+      O = Rn.offers(H, {}, s); j = O.findIndex(o => o.kind === 'market');
+    }
+    assert.throws(() => Rn.take(H, {}, s, j, { pick: 0, slot: low[RCAP[t] - n0] }), /tier|cap/i, `${t} beyond ${RCAP[t]}`);
+    const same = Rn.bill(H, s).findIndex(x => TI(Dr.hydrate(H, x).r) === t);
+    const n = Rn.take(H, {}, s, j, { pick: 0, slot: same });
     assert.equal(n.cap, true);
-    assert.equal(n.slots[good].p, O[j].list[0].p);
+    assert.equal(n.slots[same].p, O[j].list[0].p);
   }
 });
 

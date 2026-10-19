@@ -1,4 +1,4 @@
-// The Gauntlet's own draft, its run-wide opposition offset, and act and run honours, on the bundled data.
+// The Gauntlet's own draft (nearby decades, strongest squads, 3 S and 6 A), and act and run honours, on the bundled data.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -6,6 +6,7 @@ import * as E from '../../app/engine/index.js';
 import * as Dr from '../../app/draft.js';
 import * as Rn from '../../app/run.js';
 import { fields } from '../../app/data.js';
+import { ct, RCAP } from '../../app/cap.js';
 
 const G = JSON.parse(readFileSync(new URL('../../data/game.json', import.meta.url), 'utf8'));
 if (G.params) E.cfg(G.params);
@@ -43,19 +44,22 @@ test('a saved Gauntlet draft rejects an unknown map, a moved decade and a squad 
   assert.throws(() => Dr.start(4, null, true, 'nowhere'), /Gauntlet maps/);
 });
 
-test('opponents play a + b j (+ c at a boss), rising every stage of the run without resetting between decades', () => {
-  const s = Rn.runNew(5, draft(5, 'reverse'));
-  const d = (act, rd) => Rn.dOpp({ ...s, act }, rd);
-  assert.equal(d(0, 0), Rn.OPP.a);
-  assert.ok(d(1, 0) > d(0, 3), 'a new decade continues from the last round of the previous one');
-  assert.equal(d(0, Rn.N_RD), Rn.OPP.a + Rn.OPP.b * Rn.N_RD + Rn.OPP.c);
-  const O = Rn.roundOps(F, s), L = F[2020].slice(3);
-  for (const o of O) {
-    const b = L.find(x => x.id === o.id);
-    o.T.xi.forEach((c, i) => c && assert.ok(Math.abs(c.r - b.T.xi[i].r - d(0, 0)) < 1e-9));
+test('a Gauntlet draft holds at most 3 S and 6 A, with B, C and D unlimited, and refuses a fourth S', () => {
+  assert.deepEqual(RCAP, { S: 3, A: 6 });
+  for (const seed of [11, 12, 13]) {
+    const s = draft(seed, 'reverse'), n = ct(G, s.slots);
+    assert.ok(n.S <= 3 && n.A <= 6);
+    assert.ok(n.S + n.A > 6, 'the strong draws fill more than the career cap’s six S and A places');
   }
-  const B = Rn.runBoss(F, { ...s, ph: 'boss', rd: Rn.N_RD });
-  assert.ok(Math.abs(B.T.xi[0].r - F[2020][s.boss].T.xi[0].r - d(0, Rn.N_RD)) < 1e-9);
+  let s = Dr.choose(G, Dr.start(14, null, true, 'reverse'), 0);
+  const S = G.combos.filter(c => c.D === 2020).flatMap(c => G.cards[`${c.q}:${c.D}`].filter(x => x.r >= 90).map(x => ({ k: `${c.q}:${c.D}`, p: x.p })));
+  const four = [...new Map(S.map(x => [x.p, x])).values()].slice(0, 4);
+  assert.throws(() => Dr.valid(G, { ...s, phase: 'draft', slots: [...four, ...Array(11).fill(null)] }));
+});
+
+test('a Gauntlet draft draws its decades’ strongest squads far more often than a career draft', () => {
+  const mean = g => { let x = 0; for (let seed = 0; seed < 15; seed++) x += G.combos.find(c => `${c.q}:${c.D}` === Dr.spin(G, Dr.choose(G, Dr.start(seed, 2020, true, g), 0)).combo).k; return x / 15; };
+  assert.ok(mean('reverse') < mean(undefined) / 2);
 });
 
 test('a round and a boss tie log our players’ tallies, whose goals are the goals scored; honours read them', () => {

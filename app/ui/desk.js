@@ -12,7 +12,7 @@
 import { TI, CAP, ct } from '../cap.js';
 import * as E from '../engine/index.js';
 import { leagueOf, years, field } from '../club.js';
-import { form, team, preview, used, room, can, hydrate, shape } from '../draft.js';
+import { form, team, preview, used, room, lim, can, hydrate, shape } from '../draft.js';
 import { U, esc, num, club, kv, tier, fitText, delta, pitch, links, face, mini, smap, rated, share, row, capTiles, segs, spell, IC, LINE, SRC, SRT, pct } from './kit.js';
 
 const MED = new Map();
@@ -35,7 +35,7 @@ export function pool() {
   const { G, S } = U, I = used(S), R = S.cap ? room(G, S) : null, SH = shape(G, S.f);
   return G.cards[S.combo].map(x => {
     const c = hydrate(G, { k: S.combo, p: x.p }), own = I.has(c.id), ok = !own && can(G, S, c.id), t = TI(c.r);
-    const why = own ? 'In your squad' : ok ? '' : R && R[t] === 0 ? `${t} places full · ${CAP[t]} of ${CAP[t]} used` : 'Too few affordable picks would remain at this club';
+    const why = own ? 'In your squad' : ok ? '' : R && R[t] === 0 ? `${t} places full · ${lim(S)[t]} of ${lim(S)[t]} used` : 'Too few affordable picks would remain at this club';
     const e = E.em(c.D, S.D, c.tg?.tl || 0);
     let best = null;
     SH.forEach((x, i) => { if (S.slots[i]) return; const v = Math.round(c.r * (1 - E.ft(c, x.s).f) * e); if (!best || v > best[1]) best = [x.s, v]; });
@@ -100,7 +100,7 @@ function review(T, Q) {
       ${ck(!!gk?.c?.pos.includes('GK'), gk?.c?.pos.includes('GK') ? 'Keeper in goal' : 'An outfielder is in goal', gk?.c ? `${esc(gk.c.nm)}, ${num(gk.a)}` : 'The GK slot is empty')}
       ${ck(keep, keep ? 'Reserve keeper on the bench' : 'No reserve keeper', keep ? 'An absent keeper is replaced from the bench.' : 'An absent keeper is replaced by an outfielder at −75%.')}
       ${ck(!worst || worst.f < 0.1, worst && worst.f >= 0.1 ? `${esc(worst.c.nm)} loses ${pct(worst.f)}% at ${worst.s}` : 'No starter loses 10% or more', worst ? `Largest loss: ${esc(worst.c.nm)} ${fitText(worst.f)} at ${worst.s}.` : '')}
-      ${S.cap ? ck(true, 'Salary cap met', '2 S · 4 A · 4 B · 3 C · 2 D') : ''}
+      ${S.cap ? ck(true, 'Salary cap met', S.g ? 'At most 3 S · 6 A' : '2 S · 4 A · 4 B · 3 C · 2 D') : ''}
       ${ck(Q.up ? true : null, Q.up ? 'Signature bonus on' : 'No signature player', Q.up ? `${sig.map(esc).join(', ')}: grades ${m.ga}/${m.gd} → ${Q.gA}/${Q.gD}.` : `Drafting one of ${esc(m.nm)}'s signature players raises both grades.`)}
       ${ck(gap[1] >= gap[2] ? true : null, gap[1] >= gap[2] ? 'Every line at or above the field median' : `${gap[0]} below the field`, `${gap[0]} ${num(gap[1])} against a ${S.D}s median of ${num(gap[2])}.`)}
     </ul>
@@ -190,8 +190,8 @@ export function desk() {
 function mcap() {
   const { G, S } = U;
   if (!S.cap) return '<p class="small">Classic: no tier limits</p>';
-  const n = ct(G, S.slots);
-  return `<div class="mcap" aria-label="Cap places left">${Object.keys(CAP).map(t => `<span>${tier(t, 'sm')}<b>${CAP[t] - n[t]}</b></span>`).join('')}</div>`;
+  const n = ct(G, S.slots), L = lim(S);
+  return `<div class="mcap" aria-label="Cap places left">${Object.keys(CAP).map(t => `<span>${tier(t, 'sm')}<b>${t in L ? L[t] - n[t] : n[t]}</b></span>`).join('')}</div>`;
 }
 
 function dash(T, Q, c, V, b, pv) {
@@ -200,7 +200,7 @@ function dash(T, Q, c, V, b, pv) {
   const tm = `<section class="tm" style="${kv(sp?.q)}" aria-label="Your team"><p class="lbl">Your team</p><p class="tm-nm">${esc(m.nm)}</p><p class="small">${sp ? `${esc(sp.club)} · ${sp.yrs}` : 'Career (saved before club spells)'}</p>
     <div class="row"><div class="gr"><span>Att <b>${Q.gA}</b></span><span>Def <b>${Q.gD}</b></span></div><p class="small">${Q.up ? `${m.ga}/${m.gd} → ${Q.gA}/${Q.gD} with ${esc(sig[0])}${sig.length > 1 ? ` +${sig.length - 1}` : ''}` : 'A signature player raises both one step'}</p></div></section>`;
   const nt = ct(G, S.slots), seq = Object.keys(CAP).flatMap(t => Array(nt[t]).fill(t));
-  const cap = S.cap ? `<section class="capb" aria-label="Salary cap: places left by tier"><div class="row"><p class="lbl">Salary cap</p><span class="small sp">${15 - n ? `${15 - n} place${15 - n === 1 ? '' : 's'} left` : 'Cap met'}</span></div>${capTiles(nt)}${segs(seq)}<p class="small dim">Tier is the base rating, before position, era, chemistry and partnerships.</p></section>`
+  const cap = S.cap ? `<section class="capb" aria-label="Salary cap: places left by tier"><div class="row"><p class="lbl">Salary cap</p><span class="small sp">${15 - n ? `${15 - n} place${15 - n === 1 ? '' : 's'} left` : 'Cap met'}</span></div>${capTiles(nt, lim(S))}${segs(seq)}<p class="small dim">Tier is the base rating, before position, era, chemistry and partnerships.</p></section>`
     : '<section class="capb classic"><p class="lbl">Classic draft</p><p class="small">Any tier can fill an open place.</p></section>';
   const cnt = `<section class="cnt" aria-label="Progress"><div><b>${Math.min(5, S.spin + (S.combo ? 1 : 0))} / 5</b><span>Squads</span></div><div><b>${n} / 15</b><span>Players</span></div><div><b>${1 - S.squadReroll}</b><span>Re-spin left</span></div></section>`;
   const SH = shape(G, S.f), open = { GK: 0, DEF: 0, MID: 0, ATT: 0 };

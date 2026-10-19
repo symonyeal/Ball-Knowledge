@@ -1,8 +1,8 @@
-import { mk, hs, sh, play, P, tie, shift, move, rate, note, aw } from './engine/index.js';
+import { mk, hs, sh, play, P, tie, shift, move, note, aw } from './engine/index.js';
 import { hydrate, shape, draw, key } from './draft.js';
-import { TI, GCAP, fits, ck } from './cap.js';
+import { TI, RCAP, fits, ck } from './cap.js';
 import { staff } from './staff.js';
-export { TI, CAP, GCAP } from './cap.js';
+export { TI, CAP, GCAP, RCAP } from './cap.js';
 
 // Era Gauntlet: Eraball's roguelike run with the drafted fifteen, scaled from a nine-man basketball
 // roster to a fifteen-man football squad. An act is one decade of the chosen map: N_RD rounds of N_M
@@ -32,9 +32,6 @@ export { TI, CAP, GCAP } from './cap.js';
 //   LINES      position lines by first position, for the transfer window and development
 //   HOP_N      signings from each decade in the transfer window (Eraball 1 of 3 each for 9 places)
 //   bossAt     the act's boss from the seed; a retry draws a different one of the three
-//   OPP        opposition offset: every opponent card plays a + b j (+ c for a boss) rating points, j = (N_RD + 1) act + rd
-//              the run's stage (the boss is rd = N_RD). Eraball's opponents strengthen every segment
-//              and never reset between eras; a < 0 opens the run below the clubs' recorded strength
 //   pl         per-player tallies of a round or boss tie, person -> [goals, assists, clean sheets, apps]
 //   state v 3: seed, cap, map, m (the draft's team), f (formation), slots, act, rd, ph (rd | node | boss | hop | repo | done | fired),
 //              pat, rest, tries (ties per act), lost (ties lost in the run), boss, tags (person -> tag
@@ -50,7 +47,6 @@ export const MAPS = {
 };
 export const N_RD = 4, N_M = 6, PAT0 = 8, PAT_MAX = 20, B_WIN = 4, DESP = 5, HOP_N = 2;
 export const B_LOSS = n => (n === 0 ? 4 : 6);
-export const OPP = { a: -8, b: 0.2, c: -4 };
 export const dP = p => (p >= 18 ? 3 : p >= 13 ? 2 : p >= 12 ? 1 : p >= 9 ? 0 : p >= 7 ? -2 : p >= 4 ? -3 : p >= 2 ? -4 : -5);
 const LAD = [[10, 16], [6, 12], [3, 9], [0, 6]];
 const TO = ['D', 'C', 'B', 'A', 'S'];
@@ -139,23 +135,16 @@ export function runForm(G, s, f) {
 
 const me = (G, s) => ({ id: 'your-club', nm: 'Your Era XI', T: runTeam(G, s), me: true });
 
-export const lvl = (s, rd = s.rd) => (N_RD + 1) * s.act + rd;
-export const dOpp = (s, rd = s.rd) => OPP.a + OPP.b * lvl(s, rd) + (rd === N_RD ? OPP.c : 0);
-const opp = (o, d, D) => {
-  const T = { ...o.T, xi: o.T.xi.map(c => c && shift(c, d)), bn: o.T.bn.map(c => c && shift(c, d)) };
-  return { ...o, T, x: rate(T, D).ovr };
-};
-
 export function runBoss(F, s) {
-  return s.ph === 'done' || s.ph === 'fired' ? null : opp(F[D_of(s)][s.boss], dOpp(s, N_RD), D_of(s));
+  return s.ph === 'done' || s.ph === 'fired' ? null : F[D_of(s)][s.boss];
 }
 
 // Our players' tallies from a stats map filled by note().
 const tally = st => Object.fromEntries([...st.values()].filter(p => p.cl === 'your-club').map(p => [p.id, [p.g, p.as, p.cs, p.ap]]));
 
 export function roundOps(F, s) {
-  const D = D_of(s), L = F[D].slice(3), [a, b] = LAD[Math.min(s.rd, N_RD - 1)], d = dOpp(s);
-  return sh(mk(hs(`${s.seed}:ops:${s.act}:${s.rd}:${s.tries[s.act]}`)), L.slice(a, b)).map(o => opp(o, d, D));
+  const L = F[D_of(s)].slice(3), [a, b] = LAD[Math.min(s.rd, N_RD - 1)];
+  return sh(mk(hs(`${s.seed}:ops:${s.act}:${s.rd}:${s.tries[s.act]}`)), L.slice(a, b));
 }
 
 export function runRound(G, F, s) {
@@ -223,11 +212,11 @@ export const bill = (G, s) => s.slots.map(ref => ({ k: s.up[ref.p] || ref.k, p: 
 
 // n players of tier floor or better from n different clubs of decade D (optionally one position
 // line), none already in the squad or in skip, no club in xq, and on a capped run each able to
-// replace someone within GCAP.
+// replace someone within RCAP.
 function market(G, s, D, r, floor, n, ln, skip = new Set(), xq = new Set()) {
   const I = new Set([...s.slots.map(c => c.p), ...skip]), X = bill(G, s), qs = new Set(xq), out = [];
   const ok = (k, x) => !I.has(x.p) && TO.indexOf(TI(x.r)) >= TO.indexOf(floor) && (!ln || line(x) === ln) &&
-    (!s.cap || s.slots.some((_, i) => fits(G, X, i, { k, p: x.p }, GCAP)));
+    (!s.cap || s.slots.some((_, i) => fits(G, X, i, { k, p: x.p }, RCAP)));
   for (let i = 0; i < n; i++) {
     const z = draw(G, r, c => c.D === D && !qs.has(c.q) && G.cards[key(c)].some(x => ok(key(c), x)), D);
     if (!z) break;
@@ -322,7 +311,7 @@ export function take(G, F, s, j, o = {}) {
     const f = c.list[o.pick ?? 0], i = o.slot;
     if (!f || !Number.isInteger(i) || i < 0 || i > 14) throw new Error('Choose a signing and the squad place he takes.');
     const ref = { k: f.k, p: f.p }, cost = c.kind === 'desp' ? f.cost : price(G, s, f, i);
-    if (s.cap) { const Q = bill(G, s); Q[i] = ref; ck(G, Q, GCAP); }
+    if (s.cap) { const Q = bill(G, s); Q[i] = ref; ck(G, Q, RCAP); }
     const slots = s.slots.slice(), out = slots[i]; slots[i] = ref;
     const d = drop(s, out.p), t = c.kind === 'market' && ['S', 'C'].includes(TI(f.r)) ? TI(f.r) : null;
     return { ...nx, ...d, pat: spend(s, cost), slots, neg: t ? { ...d.neg, [f.p]: t } : d.neg,
@@ -374,7 +363,7 @@ export function hop(G, s, sel = {}) {
   let x = s;
   for (const i of out) x = { ...x, ...drop(x, s.slots[i].p) };
   ins.forEach((f, j) => { slots[out[j]] = { k: f.k, p: f.p }; });
-  if (s.cap) ck(G, bill(G, { ...x, slots }), GCAP);
+  if (s.cap) ck(G, bill(G, { ...x, slots }), RCAP);
   return { ...x, slots, ph: 'repo', log: [...s.log, { t: 'hop', act: s.act, in: ins.map(f => [f.k, f.p]), out: out.map(i => s.slots[i].p) }] };
 }
 
@@ -481,7 +470,7 @@ export function validRun(G, r0, manager, cap) {
       if (e.t === 'hop') for (const p of e.out) delete U[p];
     }
     for (const [p, k] of Object.entries(r.up)) if (U[p] !== k) throw new Error('The saved Gauntlet boost charge is invalid.');
-    ck(G, bill(G, r), GCAP);
+    ck(G, bill(G, r), RCAP);
   }
   return r;
 }

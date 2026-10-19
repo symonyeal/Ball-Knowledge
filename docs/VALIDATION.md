@@ -207,16 +207,16 @@ The final argument selects the map; `back`, `odyssey` and `reverse` are also sup
 
 Both rule sets cleared a median of one decade and played a median of three boss ties. Median points per six-match round were ten under both rule sets. No run cleared all three decades.
 
-Odyssey in Reverse became the browser default on 2026-10-18. With the career draft and the recorded opposition, this policy cleared no decade of it in 36 of 40 capped runs (median 7 points per round), against 8 of 40 on Original. Two changes followed: the Gauntlet draft (squads within two decades of the first act, as in Eraball) and the opposition offset `a + b j + c` of [MODEL.md](MODEL.md#era-gauntlet). The settings `a = −8`, `b = 0.2`, `c = −4` were chosen so that a mediocre squad has a fair first boss: a browser-drafted fifteen rated 80.5 in the 2020s won 44% of 300 first-act boss ties and averaged 13.5, 11.3, 10.0 and 8.1 points in the four rounds, against 22% and a last-round 6.5 with `a = −6`, `c = −3`. `node tests/balance.mjs gauntlet 40 5 cap <map>` now drafts as the Gauntlet entry does and gives:
+Odyssey in Reverse became the browser default on 2026-10-18. With the career draft, this policy cleared no decade of it in 36 of 40 capped runs (median 7 points per round), against 8 of 40 on Original. The 2020s bosses are complete squads rated 91.6 to 92.8, while a career draft's fifteen had a median of 85.3 in the 2020s. Neither the nearby-decade pool alone nor a looser cap closed that gap: with no tier limit at all the median was 86.4, because five draws of three picks set the ceiling. The Gauntlet draft therefore also draws mostly the strongest squads (rank weight τ = 4) and allows 3 S and 6 A, which raised the median fifteen to 87.9. `node tests/balance.mjs gauntlet 40 5 cap <map>` drafts as the Gauntlet entry does and gives:
 
 | Map, Salary cap | Decades cleared: runs | Median | Full clears |
 | --- | --- | ---: | ---: |
-| Odyssey in Reverse | 1: 1 · 2: 6 · 3: 1 · 4: 7 · 5: 1 · 6: 2 · 8: 22 | 8 | 22 |
-| Original Gauntlet | 1: 19 · 2: 15 · 3: 6 | 2 | 6 |
-| The Full Odyssey | 1: 3 · 2: 2 · 3: 8 · 4: 11 · 5: 12 · 6: 3 · 8: 1 | 4 | 1 |
-| Back in Time | 1: 3 · 2: 3 · 3: 34 | 3 | 34 |
+| Odyssey in Reverse | 0: 4 · 1: 16 · 2: 10 · 3: 5 · 4: 1 · 8: 4 | 1 | 4 |
+| Original Gauntlet | 1: 39 · 2: 1 | 1 | 0 |
+| The Full Odyssey | 1: 17 · 2: 12 · 3: 6 · 4: 2 · 5: 1 · 6: 1 · 7: 1 | 2 | 0 |
+| Back in Time | 0: 6 · 1: 20 · 2: 2 · 3: 12 | 1 | 12 |
 
-Classic on Odyssey in Reverse cleared a median of four decades, with 13 full clears. Every run cleared at least one decade. The policy never uses the market or rearranges the lineup, so these rates describe it, not a human player.
+Classic on Odyssey in Reverse cleared none in 1 run, one decade in 26 and all eight in 2. Original's second act, the 1990s, stops almost every run: a squad drafted for the 1960s loses rating across three decades. The policy never uses the market, rearranges the lineup or keeps its goalkeeper through transfers, so these rates describe it, not a human player.
 
 Capped runs earn 1.5 times the score, as in Eraball. The opening capped draft carries three C-tier and two D-tier players; later signings can change those counts within the S- and A-tier limits. Fatigue and absences bring substitutes into matches. These results describe one reward and transfer policy on the shortest three-decade map under the current patience and opposition rules. They do not establish human success rates, the difficulty of the other maps, or the results of planning transfers, rearranging the lineup or choosing different rewards.
 

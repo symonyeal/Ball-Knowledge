@@ -1,9 +1,12 @@
 // G archive; x roster references {k,p}; c card; r base rating; n tier counts; lim tier allowances.
 // Tiers are fixed before position, era, chemistry or manager adjustments. CAP is the drafted fifteen;
-// GCAP is Eraball's Gauntlet cap on a capped run (at most 2 S and 4 A; B, C and D unlimited).
+// GCAP is Eraball's Gauntlet cap (at most 2 S and 4 A; B, C and D unlimited), kept by the capped
+// career. RCAP loosens it to 3 S and 6 A for the Gauntlet's fifteen: a capped run and a Gauntlet
+// draft use it. A tier missing from lim is unlimited.
 export const TI = r => (r >= 90 ? 'S' : r >= 85 ? 'A' : r >= 80 ? 'B' : r >= 75 ? 'C' : 'D');
 export const CAP = Object.freeze({ S: 2, A: 4, B: 4, C: 3, D: 2 });
 export const GCAP = Object.freeze({ S: 2, A: 4 });
+export const RCAP = Object.freeze({ S: 3, A: 6 });
 
 export function ct(G, x) {
   const n = { S: 0, A: 0, B: 0, C: 0, D: 0 };
@@ -21,9 +24,9 @@ export function ck(G, x, lim = CAP) {
   return n;
 }
 
-export function left(G, x) {
+export function left(G, x, lim = CAP) {
   const n = ct(G, x);
-  return Object.fromEntries(Object.entries(CAP).map(([t, v]) => [t, v - n[t]]));
+  return Object.fromEntries(Object.keys(CAP).map(t => [t, (lim[t] ?? Infinity) - n[t]]));
 }
 
 export function fits(G, x, i, ref, lim = CAP) {
