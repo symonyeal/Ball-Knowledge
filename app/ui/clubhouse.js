@@ -88,7 +88,7 @@ export function mountClubhouse(U, { notice, weekly }) {
   function squadChallenges() {
     const done=sbcDone(), Q=challenges();
     return `${top(`${Q.filter(c=>done.has(c.id)).length} / ${Q.length} completed. Build a starting eleven in the sandbox that meets every requirement; each challenge unlocks its reward card once. Chemistry follows the lineup rules: natural positions only.`)}
-      <div class="club-grid">${Q.map(c=>{const ref=Sbc.reward(A,c), x=by.get(refid(ref));return `<article class="challenge-card ${done.has(c.id)?'club-earned':''}"><p class="lbl">${c.wk?`Weekly · ${esc(c.wk)}`:'Permanent'}${done.has(c.id)?' · Completed':''}</p><h2>${esc(c.nm)}</h2><ul class="sbc-req">${c.req.map(([k,n,v])=>`<li>${esc(Sbc.R[k].tx(n,v,G))}</li>`).join('')}</ul><p class="small">Reward: ${esc(cardLabel(x))} · ${number(x.r)}</p>${done.has(c.id)?'':btn('Build in sandbox',`data-sbc-build="${esc(c.id)}"`,false)}</article>`;}).join('')}</div>`;
+      <div class="club-grid">${Q.map(c=>{const ref=Sbc.reward(G,A,c), x=by.get(refid(ref));return `<article class="challenge-card ${done.has(c.id)?'club-earned':''}"><p class="lbl">${c.wk?`Weekly · ${esc(c.wk)}`:'Permanent'}${done.has(c.id)?' · Completed':''}</p><h2>${esc(c.nm)}</h2><ul class="sbc-req">${c.req.map(([k,n,v])=>`<li>${esc(Sbc.R[k].tx(n,v,G))}</li>`).join('')}</ul><p class="small">Reward: ${esc(cardLabel(x))} · ${number(x.r)}</p>${done.has(c.id)?'':btn('Build in sandbox',`data-sbc-build="${esc(c.id)}"`,false)}</article>`;}).join('')}</div>`;
   }
   function sbcPanel(s) {
     const c=challenges().find(c=>c.id===sbcId); if(!c)return '';
@@ -234,7 +234,7 @@ export function mountClubhouse(U, { notice, weekly }) {
       else if(b.dataset.archivePick){changeSandbox(freePlace(G,sbox(),by.get(b.dataset.archivePick),slot));slot=sbox().slots.findIndex(c=>!c);if(slot<0)slot=0;paint();}
       else if(b.dataset.sbcBuild){sbcId=b.dataset.sbcBuild;page='sandbox';sandboxResult=null;paint();dialog.scrollTop=0;}
       else if(b.id==='sbc-leave'){sbcId=null;paint();}
-      else if(b.id==='sbc-submit'){const c=challenges().find(c=>c.id===sbcId);if(!c||!Sbc.met(G,sbox(),c))throw new Error('The squad does not meet every requirement.');const ref=Sbc.reward(A,c);P=completeSbc(P,c,sbox(),ref);save();sbcId=null;page='sbc';paint();notice(`${c.nm} complete. ${cardLabel(by.get(refid(ref)))} joins your collection.`);}
+      else if(b.id==='sbc-submit'){const c=challenges().find(c=>c.id===sbcId);if(!c||!Sbc.met(G,sbox(),c))throw new Error('The squad does not meet every requirement.');const ref=Sbc.reward(G,A,c);P=completeSbc(P,c,sbox(),ref);save();sbcId=null;page='sbc';paint();notice(`${c.nm} complete. ${cardLabel(by.get(refid(ref)))} joins your collection.`);}
       else if(b.id==='sandbox-fill')changeSandbox(freeFill(G,A,sbox(),sbox().seed));
       else if(b.id==='ambience-play'){P={...P,settings:{...P.settings,volume:P.settings.volume||20}};await sound(P.settings.volume);save();paint();}
       else if(b.id==='ambience-mute'){P={...P,settings:{...P.settings,volume:0}};await sound(0);save();paint();}

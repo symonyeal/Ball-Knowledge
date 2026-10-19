@@ -56,8 +56,8 @@ test('weekly challenges are seeded, distinct and satisfiable', () => {
 });
 
 test('a completed challenge unlocks its reward once and counts towards achievements, not results', () => {
-  const ch = B.CORE[0], ref = B.reward(A, ch), s = solve(club(A[0].q));
-  assert.deepEqual(ref, B.reward(A, ch));
+  const ch = B.CORE[0], ref = B.reward(G, A, ch), s = solve(club(A[0].q));
+  assert.deepEqual(ref, B.reward(G, A, ch));
   assert.ok(A.some(c => c.k === ref.k && c.p === ref.p));
   let P = completeSbc(emptyProfile(), ch, s, ref);
   assert.equal(completeSbc(P, ch, s, ref), P);
@@ -80,7 +80,7 @@ test('the challenges of a date use its UTC ISO week, and twenty consecutive week
     // one nation, the decade's cards first, in any catalogue formation: eleven compatriots give 33 chemistry
     const nats = [...new Set(A.filter(c => c.D === D && c.nat).map(c => c.nat))];
     assert.ok(Object.keys(G.formations).some(f => nats.some(x => B.met(G, solve(A.filter(c => c.nat === x && c.r < 90).sort((a, b) => (b.D === D) - (a.D === D)), f), d))), w + ' decade');
-    for (const c of Q) { const r = B.reward(A, c); assert.deepEqual(r, B.reward(A, c)); assert.ok(A.some(x => x.k === r.k && x.p === r.p), c.id); }
+    for (const c of Q) { const r = B.reward(G, A, c); assert.deepEqual(r, B.reward(G, A, c)); assert.ok(A.some(x => x.k === r.k && x.p === r.p), c.id); }
   }
   // Sunday 23:59 and Monday 00:00 UTC fall in consecutive weeks, as for the Weekly Challenge seed.
   const sun = new Date(Date.UTC(2026, 9, 25, 23, 59)), mon = new Date(Date.UTC(2026, 9, 26, 0, 0));
@@ -89,7 +89,7 @@ test('the challenges of a date use its UTC ISO week, and twenty consecutive week
 });
 
 test('a weekly challenge survives profile export and import; a stored pre-fix week is repaired', () => {
-  const t = new Date(Date.UTC(2026, 9, 21)), ch = B.challenges(G, A, t).at(-1), s = solve(club(A[0].q)), ref = B.reward(A, ch);
+  const t = new Date(Date.UTC(2026, 9, 21)), ch = B.challenges(G, A, t).at(-1), s = solve(club(A[0].q)), ref = B.reward(G, A, ch);
   const P = completeSbc(emptyProfile(), ch, s, ref);
   assert.deepEqual(validateProfile(G, A, JSON.parse(JSON.stringify(P))).events, P.events);
   assert.equal(totals(P).seasons + totals(P).drafts, 0);
@@ -97,4 +97,14 @@ test('a weekly challenge survives profile export and import; a stored pre-fix we
   const e = validateProfile(G, A, JSON.parse(JSON.stringify(old))).events[0];
   assert.equal(e.week, '2026-W43');
   assert.ok(collection({ events: [e] }).has(refid(ref)));
+});
+
+test('no two challenges in the game share a reward card, whatever order they are asked in', () => {
+  const t0 = Date.UTC(2026, 9, 19), Q = [...B.CORE];
+  for (let i = 0; i < 104; i++) Q.push(...B.weekly(G, A, wk(new Date(t0 + 7 * i * 864e5)).id));
+  const late = Q.at(-1), R = Q.map(c => refid(B.reward(G, A, c)));
+  assert.equal(new Set(R).size, Q.length);
+  const A2 = archive(G);                                   // a fresh cache, asked for the last week first
+  assert.equal(refid(B.reward(G, A2, late)), R.at(-1));
+  assert.deepEqual(Q.map(c => refid(B.reward(G, A2, c))), R);
 });
