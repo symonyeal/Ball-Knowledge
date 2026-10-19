@@ -79,7 +79,9 @@ export function achievements(P) {
 
 export function validateProfile(G, A, raw) {
   if (!raw || raw.v!==1 || !Array.isArray(raw.events) || raw.events.length>20000 || !raw.sessions || typeof raw.sessions!=='object' || Array.isArray(raw.sessions) || Object.keys(raw.sessions).length>5000) throw new Error('Choose a valid Football Era Draft profile.');
-  const events=raw.events.map(e=>{
+  // b844ee4 (published 2026-10-19, UTC ISO week 2026-W43) stored a weekly challenge's week as '[object Object]'.
+  const events=raw.events.map(e0=>{
+    const e=e0?.kind==='sbc'&&e0.week==='[object Object]'?{...e0,week:'2026-W43'}:e0;
     if(!e || typeof e.id!=='string' || e.id.length>50000 || !['draft','season','boss','map','circuit','tie','sbc'].includes(e.kind) ||
       !['Classic','Salary cap','Weekly','Gauntlet','Circuit','Head to head','SBC'].includes(e.mode) || ![1950,1960,1970,1980,1990,2000,2010,2020].includes(e.D) ||
       !['w','d','l','gf','ga','titles','position','score','seed'].every(k=>Number.isSafeInteger(e[k])&&e[k]>=0&&e[k]<=4294967295) ||

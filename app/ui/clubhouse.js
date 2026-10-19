@@ -83,7 +83,7 @@ export function mountClubhouse(U, { notice, weekly }) {
   }
 
   // Squad Building Challenges: the permanent set and this ISO week's three; a challenge is built in the sandbox.
-  const challenges = () => { const w=wk(new Date()); if(sbcWeek?.w!==w)sbcWeek={w,Q:Sbc.weekly(G,A,w)}; return [...Sbc.CORE,...sbcWeek.Q]; };
+  const challenges = () => { const w=wk().id; if(sbcWeek?.w!==w)sbcWeek={w,Q:Sbc.challenges(G,A)}; return sbcWeek.Q; };
   const sbcDone = () => new Set(P.events.filter(e=>e.kind==='sbc').map(e=>e.id.slice(4)));
   function squadChallenges() {
     const done=sbcDone(), Q=challenges();
