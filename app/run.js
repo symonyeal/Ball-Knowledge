@@ -1,4 +1,4 @@
-import { mk, hs, sh, play, P, tie, shift, move } from './engine/index.js';
+import { mk, hs, sh, play, P, tie, shift, move, rate, note, aw } from './engine/index.js';
 import { hydrate, shape, draw, key } from './draft.js';
 import { TI, GCAP, fits, ck } from './cap.js';
 import { staff } from './staff.js';
@@ -32,6 +32,10 @@ export { TI, CAP, GCAP } from './cap.js';
 //   LINES      position lines by first position, for the transfer window and development
 //   HOP_N      signings from each decade in the transfer window (Eraball 1 of 3 each for 9 places)
 //   bossAt     the act's boss from the seed; a retry draws a different one of the three
+//   OPP        opposition offset: every opponent card plays a + b j (+ c for a boss) rating points, j = (N_RD + 1) act + rd
+//              the run's stage (the boss is rd = N_RD). Eraball's opponents strengthen every segment
+//              and never reset between eras; a < 0 opens the run below the clubs' recorded strength
+//   pl         per-player tallies of a round or boss tie, person -> [goals, assists, clean sheets, apps]
 //   state v 3: seed, cap, map, m (the draft's team), f (formation), slots, act, rd, ph (rd | node | boss | hop | repo | done | fired),
 //              pat, rest, tries (ties per act), lost (ties lost in the run), boss, tags (person -> tag
 //              overrides), up (person -> card charged for the cap), mv (person -> MVP/LVP points),
@@ -46,6 +50,7 @@ export const MAPS = {
 };
 export const N_RD = 4, N_M = 6, PAT0 = 8, PAT_MAX = 20, B_WIN = 4, DESP = 5, HOP_N = 2;
 export const B_LOSS = n => (n === 0 ? 4 : 6);
+export const OPP = { a: -8, b: 0.2, c: -4 };
 export const dP = p => (p >= 18 ? 3 : p >= 13 ? 2 : p >= 12 ? 1 : p >= 9 ? 0 : p >= 7 ? -2 : p >= 4 ? -3 : p >= 2 ? -4 : -5);
 const LAD = [[10, 16], [6, 12], [3, 9], [0, 6]];
 const TO = ['D', 'C', 'B', 'A', 'S'];
@@ -134,29 +139,40 @@ export function runForm(G, s, f) {
 
 const me = (G, s) => ({ id: 'your-club', nm: 'Your Era XI', T: runTeam(G, s), me: true });
 
+export const lvl = (s, rd = s.rd) => (N_RD + 1) * s.act + rd;
+export const dOpp = (s, rd = s.rd) => OPP.a + OPP.b * lvl(s, rd) + (rd === N_RD ? OPP.c : 0);
+const opp = (o, d, D) => {
+  const T = { ...o.T, xi: o.T.xi.map(c => c && shift(c, d)), bn: o.T.bn.map(c => c && shift(c, d)) };
+  return { ...o, T, x: rate(T, D).ovr };
+};
+
 export function runBoss(F, s) {
-  return s.ph === 'done' || s.ph === 'fired' ? null : F[D_of(s)][s.boss];
+  return s.ph === 'done' || s.ph === 'fired' ? null : opp(F[D_of(s)][s.boss], dOpp(s, N_RD), D_of(s));
 }
 
+// Our players' tallies from a stats map filled by note().
+const tally = st => Object.fromEntries([...st.values()].filter(p => p.cl === 'your-club').map(p => [p.id, [p.g, p.as, p.cs, p.ap]]));
+
 export function roundOps(F, s) {
-  const L = F[D_of(s)].slice(3), [a, b] = LAD[Math.min(s.rd, N_RD - 1)];
-  return sh(mk(hs(`${s.seed}:ops:${s.act}:${s.rd}:${s.tries[s.act]}`)), L.slice(a, b));
+  const D = D_of(s), L = F[D].slice(3), [a, b] = LAD[Math.min(s.rd, N_RD - 1)], d = dOpp(s);
+  return sh(mk(hs(`${s.seed}:ops:${s.act}:${s.rd}:${s.tries[s.act]}`)), L.slice(a, b)).map(o => opp(o, d, D));
 }
 
 export function runRound(G, F, s) {
   if (s.ph !== 'rd') throw new Error('Choose this round’s reward or play the boss tie first.');
-  const D = D_of(s), O = roundOps(F, s), r = mk(hs(`${s.seed}:run:${s.act}:${s.rd}:${s.tries[s.act]}`)), X = me(G, s), res = [];
+  const D = D_of(s), O = roundOps(F, s), r = mk(hs(`${s.seed}:run:${s.act}:${s.rd}:${s.tries[s.act]}`)), X = me(G, s), res = [], st = new Map();
   if (O.length !== N_M) throw new Error(`The ${D}s needs nineteen selected clubs for a Gauntlet round.`);
   let pts = 0, w = 0, d = 0, l = 0, gf = 0, ga = 0;
   O.forEach((o, i) => {
     const h = i % 2 === 0, M = h ? play(r, X, o, D, { h: P.h }) : play(r, o, X, D, { h: P.h });
+    if (h) note(st, M, X, o); else note(st, M, o, X);
     const a = h ? M.gx : M.gy, b = h ? M.gy : M.gx;
     gf += a; ga += b;
     if (a > b) { w++; pts += 3; } else if (a === b) { d++; pts++; } else l++;
     res.push({ op: o.nm, h, gf: a, ga: b });
   });
   const dp = dP(pts), pat = clamp(s.pat + dp);
-  const e = { t: 'seg', D, act: s.act, seg: s.rd, w, d, l, pts, gf, ga, dp, res };
+  const e = { t: 'seg', D, act: s.act, seg: s.rd, w, d, l, pts, gf, ga, dp, res, pl: tally(st) };
   return { ...s, pat, ph: pat <= 0 ? 'fired' : 'node', fa: 0, prem: 0, log: [...s.log, e] };
 }
 
@@ -184,7 +200,7 @@ export function runPlayBoss(G, F, s) {
   if (lvp) mv[lvp] = (mv[lvp] || 0) - 1;
   const dp = won ? B_WIN : -B_LOSS(s.lost), pat = clamp(s.pat + dp);
   const e = { t: 'boss', D, act: s.act, op: B.nm, n, won, agg: t.agg, legs: t.legs.map(M => [M.gx, M.gy]), et: t.et,
-    pw: t.pw ? { w: t.pw.w, x: t.pw.x, y: t.pw.y } : null, dp, mvp, lvp };
+    pw: t.pw ? { w: t.pw.w, x: t.pw.x, y: t.pw.y } : null, dp, mvp, lvp, pl: tally(st) };
   const log = [...s.log, e];
   if (won) return { ...s, tries, mv, pat, ph: isLast(s) ? 'done' : 'hop', log };
   if (pat <= 0) return { ...s, tries, mv, pat: 0, lost: s.lost + 1, ph: 'fired', log };
@@ -375,6 +391,19 @@ export function nextAct(s) {
   return { ...s, act, rd: 0, ph: 'rd', rest: 0, fa: 0, prem: 0, boss: bossAt(s.seed, act, 0, -1), log: [...s.log, { t: 'act', act }] };
 }
 
+// Eraball's act and run honours from the logged tallies (act a, or the whole run): player of the
+// act 4 goals + 3 assists + 3 clean sheets + 0.1 appearances, top scorer, assists, clean sheets;
+// biggest round win by goal difference.
+export function honours(s, a) {
+  const st = new Map(), E = s.log.filter(e => (e.t === 'seg' || e.t === 'boss') && e.pl && (a === undefined || e.act === a));
+  for (const e of E) for (const [id, [g, as, cs, ap]] of Object.entries(e.pl)) {
+    const p = st.get(id) || st.set(id, { id, cl: 'your-club', src: '', k: false, g: 0, as: 0, cs: 0, ap: 0 }).get(id);
+    p.g += g; p.as += as; p.cs += cs; p.ap += ap; p.k ||= cs > 0;
+  }
+  const W = E.filter(e => e.t === 'seg').flatMap(e => e.res.map(m => ({ ...m, D: e.D })));
+  return { ...aw(st), win: W.length ? W.reduce((x, m) => (m.gf - m.ga > x.gf - x.ga ? m : x)) : null, n: E.length };
+}
+
 // Eraball's run score: every cleared act is worth 10 + 5 x act, divided by 1 + its lost ties; times
 // 0.5 + the round win rate (a draw counts half), 1.5 under the salary cap, and 1 + 0.2 x patience/20
 // + 0.15 when no tie was ever lost.
@@ -402,13 +431,14 @@ export function validRun(G, r0, manager, cap) {
   const act = e => obj(e) && M && int(e.act, 0, M.D.length - 1) && e.D === M.D[e.act];
   const tg = (k, v) => (['tal', 'rock', 'mae', 'poa', 'tl', 'vs', 'ss'].includes(k) && (v === 1 || v === 2)) || (k === 'bg' && int(v, 1, 3));
   const pair = x => Array.isArray(x) && x.length === 2 && x.every(y => int(y));
+  const pl = x => x === undefined || (obj(x) && Object.entries(x).every(([p, v]) => person(p) && Array.isArray(v) && v.length === 4 && v.every(y => int(y))));
   const log = e => {
     if (!obj(e)) return false;
-    if (e.t === 'seg') return act(e) && int(e.seg, 0, N_RD - 1) && [e.w, e.d, e.l, e.gf, e.ga].every(x => int(x)) &&
+    if (e.t === 'seg') return act(e) && pl(e.pl) && int(e.seg, 0, N_RD - 1) && [e.w, e.d, e.l, e.gf, e.ga].every(x => int(x)) &&
       e.w + e.d + e.l === N_M && e.pts === 3 * e.w + e.d && int(e.dp, -5, 3) &&
       Array.isArray(e.res) && e.res.length === N_M && e.res.every(f => obj(f) && typeof f.op === 'string' && typeof f.h === 'boolean' && int(f.gf) && int(f.ga));
     if (e.t === 'boss') {
-      const base = act(e) && typeof e.op === 'string' && int(e.n, 1) && typeof e.won === 'boolean' && typeof e.et === 'boolean' && [4, -4, -6].includes(e.dp);
+      const base = act(e) && pl(e.pl) && typeof e.op === 'string' && int(e.n, 1) && typeof e.won === 'boolean' && typeof e.et === 'boolean' && [4, -4, -6].includes(e.dp);
       if (!base) return false;
       if (e.legs === undefined) return int(e.gx) && int(e.gy) && (!e.pw || (obj(e.pw) && int(e.pw.w, 0, 1) && int(e.pw.x) && int(e.pw.y)));
       return pair(e.agg) && Array.isArray(e.legs) && e.legs.length === 2 && e.legs.every(pair) &&

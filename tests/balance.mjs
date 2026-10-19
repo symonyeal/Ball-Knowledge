@@ -1,6 +1,7 @@
 // Balance measurement (not part of the test suite): sensible drafts play seasons or whole Gauntlet runs.
 //   node tests/balance.mjs season [drafts per decade=40] [cap|classic] [free]
-//   node tests/balance.mjs gauntlet [runs=40] [keep=5] [cap|classic] [free] [map=original]
+//   node tests/balance.mjs gauntlet [runs=40] [keep=5] [cap|classic] [free] [map=reverse]
+//   A Gauntlet run drafts as the browser's Gauntlet entry does: the map's first decade, its nearby pool.
 // A sensible draft takes the best-graded of the five managers, then for each pick the legal card and
 // open slot with the highest slot-rated, era-adjusted value plus the team chemistry it would add. Rules
 // default to Salary cap, the browser default. With `free`, the finished draft moves to the formation
@@ -16,14 +17,15 @@ import { ct, TI, GCAP } from '../app/cap.js';
 
 const G = JSON.parse(readFileSync(new URL('../data/game.json', import.meta.url), 'utf8'));
 if (G.params) E.cfg(G.params);
+if (process.env.OPP) Object.assign(Rn.OPP, JSON.parse(process.env.OPP));
 const F = fields(G), GR = { S: 0.04, A: 0.03, B: 0.015, C: 0, D: -0.015, F: -0.03 };
 const A = process.argv.slice(2), cap = !A.includes('classic'), free = A.includes('free'), legacy = A.includes('legacy');
 const rules = `${cap ? 'Salary cap' : 'Classic'}${free ? ', free formation' : ''}`;
-const [mode = 'season', a1, a2, map = 'original'] = A.filter(x => !['cap', 'classic', 'free', 'legacy'].includes(x));
+const [mode = 'season', a1, a2, map = 'reverse'] = A.filter(x => !['cap', 'classic', 'free', 'legacy'].includes(x));
 const q = (a, f) => a.slice().sort((x, y) => x - y)[Math.floor(f * (a.length - 1))];
 
-function draft(seed, D) {
-  const s0 = Dr.start(seed, D, cap);
+function draft(seed, D, g) {
+  const s0 = Dr.start(seed, D, cap, g);
   if (legacy) s0.v = 3;
   const mo = Dr.opts(G, s0).map((o, i) => { const m = G.managers.find(m => m.nm === o.nm); return [GR[m.ga] + GR[m.gd], i]; });
   let s = Dr.choose(G, s0, mo.sort((a, b) => b[0] - a[0] || a[1] - b[1])[0][1]);
@@ -70,7 +72,7 @@ if (mode === 'season') {
   const N = Number(a1 || 40), keep = Number(a2 || 5), acts = [], segs = [], boss = [];
   for (let k = 0; k < N; k++) {
     const seed = 500 + k;
-    let s = Rn.runNew(seed, draft(seed, Dr.DECADES[k % 8]), map), n = 0;
+    let s = Rn.runNew(seed, draft(seed, null, map), map), n = 0;
     while (!['done', 'fired'].includes(s.ph) && n++ < 400) {
       if (s.ph === 'rd') { s = Rn.runRound(G, F, s); segs.push(s.log.at(-1).pts); }
       else if (s.ph === 'node') {

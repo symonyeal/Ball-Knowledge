@@ -5,10 +5,11 @@
 //   season()  the seeded league and Cup for the draft's decade (recomputed from the saved draft)
 //   results() scoreboard, form strip and tabs; tab views league, fixtures, cup, stats, lineup, gauntlet, more
 //   xi(T, Q)  static pitch of a rated team; runPitch(s) the Gauntlet team in its current decade
+//   arena()   a Gauntlet draft's own results page; honoured(h) act or run honours; rerated(s) decade change
 
 import * as E from '../engine/index.js';
 import { TI, fits } from '../cap.js';
-import { team } from '../draft.js';
+import { team, POOL } from '../draft.js';
 import * as Rn from '../run.js';
 import { code } from '../play.js';
 import { U, esc, num, ord, nm, club, kv, tier, rules, pitch, links, face, capTiles, teamLine, spell } from './kit.js';
@@ -131,6 +132,25 @@ function transfer(s) {
     <div class="rewards">${[['old', H.old, H.from], ['neu', H.neu, H.to]].map(([k, Q, D]) => `<fieldset class="reward"><legend class="lbl">${D}s arrivals</legend>${Q.map((f, i) => `<div class="transfer-pick"><label><input type="checkbox" data-hop-pick="${k}" value="${i}"> ${esc(nm(f.p))} · ${esc(f.l)} · ${Math.round(f.r)} · ${TI(f.r)} tier</label><p class="small dim">${esc(club(f.k))}</p><label class="field"><span class="lbl">Release</span><select id="hop-out-${k}-${i}"><option value="">Choose a squad player</option>${squadOptions(s)}</select></label></div>`).join('')}</fieldset>`).join('')}</div>
     <button class="btn" type="button" id="run-hop">Confirm transfers</button>`;
 }
+const sgn = x => `${x >= 0 ? '+' : '−'}${num(Math.abs(x))}`;
+export function honoured(h, title) {
+  const I = [['Player', h.player, p => `${p.g} goals · ${p.as} assists`], ['Top scorer', h.scorer, p => `${p.g} goals`], ['Assists', h.assists, p => `${p.as} assists`],
+    ['Clean sheets', h.keeper, p => `${p.cs} clean sheets`]].filter(([, p]) => p);
+  const w = h.win && h.win.gf > h.win.ga ? `<article class="stat-card"><p class="lbl">Biggest win</p><p class="aw">${h.win.gf}–${h.win.ga}</p><p class="small">${h.win.h ? 'v' : 'at'} ${esc(h.win.op)}</p></article>` : '';
+  return I.length || w ? `<h3>${esc(title)}</h3><aside class="awards" aria-label="${esc(title)}">${I.map(([l, p, t]) => `<article class="stat-card"><p class="lbl">${l}</p><p class="aw">${esc(nm(p.id))}</p><p class="small">${t(p)}</p></article>`).join('')}${w}</aside>` : '';
+}
+// A transfer can leave an outfielder in goal: name him and his rating there.
+function keeper(s, D) {
+  const p = E.rate(Rn.runTeam(U.G, s), D).xi.find(p => p.s === 'GK');
+  return p?.c && !p.c.pos?.includes('GK') ? `<p class="warn small">${esc(p.c.nm)} is in goal at ${num(p.a)}. Swap a goalkeeper into the GK place before entering the ${D}s.</p>` : '';
+}
+// Each squad place's rating in the decade being left and the one about to be played.
+function rerated(s) {
+  const T = Rn.runTeam(U.G, s), D0 = Rn.D_of(s), D1 = Rn.MAPS[s.map].D[s.act + 1], A = E.rate(T, D0), B = E.rate(T, D1);
+  const Q = [...A.xi.map((p, i) => [p, B.xi[i], p.s]), ...A.bn.map((p, i) => [p, B.bn[i], `B${i + 1}`])].filter(([p]) => p?.c);
+  return `<details class="breakdown" open><summary>Re-rated for the ${D1}s · overall ${num(A.ovr)} → ${num(B.ovr)}</summary><div class="tw"><table><thead><tr><th>Place</th><th>Player</th><th class="k">${D0}s</th><th class="k">${D1}s</th><th class="k">Change</th></tr></thead>
+    <tbody>${Q.map(([p, q, l]) => `<tr><td>${l}</td><td>${esc(p.c.nm)}</td><td class="k">${num(p.a)}</td><td class="k">${num(q.a)}</td><td class="k">${sgn(q.a - p.a)}</td></tr>`).join('')}</tbody></table></div></details>`;
+}
 function runPitch(s, D) {
   const T = Rn.runTeam(U.G, s), Q = E.rate(T, D);
   return xi(T, Q, D, `Your ${s.f} in the ${D}s`);
@@ -144,20 +164,21 @@ export function gauntlet() {
   }
   const Dc = Rn.D_of(s), b = Rn.runBoss(F, s), last = s.log.at(-1), sc = Rn.score(s);
   let main = '';
-  if (s.ph === 'rd') main = `<p class="small">Round ${s.rd + 1} of ${Rn.N_RD}: six matches against rising ${Dc}s opposition. Earn 13+ points for +2 patience, 18 for +3; fewer than 9 costs patience.</p><button class="btn" type="button" id="run-round">Play the round</button>`;
-  else if (s.ph === 'node') main = `<p class="small">Choose one reward. Prices rise by ${Rn.sur(s)} patience in this act.</p><div class="rewards">${Rn.offers(G, F, s).map((o, j) => offerCard(o, j, s)).join('')}</div>`;
+  const wait = ['rd', 'node'].includes(s.ph) && s.rd === Rn.N_RD - 1 ? `<p class="run-boss small">Waiting after this round: <b>${esc(b.nm)}</b> · strength ${num(b.x)} against your ${num(E.rate(Rn.runTeam(G, s), Dc).ovr)}.</p>` : '';
+  if (s.ph === 'rd') main = `<p class="small">Round ${s.rd + 1} of ${Rn.N_RD}: six matches against rising ${Dc}s opposition, playing ${sgn(Rn.dOpp(s))} rating points against their records. Opponents strengthen every round of the run and never reset between decades. Earn 13+ points for +2 patience, 18 for +3; fewer than 9 costs patience.</p>${wait}<button class="btn" type="button" id="run-round">Play the round</button>`;
+  else if (s.ph === 'node') main = `${wait}<p class="small">Choose one reward. Prices rise by ${Rn.sur(s)} patience in this act.</p><div class="rewards">${Rn.offers(G, F, s).map((o, j) => offerCard(o, j, s)).join('')}</div>`;
   else if (s.ph === 'boss') main = `<p class="small">The ${Dc}s boss: <b>${esc(b.nm)}</b> (strength ${num(b.x)}). Your squad here: ${num(E.rate(Rn.runTeam(G, s), Dc).ovr)}. Home and away, with extra time and penalties if aggregate goals are level.</p><button class="btn" type="button" id="run-boss">Face the boss</button>`;
-  else if (s.ph === 'hop') main = transfer(s);
+  else if (s.ph === 'hop') main = `${honoured(Rn.honours(s, s.act), `The ${Dc}s honours`)}${transfer(s)}`;
   else if (s.ph === 'repo') {
     const D1 = Rn.MAPS[s.map].D[s.act + 1], rec = G.managers.find(m => m.nm === s.m.nm)?.f || [];
     main = `<h3>Prepare for the ${D1}s</h3><p class="small">Swap any two squad places or change formation before entering the next decade. A formation change keeps every card, the bench and your cap charges.</p>
-      <div class="repo">${runPitch(s, D1)}<div class="repo-ctl">
+      ${keeper(s, D1)}${rerated(s)}<div class="repo">${runPitch(s, D1)}<div class="repo-ctl">
         <label class="field"><span class="lbl">Formation</span><select id="run-form">${Object.keys(G.formations).map(f => `<option value="${esc(f)}" ${f === s.f ? 'selected' : ''}>${esc(f)}${rec.includes(f) ? ' · recorded' : ''}</option>`).join('')}</select></label>
         <button class="btn q" type="button" id="run-form-apply">Change formation</button>
         <label class="field"><span class="lbl">First place</span><select id="run-swap-a">${squadOptions(s)}</select></label><label class="field"><span class="lbl">Second place</span><select id="run-swap-b">${squadOptions(s)}</select></label>
         <div class="row wrap"><button class="btn q" type="button" id="run-swap">Swap players</button><button class="btn" type="button" id="run-next">Enter the ${D1}s</button></div></div></div>`;
-  } else if (s.ph === 'done') main = `<h3>Map conquered</h3><p class="small">Score ${num(sc.score)} · ${sc.attempts} boss ties · ${sc.w}-${sc.d}-${sc.l} in rounds · ${s.pat} patience left.</p>`;
-  else main = `<h3>The board has lost patience</h3><p class="small">Your run ended in the ${Dc}s after ${sc.acts} boss wins.</p>`;
+  } else if (s.ph === 'done') main = `<h3>Map conquered</h3><p class="small">Score ${num(sc.score)} · ${sc.attempts} boss ties · ${sc.w}-${sc.d}-${sc.l} in rounds · ${s.pat} patience left.</p>${honoured(Rn.honours(s), 'Run honours')}`;
+  else main = `<h3>The board has lost patience</h3><p class="small">Your run ended in the ${Dc}s after ${sc.acts} boss wins · score ${num(sc.score)} · ${sc.w}-${sc.d}-${sc.l} in rounds.</p>${honoured(Rn.honours(s), 'Run honours')}`;
   const msg = !last ? '' : last.t === 'seg' ? `Last round: ${last.w}-${last.d}-${last.l}, ${last.pts} points, patience ${last.dp >= 0 ? '+' : ''}${last.dp}.`
     : last.t === 'boss' ? `Boss: ${(last.agg || [last.gx, last.gy]).join('–')}${last.pw ? ' (penalties)' : last.et ? ' (extra time)' : ''}: ${last.won ? 'won' : 'lost'}, patience ${last.dp >= 0 ? '+' : ''}${last.dp}.${last.mvp ? ` MVP: ${nm(last.mvp)} (+1 rating).` : last.lvp ? ` LVP: ${nm(last.lvp)} (−1 rating).` : ''}`
       : last.t === 'boost' ? `Boost card played: ${nm(last.p)} is now ${club(last.to)}.` : last.t === 'sign' ? `Signed ${nm(last.p)}, released ${nm(last.out)}.`
@@ -169,6 +190,21 @@ export function gauntlet() {
     ${['done', 'fired'].includes(s.ph) ? `${mapChoice()}<button class="btn q sm" type="button" id="run-start">Start a new run ↻</button>` : ''}
     ${runSquad(s)}
     <div class="mode-log">${s.log.slice().reverse().filter(e => e.t === 'seg' || e.t === 'boss').slice(0, 20).map(e => `<div class="mode-event"><div>${e.D}s · ${e.t === 'seg' ? `Round ${e.seg + 1}` : `Boss · ${esc(e.op)}`}<small>${e.t === 'seg' ? `${e.w}-${e.d}-${e.l} · ${e.gf}–${e.ga}` : `Attempt ${e.n}${e.pw ? ' · penalties' : e.et ? ' · extra time' : ''}`}</small></div><b>${e.t === 'seg' ? `${e.pts} pts` : `${(e.agg || [e.gx, e.gy]).join('–')} ${e.won ? 'win' : 'loss'}`}</b></div>`).join('')}</div></section>`;
+}
+
+// A Gauntlet draft's results page: the run itself, then the replay controls.
+export function arena() {
+  const S = U.S;
+  return `<div class="arena"><p class="eyebrow">Era Gauntlet · ${esc(Rn.MAPS[S.g].nm)}</p>${gauntlet()}</div>
+    <div class="share-strip"><p class="small">${rules(S)} · Seed ${S.seed} · drafted from the ${Math.max(1950, S.D - POOL)}s to the ${Math.min(2020, S.D + POOL)}s · saved in this browser.</p><div class="row wrap">
+      <button class="btn sm" type="button" id="share">Copy result</button><button class="btn q sm" type="button" id="download">Download replay ↓</button></div></div>`;
+}
+export function runShareText() {
+  const S = U.S, s = S.mode.run, sc = Rn.score(s);
+  return `Football Era Draft · Era Gauntlet · ${Rn.MAPS[s.map].nm} · ${rules(S)}
+${sc.acts} of ${Rn.MAPS[s.map].D.length} decades cleared · ${sc.w}W ${sc.d}D ${sc.l}L · score ${num(sc.score)}
+${teamLine(S)}
+Seed ${S.seed} · ${location.href.split('?')[0]}`;
 }
 
 export function more() {
@@ -201,6 +237,7 @@ export function about() {
   <h3>Shape, chemistry and managers</h3><p>Formation shape moves strength between attack, midfield and defence. Chemistry follows EA FC Ultimate Team: each starter in a natural position earns 0–3 points from players sharing his club (2/4/7), nation (2/5/8) or league (3/5/8); the manager counts once towards his nation and league. Each point adds one rating point; the team maximum is 33. Famous duos who both start add a separate partnership bonus. The pitch draws club links in club colours.</p>
   <h3>Keyboard</h3><p>Arrow keys move through the squad list and around the pitch; Enter selects or places; Escape cancels; / jumps to search; Ctrl+Z undoes a lineup change and Ctrl+Shift+Z redoes it.</p>
   <h3>A decade at your club</h3><p>Your fifteen take the chosen club's place in its real league for every available season of the decade. Rival squads use players recorded at that club in that season, nearby-season players when needed, or labelled stand-ins. Play to winter, choose a reward and set the lineup, then play the run-in. Results against expectations change board patience; meeting the season objective earns a bonus. Win cups, develop players, upgrade a player to his best card, make summer transfers and continue until the decade ends or the board sacks you. A win in which a player has three goal involvements, or every five clean sheets for a keeper, earns an in-form: +1 rating from the next half, up to +3, until the season ends. One Evolution at a time sets a player rated 86 or below a target, such as 10 goals; completing it adds 2 rating points and, for most, a new natural position. Domestic cups and European places follow the country and era, with simplified formats.</p>
+  <h3>Era Gauntlet</h3><p>The start screen's Gauntlet entry drafts from the decades near a map's first stop, then plays it: four six-match rounds and a two-legged boss in every decade, with rewards, transfers and board patience. Opponents start 8 rating points below their records and strengthen every round of the run; bosses play 4 points weaker again. Odyssey in Reverse, from the 2020s to the 1950s, is the default map.</p>
   <h3>More modes</h3><p>Four Era Gauntlet maps, a 10 to 20 event circuit and head to head with a friend's team code stay available under More modes. The weekly challenge starts a shared-seed Salary cap draft. The Clubhouse holds the sandbox and its Squad challenges: build an eleven that meets chemistry, rating, nation, league or decade targets to unlock a reward card; eight are permanent and three change each week. Older version 2 and 3 saves retain their fictional league and European Cup; start a new draft to play the club career.</p>
   <div class="note"><p><b>Where the numbers come from.</b> ${pc('fifa') + pc('fifa-near')}% of cards are rated by EA FIFA/FC data (FIFA 07 to FC 26), ${pc('cm') + pc('cm-near')}% by Championship Manager 01/02 databases, ${pc('icon')}% by EA Icon/Hero cards, and ${pc('estimated')}% are estimated by a model fitted on those ratings, mostly players of the 1950s to 1970s. Squads come from dated Wikidata club records, so a decade squad can combine players who never shared a season. Club colours come from Wikidata and a curated table. Goals and results are simulated with a model fitted on real 2014-19 club results and checked on 2020-23; era losses, chemistry, partnerships and tags are game rules, not measurements.</p></div>`;
 }

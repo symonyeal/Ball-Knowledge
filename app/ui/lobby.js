@@ -1,12 +1,13 @@
 // Start screen and the choice of manager and club spell.
 //
 // Legend
-//   intro()   decades, rules, seed, the weekly challenge and three archive cards under the lights
+//   intro()   decades, rules, seed, the Gauntlet entry, the weekly challenge and three archive cards
 //   teams()   five seeded manager-club options; the inspected one sets the starting formation
 //   sq(o)     the spell's club-decade squads: decades from the first to the last season start
 //   sig(m, o) his signature players split by whether the spell's squads hold a card of theirs
 
-import { DECADES, opts, hydrate, shape } from '../draft.js';
+import { DECADES, POOL, opts, hydrate, shape } from '../draft.js';
+import { MAPS } from '../run.js';
 import { wk } from '../play.js';
 import { U, esc, seasons, kv, mini, pitch, vcard, ERA, nm } from './kit.js';
 
@@ -38,6 +39,10 @@ export function intro() {
     </div>
     <div class="land-art" aria-hidden="true"><div class="land-pitch">${pitch(G.formations['4-3-3'].slots.map(([s, x, y]) => ({ s, x, y })), [], { mode: 'view', sm: true })}</div><div class="fans">${cards}</div></div>
   </section>
+  <section class="weekly gauntlet-entry" aria-label="Era Gauntlet"><div><p class="lbl">Era Gauntlet · a roguelike run</p><p class="wk">Draft, then survive decade after decade</p>
+    <p class="small">Draft fifteen from the decades near your map's first stop, then play four six-match rounds and a two-legged boss in every decade, with rewards, transfers and board patience between. Uses the rules and seed above.</p></div>
+    <div class="row wrap"><label class="field"><span class="lbl">Map</span><select id="gauntlet-map">${Object.entries(MAPS).map(([k, m]) => `<option value="${k}" ${k === 'reverse' ? 'selected' : ''}>${esc(m.nm)} · ${m.D[0]}s first · draft ${Math.max(1950, m.D[0] - POOL)}s–${Math.min(2020, m.D[0] + POOL)}s</option>`).join('')}</select></label>
+    <button class="btn" id="gauntlet-start" type="button">Start the Gauntlet draft →</button></div></section>
   <section class="weekly" aria-label="Weekly challenge"><div><p class="lbl">This week · ${esc(w.id)}</p><p class="wk">${w.D}s season · one seed for everyone</p>
     <p class="small">Same managers and first squad for every player this week, under Salary cap. Your picks steer which clubs follow.</p></div>
     <button class="btn q" id="weekly" type="button">Play the weekly challenge</button></section>

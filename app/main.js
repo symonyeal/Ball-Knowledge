@@ -1,5 +1,5 @@
 import * as E from './engine/index.js';
-import { STORE, DECADES, start, choose, reroll, spin, place, swap, form, preview, shape, hydrate } from './draft.js';
+import { STORE, DECADES, POOL, start, choose, reroll, spin, place, swap, form, preview, shape, hydrate } from './draft.js';
 import { TI } from './cap.js';
 import { fields } from './data.js';
 import * as Rn from './run.js';
@@ -9,7 +9,7 @@ import { wk, code, uncode, h2h } from './play.js';
 import { U, esc, nm, club, kv, rules, vcard } from './ui/kit.js';
 import { intro, teams } from './ui/lobby.js';
 import { desk, rosterList } from './ui/desk.js';
-import { results, about, season, me, shareText, cardImage, signing } from './ui/season.js';
+import { results, about, season, me, shareText, cardImage, signing, arena, runShareText } from './ui/season.js';
 import { hub, careerShareText, careerCardImage, careerSigning } from './ui/career.js';
 import { mountClubhouse } from './ui/clubhouse.js';
 
@@ -42,7 +42,7 @@ function change(next, msg, o = {}) {
 function steps(S) {
   const k = S.phase === 'manager' ? 1 : S.phase === 'draft' ? 2 : S.phase === 'review' ? 3 : 4;
   const st = (lab, j) => `<li class="stp ${k === j ? 'on' : k > j ? 'ok' : ''}" ${k === j ? 'aria-current="step"' : ''}><span class="pp">${k > j ? '✓' : j}</span>${lab}${j === 2 ? `<span class="sqp" aria-label="${Math.min(5, S.spin)} of 5 squads drafted">${[0, 1, 2, 3, 4].map(i => `<i class="${i < S.spin ? 'ok' : i === S.spin && k === 2 ? 'on' : ''}"></i>`).join('')}</span>` : ''}</li>`;
-  return `<ol>${st('Team', 1)}${st('Squads', 2)}${st('Review', 3)}${st('Career', 4)}</ol>`;
+  return `<ol>${st('Team', 1)}${st('Squads', 2)}${st('Review', 3)}${st(S.g ? 'Gauntlet' : 'Career', 4)}</ol>`;
 }
 function bar() {
   const S = U.S, edit = !!S && ['draft', 'review'].includes(S.phase);
@@ -56,7 +56,7 @@ function render() {
   const a = document.activeElement, key = a?.dataset?.key || (a?.id && root.contains(a) ? `#${a.id}` : null);
   bar();
   const v = !U.S ? 'intro' : U.S.phase === 'manager' ? 'teams' : U.S.phase === 'results' ? 'results' : 'desk';
-  root.innerHTML = v === 'intro' ? intro() : v === 'teams' ? teams() : v === 'results' ? (U.S.mode?.career ? hub() : results()) : desk();
+  root.innerHTML = v === 'intro' ? intro() : v === 'teams' ? teams() : v === 'results' ? (U.S.mode?.career ? hub() : U.S.g ? arena() : results()) : desk();
   U.deal = null;
   if (document.body.dataset.screen && document.body.dataset.screen !== v) $('#notice').hidden = true;
   document.body.dataset.screen = v;
@@ -155,13 +155,14 @@ async function play() {
   U.busy = true; render();
   try {
     await new Promise(r => setTimeout(r, 30));
-    if (U.S.v >= 4) { U.S = { ...U.S, phase: 'results', mode: { ...U.S.mode, career: Cr.careerStart(U.G, U.S) } }; U.R = null; }
+    if (U.S.g) { U.S = { ...U.S, phase: 'results', mode: { ...U.S.mode, run: Rn.runNew(U.S.seed, U.S, U.S.g) } }; U.R = null; }
+    else if (U.S.v >= 4) { U.S = { ...U.S, phase: 'results', mode: { ...U.S.mode, career: Cr.careerStart(U.G, U.S) } }; U.R = null; }
     else { U.R = season(); U.S = { ...U.S, phase: 'results' }; }
     U.tab = 'league'; U.undo = []; U.redo = []; save();
     root.focus(); window.scrollTo({ top: 0, behavior: 'instant' });
   } finally { U.busy = false; render(); }
 }
-const resultText = () => U.S.mode?.career ? careerShareText() : shareText();
+const resultText = () => U.S.g ? runShareText() : U.S.mode?.career ? careerShareText() : shareText();
 function download() {
   const b = new Blob([JSON.stringify({ game: 'Football Era Draft', data: U.G.meta.v, draft: U.S, result: resultText() }, null, 2)], { type: 'application/json' });
   const u = URL.createObjectURL(b), a = document.createElement('a');
@@ -223,7 +224,7 @@ root.addEventListener('change', async e => {
       if (f.size > 8000000) throw new Error('The replay file is too large.');
       const raw = JSON.parse(await f.text());
       if (!['Football Era Draft', 'Football Era Lab'].includes(raw.game)) throw new Error('Choose a Football Era Draft replay file.');
-      U.S = restore(U.G, raw.draft); U.R = U.S.phase === 'results' && !U.S.mode?.career ? season() : null; U.C = null; U.H = null; U.tab = 'league';
+      U.S = restore(U.G, raw.draft); U.R = U.S.phase === 'results' && !U.S.mode?.career && !U.S.g ? season() : null; U.C = null; U.H = null; U.tab = 'league';
       U.undo = []; U.redo = []; render(); save(); notice('Replay restored with your draft choices.');
     } catch (x) { Object.assign(U, old); render(); notice(`Replay could not be restored: ${x.message}`, true); }
   }
@@ -278,6 +279,7 @@ root.addEventListener('click', async e => {
     if (b.dataset.era) { U.D = b.dataset.era === 'random' ? 'random' : Number(b.dataset.era); render(); root.querySelector(`[data-era="${b.dataset.era}"]`)?.focus(); }
     else if (b.id === 'seed-reroll') { U.seed = String(Math.floor(Math.random() * 4294967296)); U.focus = '#seed-reroll'; render(); }
     else if (b.dataset.startForm) { U.f0 = b.dataset.startForm; U.focus = `sf:${U.f0}`; render(); }
+    else if (b.id === 'gauntlet-start') { const g = $('#gauntlet-map').value; U.insp = 0; U.f0 = null; U.seed = $('#seed')?.value ?? U.seed; change(start(U.seed, null, U.cap, g), `${Rn.MAPS[g].nm}: draft from the ${Math.max(1950, Rn.MAPS[g].D[0] - POOL)}s to the ${Math.min(2020, Rn.MAPS[g].D[0] + POOL)}s.`); }
     else if (b.id === 'weekly') { const w = wk(); U.insp = 0; U.f0 = null; change({ ...start(w.seed, w.D, true), wk: w.id }, `Weekly challenge ${w.id}: Salary cap in the ${w.D}s, one club order for everyone.`); }
     else if (b.dataset.inspect !== undefined) { U.insp = Number(b.dataset.inspect); U.f0 = null; U.focus = '#start-formation'; render(); }
     else if (b.dataset.manager !== undefined || b.dataset.choose !== undefined) {
@@ -307,7 +309,7 @@ root.addEventListener('click', async e => {
     else if (b.dataset.cmp) { const p = b.dataset.cmp; U.cmp = U.cmp.includes(p) ? U.cmp.filter(x => x !== p) : [...U.cmp, p].slice(-3); render(); }
     else if (b.id === 'simulate' || b.dataset.act === 'simulate') await play();
     else if (b.dataset.tab) { U.tab = b.dataset.tab; U.focus = `#tab-${U.tab}`; render(); }
-    else if (b.id === 'replay') { U.R = U.C = U.H = null; U.seed = String(U.S.seed); change(start(U.S.seed, U.S.D, !!U.S.cap), `Same seed and ${rules(U.S)} rules. A fresh set of choices.`); window.scrollTo({ top: 0, behavior: 'instant' }); }
+    else if (b.id === 'replay') { U.R = U.C = U.H = null; U.seed = String(U.S.seed); change(start(U.S.seed, U.S.D, !!U.S.cap, U.S.g), `Same seed and ${rules(U.S)} rules. A fresh set of choices.`); window.scrollTo({ top: 0, behavior: 'instant' }); }
     else if (b.id === 'share') await copy(resultText(), 'Result copied. Share your career and replay seed.');
     else if (b.id === 'download') download();
     else if (b.id === 'result-card') await card();
@@ -397,7 +399,7 @@ async function boot() {
     try {
       const sv = localStorage.getItem(STORE);
       if (sv) {
-        U.S = restore(U.G, JSON.parse(sv)); U.cap = !!U.S.cap; if (U.S.phase === 'results' && !U.S.mode?.career) U.R = season();
+        U.S = restore(U.G, JSON.parse(sv)); U.cap = !!U.S.cap; if (U.S.phase === 'results' && !U.S.mode?.career && !U.S.g) U.R = season();
         if (U.S.mode?.ci) { U.ev = U.S.mode.ci; U.C = E.circuit(U.S.seed, me(), U.F, { events: U.ev, Ds: U.S.D }); }
         resumed = true;
       }
