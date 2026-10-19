@@ -5,7 +5,7 @@
 // R rated current squad; O rewards; H summer pools; keep patience retained after a paid prime upgrade;
 // free initial formation maximizes overall; q sample quantile; dp owner delta; rows individual careers.
 // Draft policy matches tests/balance.mjs: strongest manager grades, then the best legal card/slot by
-// fit, era and nearby club links. Rewards prefer an affordable prime upgrade retaining keep patience,
+// fit, era and the team chemistry it adds. Rewards prefer an affordable prime upgrade retaining keep patience,
 // otherwise rest, then development. Summer choices minimize lost starter strength before improving
 // the bench, with lower-rated offers breaking ties; legal cap charges include earned upgrades.
 // Summer lineup uses the best assignment within the current formation, retaining every player.
@@ -44,11 +44,12 @@ function draft(seed, D, cap) {
     s = Dr.spin(G, s);
     for (let j = 0; j < 3; j++) {
       const open = s.slots.map((c, i) => c ? -1 : i).filter(i => i >= 0); let b = null;
+      const T0 = Dr.team(G, s), c0 = E.chemistry(T0).total;
       for (const c of G.cards[s.combo].filter(c => Dr.can(G, s, c.p))) {
         const h = Dr.hydrate(G, { k: s.combo, p: c.p });
         for (const i of open) {
           let v = h.r * (i < 11 ? 1 - E.ft(h, S[i].s).f : 0.92) * E.em(h.D, D, h.tg?.tl || 0);
-          if (i < 11) v += Math.min(2, s.slots.filter((x, k) => x && k < 11 && x.k === s.combo && Math.hypot(S[k].x - S[i].x, S[k].y - S[i].y) <= 34).length);
+          if (i < 11) v += E.chemistry({ ...T0, xi: T0.xi.map((x, k) => k === i ? h : x) }).total - c0;
           if (!b || v > b.v) b = { v, p: c.p, i };
         }
       }
@@ -170,7 +171,7 @@ for (const cap of mode === 'both' ? [true, false] : [mode === 'cap']) for (const
 }
 const result = { schema: 1, dataSha256: createHash('sha256').update(raw).digest('hex'), elapsedSeconds: (performance.now() - start) / 1000,
   settings: { draftsPerDecade: N, rules: mode, decades: DS, seeds: [1000, 1000 + N - 1], keep, freeInitialFormation: free,
-    draftVersion: Dr.VERSION, careerVersion: C.CAREER_VERSION, policy: 'Best manager grades; legal fit/era/link draft; prime upgrade if keep patience remains, else rest then development; summer minimizes lost starter strength then improves bench within cap, lower-card tie break; best current-formation assignment after summer.' },
+    draftVersion: Dr.VERSION, careerVersion: C.CAREER_VERSION, policy: 'Best manager grades; legal fit/era/chemistry draft; prime upgrade if keep patience remains, else rest then development; summer minimizes lost starter strength then improves bench within cap, lower-card tie break; best current-formation assignment after summer.' },
   groups, rows };
 mkdirSync(dirname(output), { recursive: true }); writeFileSync(output, `${JSON.stringify(result, null, 2)}\n`);
 console.table(groups.map(r => ({ rules: r.rules, decade: r.decade, runs: r.runs, complete: r.complete, sacked: r.sacked, seasons: r.seasons, objectives: r.objectives, titles: Object.values(r.titles).reduce((a, b) => a + b, 0) })));
