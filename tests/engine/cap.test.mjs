@@ -156,7 +156,7 @@ test('a released and re-signed player retains the latest signing charge when boo
   const i = s.slots.findIndex(ref => Rn.versions(H, ref.p).some(v => v.k !== ref.k));
   assert.ok(i >= 0);
   const ref = s.slots[i], old = Rn.versions(H, ref.p).find(v => v.k !== ref.k), prime = Rn.versions(H, ref.p)[0];
-  const r = Rn.runNew(s.seed, s);
+  const r = Rn.runNew(s.seed, s, 'original');
   r.slots[i] = { k: prime.k, p: ref.p }; r.up[ref.p] = ref.k;
   r.log = [
     { t: 'boost', p: ref.p, from: old.k, to: prime.k, cost: 1 },

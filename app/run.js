@@ -13,7 +13,7 @@ export { TI, CAP, GCAP } from './cap.js';
 //
 // Legend
 //   G dataset; F decade fields (19 selected clubs each, strongest first); s run state; T run team
-//   MAPS       Eraball's four maps: name, decades in act order, blurb; 'original' is the default
+//   MAPS       Eraball's four maps: name, decades in act order, blurb; 'reverse' is the default
 //   N_RD, N_M  rounds per act, matches per round (Eraball 4 segments x 14 of 82 games -> 4 x 6 of 38)
 //   LAD        slice of the 16 clubs below the three bosses that each round draws from, weakest first
 //   dP(pts)    patience after a round, Eraball's eight steps on points out of 18: 18 +3, 13+ +2,
@@ -27,7 +27,7 @@ export { TI, CAP, GCAP } from './cap.js';
 //   DEV        development catalogue: id -> nm, team (squad-wide), mx levels, c base price, k tag key,
 //              ln position lines it suits, tx description; lv/val convert tag values and levels
 //   upC(a, b)  upgrade price by tiers climbed: 1 same tier, 2 one, 3 two, 4 more, +1 into S, at most 4
-//   REST       rest pays +2, then +1, then 0 when taken back to back;  DESP  desperation offer below
+//   REST       rest pays +2, then +1, then 0 when taken back to back; only spending patience resets it;  DESP  desperation offer below
 //              5 patience: cut-price stars, 1 patience, free at 2 or less
 //   LINES      position lines by first position, for the transfer window and development
 //   HOP_N      signings from each decade in the transfer window (Eraball 1 of 3 each for 9 places)
@@ -79,7 +79,7 @@ export const bossAt = (seed, act, n, prev) => {
   return o[hs(`${seed}:boss:${act}:${n}`) % o.length];
 };
 
-export function runNew(seed, draft, map = 'original') {
+export function runNew(seed, draft, map = 'reverse') {
   if (!draft?.manager || !draft.f || draft.slots?.filter(Boolean).length !== 15) throw new Error('The run needs a finished fifteen-player draft.');
   if (!MAPS[map]) throw new Error('Choose one of the four Gauntlet maps.');
   return { v: 3, seed, cap: !!draft.cap, map, m: draft.manager, f: draft.f, slots: draft.slots.map(c => ({ k: c.k, p: c.p })),
@@ -300,7 +300,7 @@ export function respin(G, F, s, prem = false) {
 export function take(G, F, s, j, o = {}) {
   const O = offers(G, F, s), c = O[j];
   if (!c) throw new Error('Choose one of the reward cards.');
-  const rd = s.rd + 1, nx = { ...s, rd, ph: rd >= N_RD ? 'boss' : 'rd', fa: 0, prem: 0, rest: 0, last: O.filter(x => x.kind === 'dev').map(x => x.id) };
+  const rd = s.rd + 1, nx = { ...s, rd, ph: rd >= N_RD ? 'boss' : 'rd', fa: 0, prem: 0, rest: c.kind === 'desp' && !c.list[o.pick ?? 0]?.cost ? s.rest : 0, last: O.filter(x => x.kind === 'dev').map(x => x.id) };
   if (c.kind === 'rest') return { ...nx, pat: clamp(s.pat + c.gain), rest: s.rest + 1, log: [...s.log, { t: 'rest', gain: c.gain }] };
   if (c.kind === 'market' || c.kind === 'desp') {
     const f = c.list[o.pick ?? 0], i = o.slot;

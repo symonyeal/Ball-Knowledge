@@ -70,7 +70,7 @@ Recorded goals, assists and expected goals also help choose who receives a simul
 
 ## The Gauntlet develops the team you drafted
 
-More modes keeps the Era Gauntlet available alongside the career. Choose one of four routes. The default Original Gauntlet visits the 1960s, 1990s and 2010s; Back in Time reverses that route. The Full Odyssey visits all eight decades from the 1950s to the 2020s, and Odyssey in Reverse travels the other way. Each decade has four six-match rounds against rising opposition, with a reward after every round, then a two-legged boss tie against one of its three strongest clubs.
+More modes keeps the Era Gauntlet available alongside the career. Choose one of four routes. The default, Odyssey in Reverse, visits all eight decades from the 2020s back to the 1950s; The Full Odyssey travels the other way. Original Gauntlet visits the 1960s, 1990s and 2010s, and Back in Time reverses that route. Each decade has four six-match rounds against rising opposition, with a reward after every round, then a two-legged boss tie against one of its three strongest clubs.
 
 The board starts with 8 patience, with a maximum of 20. Good rounds earn more; poor rounds cost it. Winning a boss restores 4 patience. The first boss loss in the run costs 4, and every later loss costs 6. Surviving a loss restarts all four rounds of that decade against a different boss. The run ends at zero patience or when the route's last boss falls.
 
