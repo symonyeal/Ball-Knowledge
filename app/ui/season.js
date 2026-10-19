@@ -13,6 +13,7 @@ import { team, POOL } from '../draft.js';
 import * as Rn from '../run.js';
 import { code } from '../play.js';
 import { U, esc, num, ord, nm, club, kv, tier, rules, pitch, links, face, capTiles, teamLine, spell } from './kit.js';
+import { candidate, marketPreview, upgradePreview } from './transfers.js';
 
 export const me = () => { const T = team(U.G, U.S); return { id: 'your-club', nm: 'Your Era XI', T, x: E.rate(T, U.S.D).ovr, me: true }; };
 export function season() {
@@ -110,7 +111,7 @@ function offerCard(o, j, s) {
   if (o.kind === 'dev') {
     if (o.id === 'upg') return `<article class="reward reward--boost"><p class="lbl">Prime-card boost</p><h3>Upgrade the same player</h3>
       <label class="field"><span class="lbl">Player</span><select id="up-pick-${j}" data-up-pick="${j}">${o.list.map((u, i) => `<option value="${i}">${esc(nm(u.from.p))} · ${Math.round(u.from.r)} → ${Math.round(u.to.r)} · ${esc(club(u.to.k))} · ${u.cost} patience</option>`).join('')}</select></label>
-      <p class="small">${s.cap ? 'An earned upgrade keeps the player’s original tier charge.' : 'He becomes his highest-rated card in the archive.'}</p><div id="up-price-${j}">${left(s, o.list[0].cost)}</div><button class="btn" type="button" data-take="${j}" ${s.pat - o.list[0].cost < 1 ? 'disabled' : ''}>Upgrade him</button></article>`;
+      <div data-upgrade-preview="${j}" data-transfer-mode="run">${upgradePreview(s,o.list[0],false)}</div><p class="small">${s.cap ? 'An earned upgrade keeps the player’s original tier charge.' : 'He becomes his highest-rated card in the archive.'}</p><div id="up-price-${j}">${left(s, o.list[0].cost)}</div><button class="btn" type="button" data-take="${j}" ${s.pat - o.list[0].cost < 1 ? 'disabled' : ''}>Upgrade him</button></article>`;
     const d = Rn.DEV[o.id];
     return `<article class="reward"><p class="lbl">Development · ${o.cost} patience</p><h3>${esc(d.nm)}</h3><p class="small">${esc(d.tx)}</p>
       ${o.team ? '' : `<label class="field"><span class="lbl">Player</span><select id="dev-player-${j}">${squadOptions(s, o.who)}</select></label>`}${left(s, o.cost)}
@@ -121,7 +122,7 @@ function offerCard(o, j, s) {
     return `<article class="reward"><p class="lbl">${o.kind === 'desp' ? 'Desperation offer' : 'Transfer market'}</p><h3>Sign one, release one</h3>
       <label class="field"><span class="lbl">Sign</span><select id="fa-pick-${j}" data-fa="${j}">${o.list.map((f, i) => `<option value="${i}">${esc(nm(f.p))} · ${esc(club(f.k))} · ${Math.round(f.r)} · ${TI(f.r)} tier</option>`).join('')}</select></label>
       <label class="field"><span class="lbl">Release</span><select id="fa-slot-${j}" data-fa="${j}">${squadOptions(s)}</select></label>
-      <p class="small" id="fa-price-${j}">${esc(x.tx)}</p>${s.cap ? `<p class="small dim">Keep at most ${Rn.RCAP.S} S-tier and ${Rn.RCAP.A} A-tier charges among the fifteen.</p>` : ''}<button class="btn" type="button" data-take="${j}" ${x.ok ? '' : 'disabled'}>Sign him</button>
+      <div data-transfer-preview="${j}" data-transfer-mode="run">${marketPreview(s,j,0,0,false)}</div><p class="small" id="fa-price-${j}" role="status">${esc(x.tx)}</p>${s.cap ? `<p class="small dim">Keep at most ${Rn.RCAP.S} S-tier and ${Rn.RCAP.A} A-tier charges among the fifteen.</p>` : ''}<button class="btn" type="button" data-take="${j}" ${x.ok ? '' : 'disabled'}>Confirm signing and release</button>
       ${o.re ? `<div class="row wrap"><button class="btn q sm" type="button" data-respin="scout" ${s.pat < 3 + 2 * u ? 'disabled' : ''}>Scout re-spin · ${1 + u}</button><button class="btn q sm" type="button" data-respin="premium" ${s.pat < 8 + 2 * u ? 'disabled' : ''}>A/S re-spin · ${5 + u}</button></div>` : ''}</article>`;
   }
   return `<article class="reward"><p class="lbl">Rest</p><h3>Recover</h3><p class="small">${o.gain ? `+${o.gain} patience.` : 'Resting again is worth nothing; choose another reward to reset it.'}</p><button class="btn q" type="button" data-take="${j}" data-rest>Rest</button></article>`;
@@ -129,8 +130,8 @@ function offerCard(o, j, s) {
 function transfer(s) {
   const H = Rn.hopPools(U.G, s);
   return `<h3>Transfer window</h3><p class="small">Choose ${Math.min(Rn.HOP_N, H.old.length)} players from the ${H.from}s and ${Math.min(Rn.HOP_N, H.neu.length)} from the ${H.to}s. Each replaces a different squad player at no patience cost. Keep your S and A charges within their limits.</p>
-    <div class="rewards">${[['old', H.old, H.from], ['neu', H.neu, H.to]].map(([k, Q, D]) => `<fieldset class="reward"><legend class="lbl">${D}s arrivals</legend>${Q.map((f, i) => `<div class="transfer-pick"><label><input type="checkbox" data-hop-pick="${k}" value="${i}"> ${esc(nm(f.p))} · ${esc(f.l)} · ${Math.round(f.r)} · ${TI(f.r)} tier</label><p class="small dim">${esc(club(f.k))}</p><label class="field"><span class="lbl">Release</span><select id="hop-out-${k}-${i}"><option value="">Choose a squad player</option>${squadOptions(s)}</select></label></div>`).join('')}</fieldset>`).join('')}</div>
-    <button class="btn" type="button" id="run-hop">Confirm transfers</button>`;
+    <div class="rewards transfer-pools">${[['old', H.old, H.from], ['neu', H.neu, H.to]].map(([k, Q, D]) => `<fieldset class="reward"><legend class="lbl">${D}s arrivals</legend>${Q.map((f, i) => `<div class="transfer-pick"><label><input type="checkbox" data-hop-pick="${k}" value="${i}"> ${esc(nm(f.p))} · ${esc(f.l)} · ${Math.round(f.r)} · ${TI(f.r)} tier</label><div data-arrival-preview>${candidate(f)}</div><label class="field"><span class="lbl">Release</span><select id="hop-out-${k}-${i}"><option value="">Choose a squad player</option>${squadOptions(s)}</select></label></div>`).join('')}</fieldset>`).join('')}</div>
+    <p class="small" id="run-transfer-window-status" role="status">Choose the arrivals and different players to release.</p><div id="run-transfer-window-preview"></div><button class="btn" type="button" id="run-hop" disabled>Confirm transfers</button>`;
 }
 const sgn = x => `${x >= 0 ? '+' : '−'}${num(Math.abs(x))}`;
 export function honoured(h, title) {

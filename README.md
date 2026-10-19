@@ -123,7 +123,7 @@ To run the game locally, serve this repository folder and open [127.0.0.1:8765](
 py -3.14 -m http.server 8765 --bind 127.0.0.1
 ```
 
-There is no frontend build step. A static host needs `index.html`, `app/` and `data/game.json`. GitHub Pages serves this repository from `main` at `/ (root)` using **Deploy from a branch** in Settings → Pages.
+There is no frontend build step. A static host needs `index.html`, `app/`, `data/game.json`, `data/portraits.json` and `data/portraits/`. GitHub Pages serves this repository from `main` at `/ (root)` using **Deploy from a branch** in Settings → Pages.
 
 For the notebook, install Node 20 or later and Python 3.11 or later, then run:
 
@@ -148,4 +148,4 @@ GitHub's workflow also executes the notebook. Browser checks and balance command
 
 The [v1 tag](https://github.com/symonyeal/Football-Era-Draft/tree/v1) preserves the earlier Python game, notebook, career, rooms, mini-games and reports. Its saves and competitive profiles have a different format and no automatic migration. Its test commands apply to that version.
 
-The [code licence](LICENSE) is MIT. Bundled Barlow fonts use the [SIL Open Font License](app/fonts/OFL.txt). Source data retains its own terms; [DATA.md](docs/DATA.md#source-attribution-and-terms) and [data/manifest.json](data/manifest.json) record them. Raw rating archives, CM databases and GPL results files remain local. Publisher declarations do not establish rights to every underlying game asset. No player portraits, card artwork or club badges are bundled. This independent project is unaffiliated with Eraball, EA, FIFA, Konami, Wikidata or the data publishers.
+The [code licence](LICENSE) is MIT. Bundled Barlow fonts use the [SIL Open Font License](app/fonts/OFL.txt). Source data retains its own terms; [DATA.md](docs/DATA.md#source-attribution-and-terms) and [data/manifest.json](data/manifest.json) record them. Raw rating archives, CM databases and GPL results files remain local. Publisher declarations do not establish rights to every underlying game asset. Featured player and manager portraits are bundled from Wikimedia Commons, with [author and licence credits](docs/PORTRAITS.md). Other player portraits load on demand; unavailable photographs show a silhouette. Photographs may show a different age or club from the historical card. No EA card artwork or club badges are bundled. This independent project is unaffiliated with Eraball, EA, FIFA, Konami, Wikidata or the data publishers.

@@ -3,6 +3,7 @@ const fs=require('node:fs'), path=require('node:path'), assert=require('node:ass
 const arg=k=>{const i=process.argv.indexOf(k);return i<0?undefined:process.argv[i+1];};
 const {chromium}=require(arg('--playwright')||'playwright');
 const out=arg('--output');if(!out)throw Error('Pass --output for screenshots and results.');fs.mkdirSync(out,{recursive:true});
+const runtime=path.resolve(out,'runtime');fs.mkdirSync(runtime,{recursive:true});process.env.TEMP=process.env.TMP=runtime;
 const KEY='football-era-draft-profile-v1', checks=[],errors=[];
 const ok=n=>{checks.push(n);console.log('ok',n);};
 const ready=p=>p.waitForFunction(()=>document.body.getAttribute('aria-busy')==='false');
@@ -17,6 +18,7 @@ const sound=async p=>{
   try{
     for(const [kind,width,height] of [['desktop',1440,900],['mobile',390,844]]){
       const ctx=await b.newContext({viewport:{width,height},acceptDownloads:true,timezoneId:'America/Vancouver'}),p=await ctx.newPage();
+      await ctx.route('https://www.wikidata.org/w/api.php?**',r=>r.fulfill({json:{entities:{}}}));
       p.on('pageerror',e=>errors.push(e.message));
       await p.goto(arg('--url')||'http://127.0.0.1:8765/');await ready(p);
       await p.click('.bar [data-club-open]');await p.locator('#clubhouse').waitFor({state:'visible'});
