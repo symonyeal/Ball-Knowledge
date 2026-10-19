@@ -238,7 +238,7 @@ root.addEventListener('change', async e => {
       const f = t.files[0]; if (!f) return;
       if (f.size > 8000000) throw new Error('The replay file is too large.');
       const raw = JSON.parse(await f.text());
-      if (!['Ball Knowledge', 'Ball Knowledge', 'Football Era Lab'].includes(raw.game)) throw new Error('Choose a Ball Knowledge replay file.');   // the two former names still import
+      if (!['Ball Knowledge', 'Football Era Draft', 'Football Era Lab'].includes(raw.game)) throw new Error('Choose a Ball Knowledge replay file.');   // the game's two former names still import
       U.S = restore(U.G, raw.draft); U.R = U.S.phase === 'results' && !U.S.mode?.career && !U.S.g ? season() : null; U.C = null; U.H = null; U.tab = 'league';
       U.tab = U.S.mode?.career ? 'home' : 'league'; U.undo = []; U.redo = []; render(); save(); notice('Replay restored with your draft choices.');
     } catch (x) { Object.assign(U, old); render(); notice(`Replay could not be restored: ${x.message}`, true); }
