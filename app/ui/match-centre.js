@@ -39,8 +39,7 @@ export function mountMatchCentre() {
     const log = eventText.join('|');
     if (el('match-events').dataset.log !== log) {
       el('match-events').dataset.log = log;
-      el('match-events').innerHTML = eventText.map((t,i) => `<p class="${i === eventText.length - 1 ? 'goal-new' : ''}">${esc(t)}</p>`).join('') || '<p class="small">Waiting for the opening goal.</p>';
-      el('match-events').scrollTop = el('match-events').scrollHeight;
+      el('match-events').innerHTML = eventText.map((t,i) => `<p class="${f.events[i][1] ? 'mine' : 'them'} ${i === eventText.length - 1 ? 'goal-new' : ''}">${esc(t)}</p>`).join('') || '<p class="small">Waiting for the opening goal.</p>';
     }
     const announcement = f.done ? `Full time. ${cname(U.G,q)} ${f.score[0]}, ${cname(U.G,m.op)} ${f.score[1]}.${f.penalties ? ` Penalties ${f.penalties[0]} to ${f.penalties[1]}.` : ''}` : eventText.at(-1) || 'Kick-off.';
     if (el('match-announcement').textContent !== announcement) el('match-announcement').textContent = announcement;

@@ -15,7 +15,7 @@ const F4231 = [['GK', 50, 92], ['LB', 15, 72], ['CB', 38, 76], ['CB', 62, 76], [
   ['CDM', 37, 58], ['CDM', 63, 58], ['LW', 17, 33], ['CAM', 50, 36], ['RW', 83, 33], ['ST', 50, 16]];
 const sr = o => E.SL.map(s => o[s] ?? 60);
 const P = [['k', ['GK'], 80], ['cm1', ['CM'], 80], ['cm2', ['CM'], 80], ['st', ['ST'], 80],
-  ['am', ['CM'], 90, sr({ CM: 88, CAM: 90, CDM: 70 })],   // best at CAM; the nearest new slot, CDM, costs 22%
+  ['am', ['CM'], 90, sr({ CM: 88, CAM: 90, CDM: 70 })],   // rated best at CAM, which he does not list: one step, 10%
   ['wg', ['CM'], 90, sr({ CM: 80, LW: 90 })],             // better at LW, but a CM slot exists to keep
   ...Array.from({ length: 12 }, (_, i) => [`x${i}`, [['CB', 'LB', 'RB', 'GK'][i % 4]], 70])];
 const G = { meta: { v: 'form-test' }, clubs: { q0: { nm: 'Club 0', cc: 'ENG' } }, people: {}, cards: {},
@@ -50,10 +50,10 @@ test('a kept role outranks a better rating elsewhere', () => {
   assert.equal(who(t).indexOf('wg'), 7);
 });
 
-test('without his role, a starter takes his best-rated open slot over the nearest one', () => {
+test('without his role, a starter takes his best open slot, and an unlisted slot keeps its position penalty', () => {
   const t = Dr.form(G, at(open(), [['am', 6]]), '4-2-3-1');
   assert.equal(who(t).indexOf('am'), 8);
-  assert.equal(E.rate(Dr.team(G, t), 1990).xi[8].a, 90);
+  assert.equal(E.rate(Dr.team(G, t), 1990).xi[8].a, 81, 'a slot rating above his listed one cannot remove the 10% one-step penalty');
 });
 
 test('the formation is free before kick-off and locked after it', () => {
@@ -72,11 +72,12 @@ test('Zidane keeps his slot ratings through a change of shape: CAM 90, then a CM
   let s = Dr.spin(B, delBosque(7, 2000, '4-2-3-1'));   // seed 7 draws Real Madrid's 2000s squad
   assert.equal(s.combo, 'Q8682:2000');
   const j = Dr.shape(B, s.f).findIndex(x => x.s === 'CAM');
-  assert.equal(Math.round(Dr.preview(B, s, 'Q1835', j).a), 90);  // his first listed position alone (CM) would cost 10%: 81
+  const p = Dr.preview(B, s, 'Q1835', j);   // del Bosque coached him at Real Madrid: one chemistry point on top
+  assert.equal(Math.round(p.a - p.n), 90); assert.equal(p.n, 1);  // his first listed position alone (CM) would cost 10%: 81
   s = Dr.place(B, s, 'Q1835', j);
-  const t = Dr.form(B, s, '4-4-2'), k = who(t).indexOf('Q1835');
+  const t = Dr.form(B, s, '4-4-2'), k = who(t).indexOf('Q1835'), x = E.rate(Dr.team(B, t), 2000).xi[k];
   assert.equal(Dr.shape(B, '4-4-2')[k].s, 'CM');
-  assert.equal(Math.round(E.rate(Dr.team(B, t), 2000).xi[k].a), 90);
+  assert.equal(Math.round(x.a - x.n), 90);
 });
 
 test('formation changes between picks leave every later club draw unchanged', () => {

@@ -13,7 +13,8 @@ import { staff } from './staff.js';
 //   side       entrant {id, nm, T, x, cc, n (players whose stint covers s), si (stand-in), src (roster source)}
 //   sg         card's distance in seasons from its club stint; rating provenance remains card.src
 //   basis      stand-in rating basis: points (real league record), default (74), given (explicit rating)
-//   squad()    people whose stint at q covers s; below NQ players or without a keeper, the club's nearest
+//   squad()    people whose stint at q covers s; below NQ players, without a keeper, or below the line quota
+//              LQ (4 defenders, 3 midfielders, 2 attackers by first listed position), the club's nearest
 //              players in time (stints within NEAR seasons, this or an adjacent decade), regulars first
 //   boss()     the curated manager whose tenure at q covers s, else club staff in the decade's formation DF;
 //              staff() adds his nation and q's league, which count towards chemistry as for every manager
@@ -38,7 +39,7 @@ import { staff } from './staff.js';
 
 export const dec = s => Math.floor(s / 10) * 10;
 export const DF = { 1950: 'WM', 1960: '4-2-4', 1970: '4-3-3', 1980: '4-4-2', 1990: '4-4-2', 2000: '4-4-2', 2010: '4-2-3-1', 2020: '4-3-3' };
-export const NQ = 15, NEAR = 3;
+export const NQ = 15, NEAR = 3, LQ = { D: 4, M: 3, A: 2 };
 export const cname = (G, id) => G.clubs[id]?.nm || G.xn?.[id] || (String(id).startsWith('nm:') ? id.slice(3) : id);
 export const rows = (G, lg, s) => G.lg?.[lg]?.S?.[s] || null;
 export const pts3 = (G, lg, s) => (s >= (G.lg?.[lg]?.s3 ?? 1995) ? 3 : 2);
@@ -67,13 +68,13 @@ export function squad(G, q, s, ban = new Set()) {
     }
   }
   P.sort((x, y) => x.t - y.t || y.c.n - x.c.n || y.c.r - x.c.r || (x.c.p < y.c.p ? -1 : 1));
-  const seen = new Set(), out = [];
+  const seen = new Set(), out = [], ln = {};
   let gk = 0, n = 0;
   for (const x of P) {
     if (seen.has(x.c.p)) continue;
-    const k = x.c.pos.includes('GK');
-    if (x.t > 0 && out.length >= NQ && (gk > 0 || !k)) continue;
-    seen.add(x.c.p); out.push(x); gk += k; n += !x.t;
+    const k = x.c.pos.includes('GK'), l = k ? 'G' : E.LN[x.c.pos[0]], short = l in LQ && (ln[l] || 0) < LQ[l];
+    if (x.t > 0 && out.length >= NQ && (gk > 0 || !k) && !short) continue;
+    seen.add(x.c.p); out.push(x); gk += k; n += !x.t; ln[l] = (ln[l] || 0) + 1;
   }
   return out.length < NQ || !gk ? null : { Q: out.map(x => ({ ...hydrate(G, { k: x.k, p: x.c.p }), sg: x.t })), n };
 }

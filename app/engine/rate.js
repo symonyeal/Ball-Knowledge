@@ -18,7 +18,8 @@
 //   wK      keeper share of the defence the opposing attack faces
 //   V       knockout boost by European Cups won (the reference game's rings rule)
 //   fit     slot fit comes from pos.ft: EA-scale slot ratings when the card has them, else the graph
-//   rate(T, Ds)  per-slot breakdown, lines A M Dd K Dk, effective grades, knockout boost kb, ovr
+//   rate(T, Ds, o)  per-slot breakdown, lines A M Dd K Dk, effective grades, knockout boost kb, ovr;
+//                o.chem false rates the same team without chemistry (what chemistry is worth)
 
 import { ft } from './pos.js';
 import { em } from './era.js';
@@ -44,8 +45,8 @@ const cap = { tal: 0.04, rock: 0.04, mae: 0.05 };
 
 const mean = a => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
 
-export const rate = (T, Ds) => {
-  const C = chemistry(T);
+export const rate = (T, Ds, o = {}) => {
+  const C = chemistry(T), wc = o.chem !== false;
   const sig = new Set(T.m?.sig || []);
   const all = [...T.xi, ...T.bn].filter(Boolean);
   const up = all.some(c => sig.has(c.id)), lk = T.lk || 1;
@@ -61,7 +62,7 @@ export const rate = (T, Ds) => {
     let b = 0;
     for (const p of new Set(c.duo || [])) if (p !== c.id && ids.has(p)) b += b_duo;
     b = Math.min(m_b, b) * lk;
-    const n = C.players[c.id]?.n || 0;
+    const n = wc ? C.players[c.id]?.n || 0 : 0;
     return { s: s.s, x: s.x, y: s.y, c, f, lab, e, b, n, a: c.r * (1 - f) * e + b + n };
   });
   const bn = T.bn.map(c => (c ? { c, e: em(c.D, Ds, c.tg?.tl || 0), a: c.r * em(c.D, Ds, c.tg?.tl || 0) } : null));

@@ -174,14 +174,14 @@ async function play() {
 }
 const resultText = () => U.S.g ? runShareText() : U.S.mode?.career ? careerShareText() : shareText();
 function download() {
-  const b = new Blob([JSON.stringify({ game: 'Football Era Draft', data: U.G.meta.v, draft: U.S, result: resultText() }, null, 2)], { type: 'application/json' });
+  const b = new Blob([JSON.stringify({ game: 'Ball Knowledge', data: U.G.meta.v, draft: U.S, result: resultText() }, null, 2)], { type: 'application/json' });
   const u = URL.createObjectURL(b), a = document.createElement('a');
-  a.href = u; a.download = `Football Era Draft ${U.S.D}s Seed ${U.S.seed}.json`; document.body.append(a); a.click(); a.remove();
+  a.href = u; a.download = `Ball Knowledge ${U.S.D}s Seed ${U.S.seed}.json`; document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(u), 1000); notice('Replay downloaded with every draft choice.');
 }
 async function card() {
   const b = await (U.S.mode?.career ? careerCardImage() : cardImage()), u = URL.createObjectURL(b), a = document.createElement('a');
-  a.href = u; a.download = `Football Era Draft ${U.S.D}s Seed ${U.S.seed}.png`;
+  a.href = u; a.download = `Ball Knowledge ${U.S.D}s Seed ${U.S.seed}.png`;
   document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 1000); notice('Your result card is downloaded.');
 }
 const setRun = (s, msg) => { U.S = { ...U.S, mode: { ...U.S.mode, run: s } }; save(); render(); if (msg) notice(msg); };
@@ -238,7 +238,7 @@ root.addEventListener('change', async e => {
       const f = t.files[0]; if (!f) return;
       if (f.size > 8000000) throw new Error('The replay file is too large.');
       const raw = JSON.parse(await f.text());
-      if (!['Football Era Draft', 'Football Era Lab'].includes(raw.game)) throw new Error('Choose a Football Era Draft replay file.');
+      if (!['Ball Knowledge', 'Ball Knowledge', 'Football Era Lab'].includes(raw.game)) throw new Error('Choose a Ball Knowledge replay file.');   // the two former names still import
       U.S = restore(U.G, raw.draft); U.R = U.S.phase === 'results' && !U.S.mode?.career && !U.S.g ? season() : null; U.C = null; U.H = null; U.tab = 'league';
       U.tab = U.S.mode?.career ? 'home' : 'league'; U.undo = []; U.redo = []; render(); save(); notice('Replay restored with your draft choices.');
     } catch (x) { Object.assign(U, old); render(); notice(`Replay could not be restored: ${x.message}`, true); }

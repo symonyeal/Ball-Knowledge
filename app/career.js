@@ -180,6 +180,9 @@ export function careerPlayHalf(G, s) {
   return { ...nx, ph: 'node' };
 }
 
+// One rival entry {id, nm, T, ...} of the current season, as the engine fields it against you; null if absent.
+export const careerRival = (G, s, q) => Club.sides(G, s.S, mine(G, s), ban(s), s.m.nm).get(q) || null;
+
 export function careerSource(G, s) {
   const by = Club.sides(G, s.S, mine(G, s), ban(s), s.m.nm);
   return [...by.values()].map(c => ({ id: c.id, nm: c.nm, si: !!c.si, n: c.n || 0,

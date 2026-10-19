@@ -178,7 +178,7 @@ export function mountClubhouse(U, { notice, weekly }) {
 
   function paint() {
     const active=document.activeElement, id=dialog.contains(active)?active.id:null, start=active?.selectionStart, scroll=dialog.scrollTop;
-    dialog.innerHTML=`<header class="club-heading"><div><p class="eyebrow">Football Era Draft</p><h1 id="clubhouse-title">${pages[page]}</h1></div>${btn('Return to game','id="clubhouse-close"')}</header><nav class="club-nav" aria-label="Clubhouse sections">${Object.entries(pages).map(([k,n])=>btn(n,`data-club-page="${k}" aria-current="${page===k?'page':'false'}"`)).join('')}</nav>${loadError?`<p role="alert" class="warn">${esc(loadError)}</p>`:''}<section class="club-content">${({home,sandbox,database,sbc:squadChallenges,stats:statistics,records,achievements:achievementView,collection:()=>`${top(`${collection(P).size} exact club-era cards unlocked. Win a trophy in a completed career season with a card in your squad, or complete a Squad challenge, to collect it.`)}${database(true)}`,minis,weekly:weeklyView,settings}[page])()}</section>`;
+    dialog.innerHTML=`<header class="club-heading"><div><p class="eyebrow">Ball Knowledge</p><h1 id="clubhouse-title">${pages[page]}</h1></div>${btn('Return to game','id="clubhouse-close"')}</header><nav class="club-nav" aria-label="Clubhouse sections">${Object.entries(pages).map(([k,n])=>btn(n,`data-club-page="${k}" aria-current="${page===k?'page':'false'}"`)).join('')}</nav>${loadError?`<p role="alert" class="warn">${esc(loadError)}</p>`:''}<section class="club-content">${({home,sandbox,database,sbc:squadChallenges,stats:statistics,records,achievements:achievementView,collection:()=>`${top(`${collection(P).size} exact club-era cards unlocked. Win a trophy in a completed career season with a card in your squad, or complete a Squad challenge, to collect it.`)}${database(true)}`,minis,weekly:weeklyView,settings}[page])()}</section>`;
     if(id) {const el=document.getElementById(id);el?.focus({preventScroll:true});if(typeof start==='number'&&el?.setSelectionRange&&el.type!=='number')el.setSelectionRange(start,start);}
     dialog.scrollTop=scroll;
   }
@@ -248,7 +248,7 @@ export function mountClubhouse(U, { notice, weekly }) {
         const row=sandboxResult.L.tab.find(t=>t.me),id=JSON.stringify(s),item={id,D:s.D,f:s.f,seed:s.seed,position:sandboxResult.L.tab.indexOf(row)+1,w:row.W,d:row.D,l:row.L,titles:Number(sandboxResult.L.tab[0].me)+Number(sandboxResult.K.champ==='sandbox')};
         P={...P,sandboxRecords:[...(P.sandboxRecords||[]).filter(r=>r.id!==id),item].slice(-100)};save();paint();
       }
-      else if(b.id==='sandbox-export')download({game:'Football Era Draft',sandbox:sbox()},'Football Era Draft Sandbox.json');
+      else if(b.id==='sandbox-export')download({game:'Ball Knowledge',sandbox:sbox()},'Ball Knowledge Sandbox.json');
       else if(b.id==='sandbox-code'){const s=sbox();await navigator.clipboard.writeText(code(G,{phase:'review',cap:false,D:s.D,manager:{nm:s.m},f:s.f,slots:s.slots}));notice('Classic team code copied for head to head.');}
       else if(b.dataset.miniMode){daily=b.dataset.miniMode==='daily';mini=null;paint();}
       else if(b.dataset.miniStart){const kind=b.dataset.miniStart,seed=daily?'daily':String(random()),key=dailyKey(kind,seed);if(!P.sessions[key])P={...P,sessions:{...P.sessions,[key]:puzzle(G,A,kind,day(),seed)}};mini=key;chosen.clear();feedback='';save();paint();}
@@ -258,8 +258,8 @@ export function mountClubhouse(U, { notice, weekly }) {
       else if(b.id==='recall-finish')updateMini(null);
       else if(b.id==='trail-submit')updateMini([...chosen]);
       else if(b.dataset.week!==undefined){const d=new Date();d.setUTCDate(d.getUTCDate()-7*Number(b.dataset.week));if(U.S&&!confirm('Start this weekly challenge and replace your current draft?'))return;weekly(wk(d));dialog.close();}
-      else if(b.id==='profile-export')download({game:'Football Era Draft',profile:P},'Football Era Draft Profile.json');
-      else if(b.id==='profile-raw')download(localStorage.getItem(PROFILE)||JSON.stringify(P),'Football Era Draft Stored Profile.json');
+      else if(b.id==='profile-export')download({game:'Ball Knowledge',profile:P},'Ball Knowledge Profile.json');
+      else if(b.id==='profile-raw')download(localStorage.getItem(PROFILE)||JSON.stringify(P),'Ball Knowledge Stored Profile.json');
       else if(b.id==='profile-reset'&&confirm('Reset personal records, collection, puzzles, settings and sandbox? Your active draft and career are kept.')){const ignored=[...P.ignored,...P.events.map(e=>e.id)];P={...emptyProfile(),ignored};mini=null;loadError='';applySettings();await sound(0);save();paint();}
     }catch(x){feedback=x.message;notice(x.message,true);if(page==='minis')paint();}
   });

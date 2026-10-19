@@ -260,3 +260,19 @@ class Nations(unittest.TestCase):
         self.assertEqual(export.nation({"Q29999"}, Pl), "Netherlands")
         self.assertEqual(export.nation({"Q145"}, Pl), "")
         self.assertEqual(export.nation(set(), Pl), "")
+
+    def test_a_national_side_names_its_nation_whatever_its_age_group(self):
+        from pipeline import nations
+        K = {"England", "France", "Italy", "Netherlands", "Spain"}
+        self.assertEqual(nations.team("England national under-21 association football team", K), "England")
+        self.assertEqual(nations.team("France B national football team", K), "France")
+        self.assertEqual(nations.team("Italy Lega Pro representative teams", K), "Italy")
+        self.assertEqual(nations.team("Netherlands military", K), "Netherlands")
+        self.assertEqual(nations.team("Catalonia national football team", K), "")
+
+    def test_the_united_kingdom_fields_no_team_and_old_states_take_their_football_name(self):
+        from pipeline import nations
+        self.assertEqual(nations.pick(["United Kingdom"]), "")
+        self.assertEqual(nations.pick(["Kingdom of Italy"]), "Italy")
+        self.assertEqual(nations.pick(["Wales", "United Kingdom"]), "Wales")
+        self.assertEqual(nations.pick(["German Democratic Republic"]), "East Germany")

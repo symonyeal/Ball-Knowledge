@@ -157,6 +157,8 @@ python -m pipeline.validate
 
 The first command downloads and caches result and Wikidata records, then reads the local game-engine inputs. Calibration fits the match model using edition-specific squads and saves its report. The next export embeds those parameters; validation records the hash of that export.
 
+The export ends with [pipeline/refine.py](../pipeline/refine.py), which gives a football nation to people whose country for sport is missing or is the United Kingdom, from the curated table [pipeline/curated/nations.json](../pipeline/curated/nations.json). `python -m pipeline.nations` rebuilds that table from Wikidata: a national team the person played for, then the home nation of a United Kingdom birthplace, then citizenship other than the United Kingdom. To apply a refreshed table to an existing `game.json`, run `python -m pipeline.refine`, then `python -m pipeline.validate`. Running the pass twice changes nothing.
+
 The full export includes the real league and European records through [pipeline/leagues.py](../pipeline/leagues.py). To add or refresh those records in an existing `game.json` from persistent caches, run `python -m pipeline.leagues`, then `python -m pipeline.validate`. The league step keeps the existing cards and other game keys; validation updates the fingerprint for the changed bundle.
 
 To resume from existing inputs and caches, name the required steps, for example `python -m pipeline.build model export`. After changing a source or rule, rebuild every affected downstream step; otherwise saved intermediate values remain in use. Run calibration again when its engine-rating rules change. Gameplay does not run this pipeline or download the raw sources.

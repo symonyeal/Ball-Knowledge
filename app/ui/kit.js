@@ -13,7 +13,8 @@
 //            (R. Carlos, M. van Basten)
 //   pitch(S, cells, o)  floodlit pitch: S slots, cells[i] {kind: f filled | p preview | e open, ...};
 //            o.mode play (buttons data-slot) | sheet (buttons data-target) | view (static)
-//   links(S, xi)  natural-position starter pairs from one club: the club links chemistry counts
+//   links(Q)  the rated team's chemistry links [i, j, k] for the pitch: k tm teammates, cl same club, nat nation
+//   bondText(G, b)  one bond in words;  chemKey  the pitch legend for the three link styles
 //   row(c, o)     roster row; smap(c, Ds) the card's rating in each of the 15 slots
 
 import { TI, CAP } from '../cap.js';
@@ -87,14 +88,11 @@ const MK = `<g fill="none" stroke="rgba(240,250,240,.5)" stroke-width="1.2" vect
   <rect x="36" y="123" width="28" height="8" vector-effect="non-scaling-stroke"/></g>
   <circle cx="50" cy="67.5" r=".8" fill="rgba(240,250,240,.7)"/><circle cx="50" cy="19" r=".7" fill="rgba(240,250,240,.6)"/><circle cx="50" cy="116" r=".7" fill="rgba(240,250,240,.6)"/>`;
 
-export const links = (S, xi) => {
-  const L = [];
-  for (let i = 0; i < 11; i++) for (let j = i + 1; j < 11; j++) {
-    const a = xi[i], b = xi[j];
-    if (a && b && a.cq && a.cq === b.cq && a.pos?.includes(S[i].s) && b.pos?.includes(S[j].s)) L.push([i, j, a.cq]);
-  }
-  return L;
-};
+export const links = Q => (Q.chem?.links || []).map(l => [l.i, l.j, l.k]);
+// Bond words for a chemistry link: k tm (teammates) | cl (same club, other years) | nat; q club or nation.
+export const bondText = (G, b) => b.k === 'nat' ? `both ${esc(b.q)}` :
+  `${b.k === 'tm' ? 'teammates' : 'both played'} at ${esc(G.clubs[b.q]?.nm || b.q)} ${b.y[0] === b.y[1] ? b.y[0] : `${b.y[0]}–${String(b.y[1]).slice(-2)}`}`;
+export const chemKey = '<p class="chem-key" aria-hidden="true"><span class="k-tm">Teammates</span><span class="k-cl">Same club</span><span class="k-nat">Same nation</span></p>';
 
 // Drawn height of a slot: the keeper sits at least 96% down with his labels beside him, clear of a central back's labels.
 const yd = x => (x.s === 'GK' ? Math.max(x.y, 96) : x.y);
@@ -117,11 +115,11 @@ export const FACE = { if: 'In-form', evo: 'Evolved', icon: 'Icon', mvp: 'MVP' };
 export const chem = n => `<i class="chm" title="Chemistry ${n}/3">${'◆'.repeat(n)}${'◇'.repeat(3 - n)}</i>`;
 
 export function pitch(S, cells, o = {}) {
-  const line = ([a, b, q]) => `<line x1="${S[a].x}" y1="${yd(S[a]) * 1.35}" x2="${S[b].x}" y2="${yd(S[b]) * 1.35}" stroke="${kit(q)[0]}" stroke-opacity=".8" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
+  const line = ([a, b, k]) => `<line class="ln-${k}" x1="${S[a].x}" y1="${yd(S[a]) * 1.35}" x2="${S[b].x}" y2="${yd(S[b]) * 1.35}" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
   const arrow = ([x1, y1, x2, y2]) => `<line x1="${x1}" y1="${y1 * 1.35}" x2="${x2}" y2="${y2 * 1.35}" stroke="#fff" stroke-width="2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke" marker-end="url(#ah)"/>`;
   const defs = o.arrows?.length ? '<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#fff"/></marker></defs>' : '';
   const ghosts = (o.ghosts || []).map(g => `<div class="tk g" style="left:${g.x}%;top:${g.y}%;${kv(g.q)}" aria-hidden="true"><span class="c">${Math.round(g.a)}</span><span class="n">${esc(sn(g.nm))}</span></div>`).join('');
-  return `<div class="pt ${o.sm ? 'sm' : ''} ${o.cls || ''}" ${o.id ? `id="${o.id}"` : ''} role="group" aria-label="${esc(o.label || 'Pitch')}"><svg viewBox="0 0 100 135" preserveAspectRatio="none" aria-hidden="true">${defs}${MK}${(o.links || []).map(line).join('')}${(o.arrows || []).map(arrow).join('')}</svg>${ghosts}${S.map((_, i) => token(S, i, cells[i], o)).join('')}</div>`;
+  return `<div class="pt ${o.sm ? 'sm' : ''} ${o.cls || ''}" ${o.id ? `id="${o.id}"` : ''} role="group" aria-label="${esc(o.label || 'Pitch')}"><svg viewBox="0 0 100 135" preserveAspectRatio="none" aria-hidden="true">${defs}${MK}${(o.links || []).slice().sort((x, y) => 'nat cl tm'.indexOf(x[2]) - 'nat cl tm'.indexOf(y[2])).map(line).join('')}${(o.arrows || []).map(arrow).join('')}</svg>${ghosts}${S.map((_, i) => token(S, i, cells[i], o)).join('')}</div>`;
 }
 
 export const mini = (G, f) => `<span class="md" aria-hidden="true">${G.formations[f].slots.map(([, x, y]) => `<i style="left:${x}%;top:${y}%"></i>`).join('')}</span>`;
@@ -138,11 +136,12 @@ export const share = s => W[s].map(x => Math.round(100 * x)).join('/');
 
 // Roster row. c hydrated card with st {ok, why, own}, best [slot, value] in an open slot, sig signature flag.
 export function row(c, o = {}) {
-  const t = TI(c.r), top = rated(c, o.Ds).sort((a, b) => b[1] - a[1])[0], listed = c.pos;
-  const note = !listed.includes(top[0]) ? ` · <em>rated best ${top[0]} ${top[1]}</em>` : '';
+  const t = TI(c.r), R = rated(c, o.Ds).sort((a, b) => b[1] - a[1]), top = R[0], listed = c.pos;
+  const own = Math.max(...R.filter(([s]) => listed.includes(s)).map(x => x[1]));
+  const note = !listed.includes(top[0]) && top[1] > own ? ` · <em>rated best ${top[0]} ${top[1]}</em>` : '';
   const cls = o.own ? 'own' : !o.ok ? 'player-row--blocked' : '';
   const gk = listed.includes('GK') && o.best && o.best[0] !== 'GK';
-  const fit = o.own ? `<span class="st">${IC.check} In squad</span>` : !o.ok ? '' : gk ? '<b>Bench</b><small>reserve keeper</small>' : o.best ? `<b>${o.best[0]} ${o.best[1]}</b><small>best here</small>` : '';
+  const fit = o.own ? `<span class="st">${IC.check} In squad</span>` : !o.ok ? '' : gk ? '<b>Bench</b><small>reserve keeper</small>' : o.best ? `<b>${o.best[0]} ${o.best[1]}</b><small>${listed.includes(o.best[0]) ? 'best here' : 'out of position'}</small>` : '';
   const why = o.own ? 'In your squad' : o.why;
   return `<button type="button" class="player-row pr ${cls} ${o.sel ? 'sel' : ''}" data-player="${esc(c.id)}" data-tier="${t}" data-key="p:${esc(c.id)}" tabindex="${o.entry ? 0 : -1}" aria-pressed="${o.sel ? 'true' : 'false'}"${o.ok && !o.own ? '' : ` aria-disabled="true" title="${esc(why)}"`} style="${kv(c.cq)}">
     <span class="strip-face t${t}"><b class="r">${Math.round(c.r)}</b>${portrait(c.id, c.nm, true)}</span>

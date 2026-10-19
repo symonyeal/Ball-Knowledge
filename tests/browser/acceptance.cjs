@@ -370,7 +370,7 @@ async function full(kind) {
     const [download] = await Promise.all([p.waitForEvent('download'), p.click('#download')]);
     await download.saveAs(replay);
     const saved = JSON.parse(fs.readFileSync(replay, 'utf8'));
-    assert.equal(saved.game, 'Football Era Draft'); assert.equal(saved.draft.seed, 424242); assert.equal(saved.draft.cap, true); assert.equal(saved.draft.v, 4);
+    assert.equal(saved.game, 'Ball Knowledge'); assert.equal(saved.draft.seed, 424242); assert.equal(saved.draft.cap, true); assert.equal(saved.draft.v, 4);
     assert.match(saved.result, /Salary cap/); assert.match(saved.result, /Season 1 \/ 10/); assert.match(saved.result, new RegExp(saved.draft.f));
     assert.deepEqual(saved.draft.slots, (await st(p)).slots);
     const [card] = await Promise.all([p.waitForEvent('download'), p.click('#result-card')]);
@@ -503,6 +503,16 @@ async function careerControls() {
     await p.click('#random-decade'); assert.equal(await p.locator('#random-decade').getAttribute('aria-pressed'), 'true');
     ok('compact random-decade and seed re-roll controls update their actual settings');
     await p.setInputFiles('#import-replay', path.join(out, 'desktop-replay.json')); await p.waitForSelector('.career-hero'); await settle(p);
+    // This check is about upgrades, scouting and signings in a trophy window: two choices, the first free, with patience
+    // to spend. Whether the seeded season wins a trophy depends on the match engine, so set that window up when it did
+    // not, and mark every other development as last offered, so the prime upgrade is the fresh one (developments are
+    // drawn at random).
+    if (await p.evaluate(async key => {
+      const C = await import('./app/career.js'), g = await (await fetch('./data/game.json')).json(), all = JSON.parse(localStorage.getItem(key)), s = all.mode.career;
+      const u = C.careerOffers(g, s).find(o => o.id === 'upg');
+      if (u?.free && s.node.left >= 2) return false;
+      all.mode.career = { ...s, last: Object.keys(C.CAREER_DEV), node: { ...s.node, left: 2, free: 1 }, pat: Math.max(s.pat, 12) }; localStorage.setItem(key, JSON.stringify(all)); return true;
+    }, KEY)) { await p.reload(); await p.waitForSelector('.career-hero'); await settle(p); }
     const up = await p.evaluate(async key => {
       const C = await import('./app/career.js'), g = await (await fetch('./data/game.json')).json(), s = JSON.parse(localStorage.getItem(key)).mode.career;
       const O = C.careerOffers(g, s), j = O.findIndex(o => o.id === 'upg');

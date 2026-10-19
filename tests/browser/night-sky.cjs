@@ -28,7 +28,7 @@ const sound=async p=>{const bad=await p.evaluate(()=>document.documentElement.sc
   assert.ok(await p.locator('.position-filter').count());
   const ids=await p.locator('#roster-list [data-player]').evaluateAll(Q=>Q.map(x=>x.dataset.player));
   assert.ok(ids.length);
-  assert.equal(await p.evaluate(async ids=>{const D=await import('./app/draft.js'),E=await import('./app/engine/index.js'),g=await(await fetch('./data/game.json')).json(),s=JSON.parse(localStorage.getItem('football-era-lab-v2'));return ids.every(p=>E.ft(D.hydrate(g,{k:s.combo,p}),'GK').f<.075);},ids),true);
+  assert.equal(await p.evaluate(async ids=>{const D=await import('./app/draft.js'),E=await import('./app/engine/index.js'),g=await(await fetch('./data/game.json')).json(),s=JSON.parse(localStorage.getItem('football-era-lab-v2'));return ids.every(p=>D.hydrate(g,{k:s.combo,p}).pos.includes('GK')&&E.ft(D.hydrate(g,{k:s.combo,p}),'GK').f<.25);},ids),true,'the GK shortlist lists keepers only');
   assert.deepEqual(await state(p),before,'shortlisting does not edit the draft');
   await p.keyboard.press('Escape');assert.equal(await p.locator('.position-filter').count(),0);
   await shot('03-draft');
