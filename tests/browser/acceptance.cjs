@@ -126,8 +126,8 @@ async function stageRun(p, target) {
     for (let seed = 1; seed <= 100; seed++) {
       let s = { ...R.runNew(seed, draft, 'original'), pat: 20 };
       if (target === 'hop') {
-        for (let rd = 0; rd < 4; rd++) {
-          s = R.runRound(g, F, s);
+        for (let k = 0; k < 8 && ['rd', 'node'].includes(s.ph); k++) {
+          if (s.ph === 'rd') { s = R.runRound(g, F, s); continue; }
           const O = R.offers(g, F, s), rest = O.findIndex(o => o.kind === 'rest');
           const j = rest >= 0 ? rest : O.findIndex(o => o.kind === 'dev' && o.id !== 'upg' && s.pat > o.cost);
           if (j < 0) break;
@@ -137,7 +137,7 @@ async function stageRun(p, target) {
         s = R.runPlayBoss(g, F, s);
         if (s.ph !== 'hop') continue;
       } else {
-        s = R.runRound(g, F, s);
+        s = R.runRound(g, F, R.runRound(g, F, s));
         if (!R.offers(g, F, s).some(o => target === 'upg' ? o.id === 'upg' && o.list.some(u => u.cost < s.pat) : o.kind === 'market')) continue;
       }
       const { restore } = await import('./app/save.js');
@@ -187,10 +187,10 @@ async function runControls(p, kind) {
   const h = await p.evaluate(async key => {
     const R = await import('./app/run.js'), { ct, TI } = await import('./app/cap.js'), { hydrate } = await import('./app/draft.js');
     const g = await (await fetch('./data/game.json')).json(), s = JSON.parse(localStorage.getItem(key)).mode.run, H = R.hopPools(g, s);
-    const low = L => L.map((f, i) => i).sort((i, j) => L[i].r - L[j].r).slice(0, 2), old = low(H.old), neu = low(H.neu);
+    const low = L => L.map((f, i) => i).sort((i, j) => L[i].r - L[j].r).slice(0, 1), old = low(H.old), neu = low(H.neu);
     const ins = [...old.map(i => H.old[i]), ...neu.map(i => H.neu[i])], Q = R.bill(g, s), C = ct(g, Q), out = [];
     for (const t of ['S', 'A']) out.push(...Q.map((f, i) => i).filter(i => TI(hydrate(g, Q[i]).r) === t).slice(0, Math.max(0, C[t] + ins.filter(f => TI(f.r) === t).length - R.GCAP[t])));
-    out.push(...Q.map((f, i) => i).filter(i => !out.includes(i)).slice(0, 4 - out.length));
+    out.push(...Q.map((f, i) => i).filter(i => !out.includes(i)).slice(0, 2 - out.length));
     return { old, neu, out, people: ins.map(f => f.p) };
   }, KEY);
   let n = 0;
@@ -198,21 +198,22 @@ async function runControls(p, kind) {
     await p.check(`[data-hop-pick="${k}"][value="${i}"]`); await p.selectOption(`#hop-out-${k}-${i}`, String(h.out[n++]));
   }
   await sound(p, 'transfers'); await p.click('#run-hop'); await settle(p);
-  s = (await st(p)).mode.run; assert.equal(s.ph, 'repo');
+  s = (await st(p)).mode.run; assert.equal(s.ph, 'rd'); assert.equal(s.act, 1, 'the transfers lead straight into the next decade');
   assert.deepEqual(h.out.map(i => s.slots[i].p), h.people);
   const f0 = s.f, f1 = f0 === '3-5-2' ? '4-4-2' : '3-5-2';
+  await p.locator('details:has(#run-form)').evaluate(e => { e.open = true; });
   await p.selectOption('#run-form', f1); await p.click('#run-form-apply'); await settle(p);
   const t = (await st(p)).mode.run;
   assert.equal(t.f, f1); assert.deepEqual(t.slots.slice(11), s.slots.slice(11), 'a formation change keeps the bench');
   assert.deepEqual(t.slots.map(c => c.p).sort(), s.slots.map(c => c.p).sort(), 'a formation change keeps every card');
-  ok(`${kind}: between decades the Gauntlet changes formation and keeps every card and the bench`);
+  ok(`${kind}: between matches the Gauntlet changes formation and keeps every card and the bench`);
+  await p.locator('details:has(#run-swap)').evaluate(e => { e.open = true; });
   await p.selectOption('#run-swap-a', '0'); await p.selectOption('#run-swap-b', '11'); await p.click('#run-swap'); await settle(p);
   assert.equal((await st(p)).mode.run.slots[11].p, t.slots[0].p);
-  await p.click('#run-next'); await settle(p);
   assert.equal((await st(p)).mode.run.act, 1); assert.equal((await st(p)).mode.run.ph, 'rd'); assert.equal((await st(p)).mode.run.f, f1);
   await p.reload(); await settle(p); await p.click('[data-tab="more"]'); await settle(p);
   assert.equal(await p.locator('#run-round').count(), 1);
-  ok(`${kind}: four transfers, a lineup swap and the next decade survive a reload`);
+  ok(`${kind}: two transfers, a lineup swap and the next decade survive a reload`);
 }
 
 // A formation change after pick 1 of a batch: preview, apply, undo, redo, finish the batch, reload.
@@ -625,14 +626,22 @@ async function gauntletEntry(kind) {
     assert.match(await p.locator('#simulate').innerText(), /Gauntlet/);
     await p.click('#simulate'); await settle(p);
     s = await st(p); assert.equal(s.mode.run.map, 'reverse'); assert.equal(s.mode.career, undefined);
-    for (let k = 0; k < 4; k++) {
-      if (k === 3) assert.match(await p.locator('.run-boss').innerText(), /Waiting after this round/);
-      await p.click('#run-round'); await settle(p);
-      if ((await st(p)).mode.run.ph === 'fired') break;
-      const rest = p.locator('[data-rest]');
-      if (await rest.count()) await rest.click(); else await p.locator('[data-take]:not([disabled])').first().click();
-      await settle(p);
+    for (let k = 0; ['rd', 'node'].includes((await st(p)).mode.run.ph) && k < 8; k++) {
+      const q = (await st(p)).mode.run;
+      if (q.ph === 'rd') {
+        if (q.rd === 3) assert.match(await p.locator('.run-boss').innerText(), /Waiting after this round/);
+        await p.click('#run-round'); await p.waitForSelector('#match-centre[open] .match');
+        await p.click('#match-all'); assert.equal(await p.locator('#match-centre .match').count(), 6, 'a round lists its six matches');
+        await settle(p);
+        const ph = (await st(p)).mode.run.ph;
+        assert.ok(ph === 'fired' || ph === (q.rd % 2 ? 'node' : 'rd'), 'rewards follow rounds 2 and 4 only');
+      } else {
+        const rest = p.locator('[data-rest]');
+        if (await rest.count()) await rest.click(); else await p.locator('[data-take]:not([disabled])').first().click();
+        await settle(p);
+      }
     }
+    assert.ok(await p.locator('.run .match').count() >= 6, 'the run page lists the matches of the decade');
     const r = (await st(p)).mode.run;
     if (r.ph === 'boss') { await p.click('#run-boss'); await settle(p); }
     const r2 = (await st(p)).mode.run;

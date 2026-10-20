@@ -70,18 +70,18 @@ function step(s) {
   if (s.ph === 'rd') return Rn.runRound(G, F, s);
   if (s.ph === 'boss') return Rn.runPlayBoss(G, F, s);
   if (s.ph === 'repo') return Rn.nextAct(s);
-  if (s.ph === 'hop') return Rn.hop(G, s, { old: [0, 1], neu: [0, 1], out: [11, 12, 13, 14] });
+  if (s.ph === 'hop') return Rn.hop(G, s, { old: [0], neu: [0], out: [13, 14] });
   const O = Rn.offers(G, F, s), rest = O.findIndex(o => o.kind === 'rest');
   const j = rest >= 0 ? rest : O.findIndex(o => o.kind === 'dev' && o.cost < s.pat);
   return Rn.take(G, F, s, j);
 }
 
-test('four rounds each require a reward before the boss tie and replay identically', () => {
+test('rewards follow rounds 2 and 4 only, then the boss tie, and the run replays identically', () => {
   const d = draft(11, 1970);
   const go = () => {
     let s = { ...Rn.runNew(11, d, 'original'), pat: 20 };
     const out = [];
-    for (let k = 0; k < 9; k++) {
+    for (let k = 0; k < 7; k++) {
       s = step(s);
       out.push([s.ph, s.act, s.pat]);
       assert.ok(s.pat >= 0 && s.pat <= Rn.PAT_MAX);
@@ -91,9 +91,12 @@ test('four rounds each require a reward before the boss tie and replay identical
   const [a, ta] = go(), [b, tb] = go();
   assert.deepEqual(ta, tb);
   assert.deepEqual(a.slots, b.slots);
-  assert.deepEqual(ta.slice(0, 8).map(x => x[0]), ['node', 'rd', 'node', 'rd', 'node', 'rd', 'node', 'boss']);
+  assert.deepEqual(ta.slice(0, 6).map(x => x[0]), ['rd', 'node', 'rd', 'rd', 'node', 'boss']);
   assert.equal(a.log.filter(e => e.t === 'seg').length, 4);
   assert.equal(a.log.filter(e => e.t === 'boss').length, 1);
+  const e = a.log.find(e => e.t === 'seg'), b0 = a.log.find(e => e.t === 'boss');
+  for (const m of e.res) assert.deepEqual([m.sc.filter(g => g[1]).length, m.sc.length], [m.gf, m.gf + m.ga], 'each goal is saved with its side');
+  assert.deepEqual(b0.sc.map(L => L.filter(g => g[1]).length), [b0.legs[0][0], b0.legs[1][1]], 'boss goals are saved from your side');
 });
 
 test('a lost boss tie restarts the act against another boss and charges run-wide loss costs', () => {
@@ -115,7 +118,7 @@ test('a lost boss tie restarts the act against another boss and charges run-wide
   assert.equal(u.lost, 2);
 });
 
-test('a won boss tie opens four free transfers before the next decade and the last boss ends the map', () => {
+test('a won boss tie opens two free transfers that lead straight into the next decade, and the last boss ends the map', () => {
   const s = { ...Rn.runNew(5, draft(5, 1990), 'original'), ph: 'boss', rd: 4, pat: 8 };
   const H = Object.fromEntries(Object.entries(F).map(([D, Q]) => [D, Q.map((c, i) => i < 3 ? club(`weak${i}`, 20, Number(D)) : c)]));
   const t = Rn.runPlayBoss(G, H, s), e = t.log.at(-1);
@@ -128,16 +131,16 @@ test('a won boss tie opens four free transfers before the next decade and the la
   assert.equal(P.old.length, 5);
   assert.equal(P.neu.length, 5);
   assert.equal(new Set([...P.old, ...P.neu].map(c => c.p)).size, 10);
-  assert.throws(() => Rn.hop(G, t, { old: [0], neu: [0, 1], out: [11, 12, 13] }), /Sign 2/);
-  const u = Rn.hop(G, t, { old: [0, 1], neu: [0, 1], out: [11, 12, 13, 14] });
-  assert.equal(u.ph, 'repo');
-  assert.equal(u.pat, 12);
-  const v = Rn.nextAct(Rn.runSwap(u, 0, 11));
+  assert.throws(() => Rn.hop(G, t, { old: [0], neu: [0, 1], out: [11, 12, 13] }), /Sign 1/);
+  const v = Rn.hop(G, Rn.runSwap(t, 0, 11), { old: [0], neu: [0], out: [11, 14] });
+  assert.equal(v.pat, 12);
   assert.equal(v.act, 1);
   assert.equal(Rn.D_of(v), 1990);
   assert.equal(v.ph, 'rd');
   assert.equal(v.rd, 0);
-  assert.equal(v.slots[0].p, P.old[0].p);
+  assert.equal(v.slots[0].p, t.slots[11].p);
+  assert.equal(v.slots[11].p, P.old[0].p);
+  assert.equal(v.slots[14].p, P.neu[0].p);
   const done = Rn.runPlayBoss(G, H, { ...v, act: 2, ph: 'boss', rd: 4 });
   assert.equal(done.ph, 'done');
   assert.equal(Rn.runBoss(H, done), null);
@@ -277,19 +280,19 @@ test('run score penalizes act retries and rewards capped clean runs', () => {
   assert.equal(Rn.score({ ...s, log: [sg] }).score, 0);
 });
 
-test('between decades the Gauntlet may change formation; cards, charges and the bench stay', () => {
+test('between matches the Gauntlet may change formation; cards, charges and the bench stay', () => {
   const s = { ...Rn.runNew(5, draft(5, 1990), 'original'), ph: 'boss', rd: 4, pat: 8 };
   const H = Object.fromEntries(Object.entries(F).map(([D, Q]) => [D, Q.map((c, i) => i < 3 ? club(`weak${i}`, 20, Number(D)) : c)]));
-  const u = Rn.hop(G, Rn.runPlayBoss(G, H, s), { old: [0, 1], neu: [0, 1], out: [11, 12, 13, 14] });
-  assert.throws(() => Rn.runForm(G, s, '3-5-2'), /transfer window/i);
+  const u = Rn.hop(G, Rn.runPlayBoss(G, H, s), { old: [0], neu: [0], out: [13, 14] });
+  assert.throws(() => Rn.runForm(G, { ...s, ph: 'done' }, '3-5-2'), /over/i);
   const v = Rn.runForm(G, u, '3-5-2');
   assert.deepEqual(Rn.runTeam(G, v).S.map(x => x.s), ['GK', 'CB', 'CB', 'CB', 'LWB', 'CDM', 'CM', 'CM', 'RWB', 'ST', 'ST']);
   assert.deepEqual(v.slots.slice(11), u.slots.slice(11));
   assert.deepEqual(v.slots.map(c => c.p).sort(), u.slots.map(c => c.p).sort());
   assert.deepEqual(Rn.bill(G, v).map(c => c.k).sort(), Rn.bill(G, u).map(c => c.k).sort());
-  assert.deepEqual(v.log.at(-1), { t: 'form', act: 0, f: '3-5-2' });
+  assert.deepEqual(v.log.at(-1), { t: 'form', act: 1, f: '3-5-2' });
   assert.deepEqual(Dr.valid(G, { ...draft(5, 1990), phase: 'results', mode: { run: v } }).mode.run, v);
-  assert.equal(Rn.runTeam(G, Rn.nextAct(v)).S[4].s, 'LWB');
+  assert.equal(Rn.runTeam(G, v).S[4].s, 'LWB');
 });
 
 test('a version 2 save resumes its draft and Gauntlet in the formation its manager option named', () => {
