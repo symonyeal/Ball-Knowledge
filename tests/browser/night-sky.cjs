@@ -23,6 +23,22 @@ const sound=async p=>{const bad=await p.evaluate(()=>document.documentElement.sc
   await p.click('#start-form button[type=submit]');await ready(p);await shot('02-managers');
   await p.click('[data-manager="0"]');await ready(p);await p.click('#squad-spin');await ready(p);
   await p.waitForTimeout(2800);
+  if(kind==='mobile'){
+   const list=p.locator('#roster-list');
+   assert.equal(await list.evaluate(e=>e.scrollHeight>e.clientHeight),true,'phone roster scrolls within its panel');
+   const before=await p.locator('.squad .ctl').boundingBox();
+   await list.evaluate(e=>e.scrollTop=e.scrollHeight);
+   assert.ok(await list.evaluate(e=>e.scrollTop>0),'long phone roster reaches its final cards');
+   const after=await p.locator('.squad .ctl').boundingBox();
+   assert.equal(after.y,before.y,'scrolling cards keeps the draft controls in place');
+   await list.evaluate(e=>e.scrollTop=0);await shot('03-roster');
+   for(const [width,height] of [[320,568],[430,932],[390,844]]){
+    await p.setViewportSize({width,height});await sound(p);
+    const cards=await list.boundingBox(),bar=await p.locator('.bb').boundingBox();
+    assert.ok(cards.height>=54,'short phones retain room for a complete player card');
+    assert.ok(cards.y+cards.height<=bar.y+1,'phone roster stays above the fixed lineup action');
+   }
+  }
   if(kind==='mobile')await p.click('[data-view="lineup"]');
   const before=await state(p);await p.click('#pitch [data-slot="0"]');await ready(p);
   assert.ok(await p.locator('.position-filter').count());

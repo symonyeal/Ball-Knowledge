@@ -1,0 +1,547 @@
+{
+  "measured": "2026-10-20",
+  "revision": "6a52c67",
+  "dataSha256": "6e80869fe57bc3b03c223a9e3b23412c69c839c0c65a0e420cd499f2a5685636",
+  "sourceSha256": {
+    "app/draft.js": "24ec93b2e448be5b5a05d56b2bb2ab12b45ec55b1629f60449d2233d710bf823",
+    "app/career.js": "cdb003df1a460b7d6c255c55b5cb42161059633bc0820ebf14c88d183f02d98b",
+    "app/run.js": "4e0ad6bdb972a7fc7f45e575e39a08c72d6ce7ad714545a218e831ed73d4a776",
+    "app/engine/chemistry.js": "cdccacf049f27bdeceb1a339f437b389a6720e80cc62a3e01cd40f8c19e7a727",
+    "tests/career-balance.mjs": "d5d990ccb9cc2bd91e27cd8ae355f5c3f98985396cfd28b769226c80383cf852",
+    "tests/balance.mjs": "7e09306729ce036f0d0ec43fd42742c95b6c3e66db609d6ff281c54a0265cb89"
+  },
+  "career": {
+    "settings": {
+      "draftsPerDecade": 4,
+      "rules": "both",
+      "decades": [
+        1950,
+        1960,
+        1970,
+        1980,
+        1990,
+        2000,
+        2010,
+        2020
+      ],
+      "seeds": [
+        1000,
+        1003
+      ],
+      "keep": 5,
+      "freeInitialFormation": false,
+      "draftVersion": 4,
+      "careerVersion": 1,
+      "policy": "Best manager grades; legal fit/era/chemistry draft; prime upgrade if keep patience remains, else rest then development; one summer change; best current-formation assignment after summer."
+    },
+    "summary": [
+      {
+        "rules": "Salary cap",
+        "attempted": 32,
+        "completed": 32,
+        "dismissed": 0,
+        "seasons": 300,
+        "objectives": 270,
+        "league_titles": 248
+      },
+      {
+        "rules": "Classic",
+        "attempted": 32,
+        "completed": 31,
+        "dismissed": 1,
+        "seasons": 298,
+        "objectives": 287,
+        "league_titles": 280
+      }
+    ],
+    "groups": [
+      {
+        "rules": "Salary cap",
+        "decade": 1950,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 38,
+        "objectiveShare": 0.95,
+        "initialMedian": 82.96250499715909,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 33,
+          "L": 32,
+          "SC": 14,
+          "EC": 8
+        },
+        "halfDelta": {
+          "0": 39,
+          "1": 3,
+          "2": 3,
+          "3": 29,
+          "-2": 6
+        }
+      },
+      {
+        "rules": "Salary cap",
+        "decade": 1960,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 39,
+        "objectiveShare": 0.975,
+        "initialMedian": 84.7353720909091,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 25,
+          "LC": 4,
+          "L": 37,
+          "SC": 4,
+          "EC": 12,
+          "UC": 1,
+          "CW": 1
+        },
+        "halfDelta": {
+          "0": 50,
+          "1": 2,
+          "2": 8,
+          "3": 18,
+          "-2": 2
+        }
+      },
+      {
+        "rules": "Salary cap",
+        "decade": 1970,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 40,
+        "objectiveShare": 1,
+        "initialMedian": 87.96905,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 31,
+          "LC": 8,
+          "UC": 2,
+          "L": 40,
+          "SC": 6,
+          "EC": 20,
+          "US": 15
+        },
+        "halfDelta": {
+          "0": 49,
+          "1": 2,
+          "2": 2,
+          "3": 26,
+          "-2": 1
+        }
+      },
+      {
+        "rules": "Salary cap",
+        "decade": 1980,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 39,
+        "objectiveShare": 0.975,
+        "initialMedian": 86.99261349999999,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 26,
+          "L": 39,
+          "EC": 19,
+          "SC": 11,
+          "US": 16,
+          "CW": 2
+        },
+        "halfDelta": {
+          "0": 59,
+          "1": 2,
+          "2": 5,
+          "3": 12,
+          "-2": 2
+        }
+      },
+      {
+        "rules": "Salary cap",
+        "decade": 1990,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 34,
+        "objectiveShare": 0.85,
+        "initialMedian": 87.4099152869318,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 22,
+          "L": 31,
+          "SC": 23,
+          "LC": 6,
+          "EC": 15,
+          "US": 13,
+          "CW": 3,
+          "UC": 3
+        },
+        "halfDelta": {
+          "0": 51,
+          "1": 3,
+          "2": 8,
+          "3": 14,
+          "-2": 4
+        }
+      },
+      {
+        "rules": "Salary cap",
+        "decade": 2000,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 38,
+        "objectiveShare": 0.95,
+        "initialMedian": 85.83174422727272,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 31,
+          "L": 38,
+          "SC": 21,
+          "EC": 15,
+          "US": 12,
+          "LC": 9
+        },
+        "halfDelta": {
+          "0": 48,
+          "1": 5,
+          "2": 7,
+          "3": 18,
+          "-2": 2
+        }
+      },
+      {
+        "rules": "Salary cap",
+        "decade": 2010,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 31,
+        "objectiveShare": 0.775,
+        "initialMedian": 87.06568000000001,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 17,
+          "EC": 8,
+          "L": 28,
+          "SC": 22,
+          "US": 7,
+          "LC": 5
+        },
+        "halfDelta": {
+          "0": 55,
+          "1": 4,
+          "2": 8,
+          "3": 4,
+          "-2": 9
+        }
+      },
+      {
+        "rules": "Salary cap",
+        "decade": 2020,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 20,
+        "available": 20,
+        "halves": 40,
+        "objectives": 11,
+        "objectiveShare": 0.55,
+        "initialMedian": 85.32644013636362,
+        "seasonsMedian": 5,
+        "titles": {
+          "EC": 4,
+          "US": 2,
+          "L": 3,
+          "SC": 8,
+          "C": 7
+        },
+        "halfDelta": {
+          "0": 23,
+          "1": 2,
+          "2": 7,
+          "3": 1,
+          "-2": 7
+        }
+      },
+      {
+        "rules": "Classic",
+        "decade": 1950,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 40,
+        "objectiveShare": 1,
+        "initialMedian": 85.2726642213068,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 34,
+          "L": 40,
+          "SC": 13,
+          "EC": 16
+        },
+        "halfDelta": {
+          "0": 37,
+          "1": 4,
+          "2": 1,
+          "3": 37,
+          "-2": 1
+        }
+      },
+      {
+        "rules": "Classic",
+        "decade": 1960,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 38,
+        "objectiveShare": 0.95,
+        "initialMedian": 85.78569625568181,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 31,
+          "LC": 6,
+          "L": 38,
+          "SC": 6,
+          "EC": 20,
+          "CW": 2,
+          "UC": 1
+        },
+        "halfDelta": {
+          "0": 48,
+          "1": 1,
+          "2": 4,
+          "3": 26,
+          "-2": 1
+        }
+      },
+      {
+        "rules": "Classic",
+        "decade": 1970,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 40,
+        "objectiveShare": 1,
+        "initialMedian": 89.49337150000001,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 34,
+          "LC": 7,
+          "UC": 2,
+          "L": 39,
+          "SC": 8,
+          "EC": 23,
+          "US": 16
+        },
+        "halfDelta": {
+          "0": 37,
+          "1": 2,
+          "2": 1,
+          "3": 40
+        }
+      },
+      {
+        "rules": "Classic",
+        "decade": 1980,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 40,
+        "objectiveShare": 1,
+        "initialMedian": 88.47616936363636,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 30,
+          "L": 40,
+          "EC": 24,
+          "US": 22,
+          "SC": 10,
+          "CW": 1
+        },
+        "halfDelta": {
+          "0": 51,
+          "1": 3,
+          "2": 5,
+          "3": 21
+        }
+      },
+      {
+        "rules": "Classic",
+        "decade": 1990,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 39,
+        "objectiveShare": 0.975,
+        "initialMedian": 88.21572218181815,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 26,
+          "L": 37,
+          "SC": 31,
+          "LC": 6,
+          "EC": 20,
+          "US": 18,
+          "CW": 2,
+          "UC": 1
+        },
+        "halfDelta": {
+          "0": 46,
+          "1": 3,
+          "2": 6,
+          "3": 23,
+          "-2": 2
+        }
+      },
+      {
+        "rules": "Classic",
+        "decade": 2000,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 40,
+        "objectiveShare": 1,
+        "initialMedian": 90.54182149999998,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 34,
+          "EC": 15,
+          "L": 40,
+          "SC": 25,
+          "US": 10,
+          "LC": 10
+        },
+        "halfDelta": {
+          "0": 45,
+          "1": 3,
+          "2": 3,
+          "3": 28,
+          "-2": 1
+        }
+      },
+      {
+        "rules": "Classic",
+        "decade": 2010,
+        "runs": 4,
+        "complete": 4,
+        "sacked": 0,
+        "seasons": 40,
+        "available": 40,
+        "halves": 80,
+        "objectives": 39,
+        "objectiveShare": 0.975,
+        "initialMedian": 88.43020873863637,
+        "seasonsMedian": 10,
+        "titles": {
+          "C": 29,
+          "EC": 10,
+          "L": 37,
+          "SC": 32,
+          "US": 7,
+          "LC": 6
+        },
+        "halfDelta": {
+          "0": 54,
+          "1": 5,
+          "2": 6,
+          "3": 12,
+          "-2": 3
+        }
+      },
+      {
+        "rules": "Classic",
+        "decade": 2020,
+        "runs": 4,
+        "complete": 3,
+        "sacked": 1,
+        "seasons": 18,
+        "available": 20,
+        "halves": 36,
+        "objectives": 11,
+        "objectiveShare": 0.6111111111111112,
+        "initialMedian": 88.20234327272728,
+        "seasonsMedian": 5,
+        "titles": {
+          "EC": 4,
+          "SC": 10,
+          "US": 2,
+          "C": 7,
+          "L": 9
+        },
+        "halfDelta": {
+          "0": 23,
+          "1": 2,
+          "2": 5,
+          "3": 2,
+          "-2": 4
+        }
+      }
+    ]
+  },
+  "gauntlet": {
+    "seeds": [
+      500,
+      539
+    ],
+    "rules": "Salary cap",
+    "map": "reverse",
+    "runs": 40,
+    "keep": 5,
+    "decadesCleared": {
+      "0": 6,
+      "1": 17,
+      "2": 6,
+      "3": 4,
+      "4": 1,
+      "8": 6
+    },
+    "medianDecades": 1,
+    "fullClears": 6,
+    "segmentPointsMedian": 11,
+    "bossMatchesMedian": 6
+  },
+  "limits": "One automatic policy and fixed seeds; no human difficulty inference, full pipeline rebuild or new goal-model calibration."
+}

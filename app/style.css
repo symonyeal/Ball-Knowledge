@@ -606,8 +606,9 @@ tbody tr:last-child td{border-bottom:0}
   .seg2.mob{display:grid;position:sticky;top:calc(var(--bar) + env(safe-area-inset-top,0px));z-index:5}
   .ws[data-view="squad"] .lineup,.ws[data-view="squad"] .dash{display:none}
   .ws[data-view="lineup"] .squad{display:none}
-  .squad{min-height:calc(100dvh - var(--bar) - 170px)}
-  .list{overflow:visible}
+  .squad{height:calc(100dvh - var(--bar) - 170px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:360px}
+  .squad>.sh,.squad>.ctl,.squad>.fcs{flex-shrink:0}
+  .list{overflow:auto;overscroll-behavior-y:contain}
   .dash{flex-direction:column;overflow:visible}.dash .cnt,.dash .need{display:grid}.dash-body{display:grid}.dash .capb{display:none}
   .pitch-wrap{container-type:inline-size;flex:none}
   .pitch-wrap .pt{width:100%;height:auto}
@@ -838,6 +839,11 @@ body[data-theme=light] .is-yours{color:var(--focus)}
 @media(min-width:1280px){body[data-screen=desk] .key-hints{display:block;height:36px;padding:6px 24px}body[data-screen=desk] .ws{height:calc(100dvh - var(--bar) - 36px - env(safe-area-inset-top,0px))}body[data-screen=desk] .toast{bottom:48px}
   .toast{left:50%;right:auto;transform:translateX(-50%)}}
 @media(pointer:coarse){.key-hints{display:none}}
+@media(max-width:767px) and (max-height:700px){
+  .squad .sh{padding:10px 10px 6px}.squad .club{font-size:28px}
+  .squad .ctl{padding-top:6px}.squad .fcs{gap:4px;padding:6px 10px}
+  .squad .fc2{min-height:30px;padding:0 8px}
+}
 .sbc-req{margin:6px 0;padding-left:18px;display:grid;gap:3px;font-size:13.5px}
 .sbc-panel{padding:12px 14px;border-radius:14px;border:1px solid var(--l1);background:var(--n1);margin:10px 0}
 .sbc-panel .sbc-req{list-style:none;padding:0}.sbc-panel li{display:flex;justify-content:space-between;gap:10px}
