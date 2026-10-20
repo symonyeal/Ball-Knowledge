@@ -401,7 +401,9 @@ async function full(kind) {
     await runControls(p, kind);
     await p.click('[data-tab="more"]'); await settle(p);
     await p.selectOption('#circuit-events', '10'); await p.click('#circuit-start'); await settle(p);
-    assert.equal(await p.locator('#circuit-events').inputValue(), '10'); assert.ok(await p.locator('.mode-event').count() >= 10);
+    assert.equal(await p.locator('#circuit-events').inputValue(), '10');
+    assert.equal(await p.locator('.circuit .mode-log > details').count(), 10);
+    assert.equal(await p.locator('.circuit .match').count(), await p.evaluate(async () => (await import('./app/ui/kit.js')).U.C.totals.played));
     assert.equal(await p.locator('[aria-label="Circuit awards"] .stat-card').count(), 4);
     assert.match(await p.locator('[aria-label="Circuit awards"]').innerText(), /Circuit top scorer/i);
     ok(`${kind}: circuit completion shows scorer, assist, keeper and player awards`);
@@ -409,11 +411,11 @@ async function full(kind) {
     assert.equal(z0.v, 2); assert.equal(z0.f, f0); assert.deepEqual(z0.m, saved.draft.manager);
     const classic = { ...z0, cap: false };
     await p.fill('#their-code', Buffer.from(JSON.stringify(classic)).toString('base64url')); await p.click('#h2h-play'); await settle(p);
-    assert.equal(await p.locator('.cup-tie--yours').count(), 0);
+    assert.equal(await p.locator('.challenge-card .match').count(), 0);
     assert.match(await p.locator('#notice').innerText(), /matching Salary cap team code/i);
     ok(`${kind}: head to head rejects a Classic code against a capped team and explains the matching rules`);
     await p.fill('#their-code', c); await p.click('#h2h-play'); await settle(p);
-    assert.equal(await p.locator('.cup-tie--yours').count(), 1);
+    assert.equal(await p.locator('.challenge-card .match').count(), 2);
     ok(`${kind}: the team code carries the club spell and formation, and plays head to head`);
     await sound(p, 'more modes');
     await p.click('#replay'); await settle(p);

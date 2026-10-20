@@ -16,6 +16,8 @@ The career hub brings together the next league fixture, standings, squad, board 
 
 Each half-season opens a match centre that lists the half's results one match at a time: score, goal minutes, scorers and assists, extra time, penalties, two-leg aggregates, the standout and any in-form earned. Show all reveals the rest at once. Results are saved before playback starts, so closing or reloading keeps the same season. Reduced motion shows every result immediately. The Your matches tab keeps the same cards for the whole season, split into the opening half and the run-in, with League and Cups filters. The standout reflects recorded goals and assists; it grants no extra award. Gauntlet rounds and boss ties use the same match centre and cards; the run page lists the current decade's matches by round, with earlier rounds folded. Runs saved before goals were recorded show scores only.
 
+Completed career seasons keep every match in Career history. Earlier Gauntlet decades have expandable round and boss records with no history cutoff. Tournament circuit events list your matches, goals, deciding aggregates and league or group tables; head to head lists both legs and the tie outcome. Both modes open the match centre when played. Older season replays and sandbox seasons include your league and European Cup matches with the same goal details.
+
 ![Career hub with the next league fixture, board inbox and season objectives.](docs/images/football-era-career.png)
 
 ## Five clubs supply your fifteen players

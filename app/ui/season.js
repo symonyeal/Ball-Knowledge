@@ -14,7 +14,7 @@ import * as Rn from '../run.js';
 import { code } from '../play.js';
 import { U, esc, num, ord, nm, club, kv, tier, rules, pitch, links, face, capTiles, teamLine, spell, portrait } from './kit.js';
 import { candidate, marketPreview, upgradePreview } from './transfers.js';
-import { card } from './match-centre.js';
+import { card, engineCard } from './match-centre.js';
 
 export const me = () => { const T = team(U.G, U.S); return { id: 'your-club', nm: 'Your Era XI', T, x: E.rate(T, U.S.D).ovr, me: true }; };
 export function season() {
@@ -46,7 +46,6 @@ export function awards(a = U.R.L.awards || {}, scope = 'League', name = clubName
   const L = [[`${scope} top scorer`, a.scorer, 'g', 'goals'], ['Assist leader', a.assists, 'as', 'assists'], ['Clean sheet leader', a.keeper, 'cs', 'clean sheets'], [`Player of the ${scope === 'League' ? 'season' : 'circuit'}`, a.player, 'ap', 'appearances']];
   return `<aside class="awards" aria-label="${scope} awards">${L.filter(([, p]) => p).map(([l, p, k, u]) => `<article class="stat-card"><p class="lbl">${l}</p><p class="aw">${esc(p.nm || nm(p.id))}</p><p class="small">${p[k]} ${u} · ${esc(name(p.cl))}</p></article>`).join('')}</aside>`;
 }
-const fixtures = () => `<div class="fixtures">${U.R.L.res.map(c => `<article class="fixture"><span class="fr">MD ${c.rd}<br>${c.h ? 'Home' : 'Away'}</span><b class="fsc">${c.gf}–${c.ga}</b><span class="fo">${esc(c.op)}</span><span class="fw ${c.gf > c.ga ? 'win' : c.gf < c.ga ? 'loss' : 'draw'}">${c.gf > c.ga ? 'W' : c.gf < c.ga ? 'L' : 'D'}</span></article>`).join('')}</div>`;
 const cupRounds = K => K.rounds.map((Q, i) => `<section class="cup-round"><h3>${E.RD[i] || `Round ${i + 1}`}</h3>${Q.map(t => `<div class="cup-tie ${t.A === 'your-club' || t.B === 'your-club' ? 'cup-tie--yours' : ''}"><div>${esc(t.an)}<br>${esc(t.bn)}<small>${t.legs.length === 2 ? `Two legs: ${t.legs[0].gx}–${t.legs[0].gy} / ${t.legs[1].gx}–${t.legs[1].gy}` : 'Neutral final'}${t.et ? ' · Extra time' : ''}${t.pw ? ' · Penalties' : ''} · Winner: ${esc(t.wn)}</small></div><strong>${t.agg[0]}–${t.agg[1]}</strong></div>`).join('')}</section>`).join('');
 const stats = () => `<div class="tw"><table><thead><tr><th>Player</th><th>Club</th><th class="k">Apps</th><th class="k">Goals</th><th class="k">Assists</th><th class="k">CS</th></tr></thead>
     <tbody>${stRows(U.R.L.st).slice(0, 120).map(p => `<tr class="${p.cl === 'your-club' ? 'your-row' : ''}"><td>${esc(p.nm)}</td><td>${esc(clubName(p.cl))}</td><td class="k">${p.ap}</td><td class="k">${p.g}</td><td class="k">${p.as}</td><td class="k">${p.cs}</td></tr>`).join('')}</tbody></table></div>
@@ -65,7 +64,7 @@ export function results() {
   const T = [['league', 'League table'], ['fixtures', 'Your matches'], ['cup', 'European Cup'], ['stats', 'Player stats'], ['lineup', 'Your XI'], ['gauntlet', 'Era Gauntlet'], ['more', 'More modes']];
   const Tm = team(U.G, S), Q = E.rate(Tm, S.D);
   const body = { league: () => `<div class="res-grid"><div><h2 class="st">The ${S.D}s Era League</h2>${table(R.L.tab)}<p class="small">Double round robin · 3 points for a win · ranked by points, goal difference, then goals scored.</p></div>${awards()}</div>`,
-    fixtures: () => `<h2 class="st">Your 38 league matches</h2>${fixtures()}`, cup: () => `<h2 class="st">The European Cup</h2>${cupRounds(R.K)}<p class="small">Two legs through the semi-finals, a neutral final, extra time and penalties; no away-goals rule.</p>`,
+    fixtures: () => `<h2 class="st">Your matches · all competitions</h2><div class="match-list">${seasonCards(R).join('')}</div>`, cup: () => `<h2 class="st">The European Cup</h2>${cupRounds(R.K)}<p class="small">Two legs through the semi-finals, a neutral final, extra time and penalties; no away-goals rule.</p>`,
     stats: () => `<h2 class="st">League player statistics</h2>${stats()}`,
     lineup: () => `<h2 class="st">Your XI · ${esc(S.f)}</h2>${xi(Tm, Q, S.D, `Your ${S.f}`)}${breakdown(Q)}`, gauntlet, more }[U.tab] || (() => '');
   const head = i === 0 && cup ? 'A team for the ages' : i === 0 ? 'Champions' : cup ? 'Kings of Europe' : i < 4 ? 'Top four' : 'Season complete';
@@ -83,6 +82,28 @@ export function results() {
 }
 
 // Era Gauntlet
+// seasonCards(R, id): every league and Cup match, also used by the sandbox.
+export function seasonCards(R, id = 'your-club') {
+  const L = R.L.fixtures.filter(f => f.A === id || f.B === id).map(f => engineCard(f, id, `League · MD ${f.rd}`));
+  return [...L, ...R.K.rounds.flat().filter(t => t.A === id || t.B === id).flatMap(t =>
+    t.legs.map((M, i) => engineCard({ A: i ? t.B : t.A, B: i ? t.A : t.B, an: i ? t.bn : t.an, bn: i ? t.an : t.bn, neutral: t.k === 'Final', M }, id,
+      `European Cup · ${t.k} · ${t.legs.length === 1 ? 'Neutral final' : `Leg ${i + 1}`}`,
+      i === t.legs.length - 1 ? [`Aggregate ${(t.A === id ? t.agg : t.agg.slice().reverse()).join('–')}`, t.w === id ? 'Tie won' : 'Tie lost'] : [])))];
+}
+
+export function circuitCards(c) {
+  return c.matches.filter(f => f.A === 'your-club' || f.B === 'your-club').map(f => {
+    const t = c.rounds?.flat().find(t => t.legs.includes(f.M)), last = t?.legs.at(-1) === f.M;
+    const notes = last ? [`Aggregate ${(t.A === 'your-club' ? t.agg : t.agg.slice().reverse()).join('–')}`, t.w === 'your-club' ? 'Tie won' : 'Tie lost'] : [];
+    return engineCard({ ...f, neutral: !!t && (c.format !== 'two-leg' || f.k === 'Final') }, 'your-club', `Event ${c.i} · ${c.Ds}s · ${f.k || `MD ${f.rd}`}`, notes);
+  });
+}
+
+export function h2hCards(H) {
+  return H.legs.map((l, i) => engineCard({ A: i ? 'friend' : 'your-club', B: i ? 'your-club' : 'friend', an: l.h, bn: l.a, M: l.M },
+    'your-club', `Head to head · Leg ${i + 1} · ${l.D}s`, i ? [`Aggregate ${H.agg.join('–')}`, H.w === 'your-club' ? 'Tie won' : 'Tie lost'] : []));
+}
+
 // runCards(e): the match cards of a round or boss entry of the run log; legs are stored from each home side.
 export function runCards(e) {
   if (e.t === 'seg') return e.res.map((m, i) => card(m, `${e.D}s · Round ${e.seg + 1} · Match ${i + 1} · ${m.h ? 'Home' : 'Away'}`, `<span>${m.h ? 'v' : 'at'} ${esc(m.op)}</span>`));
@@ -207,7 +228,7 @@ export function gauntlet() {
     ${['done', 'fired'].includes(s.ph) ? `${mapChoice()}<button class="btn q sm" type="button" id="run-start">Start a new run ↻</button>` : ''}
     ${runSquad(s)}${['rd', 'node', 'boss', 'hop'].includes(s.ph) ? runLineup(s) : ''}
     <h3 class="st">Matches in the ${Dc}s</h3><div class="match-list">${s.log.filter(e => e.act === s.act && ['seg', 'boss'].includes(e.t)).map((e, i, Q) => `<details class="breakdown" ${i === Q.length - 1 ? 'open' : ''}><summary>${e.t === 'seg' ? `Round ${e.seg + 1} · ${e.w}-${e.d}-${e.l} · ${e.gf}–${e.ga}` : `Boss tie · attempt ${e.n} · ${(e.agg || [e.gx, e.gy]).join('–')} ${e.won ? 'won' : 'lost'}`}</summary><div class="match-list">${runCards(e).join('')}</div></details>`).join('') || '<p class="empty">Your matches appear after the first round.</p>'}</div>
-    <div class="mode-log">${s.log.slice().reverse().filter(e => (e.t === 'seg' || e.t === 'boss') && e.act !== s.act).slice(0, 20).map(e => `<div class="mode-event"><div>${e.D}s · ${e.t === 'seg' ? `Round ${e.seg + 1}` : `Boss · ${esc(e.op)}`}<small>${e.t === 'seg' ? `${e.w}-${e.d}-${e.l} · ${e.gf}–${e.ga}` : `Attempt ${e.n}${e.pw ? ' · penalties' : e.et ? ' · extra time' : ''}`}</small></div><b>${e.t === 'seg' ? `${e.pts} pts` : `${(e.agg || [e.gx, e.gy]).join('–')} ${e.won ? 'win' : 'loss'}`}</b></div>`).join('')}</div></section>`;
+    <div class="mode-log result-log">${s.log.filter(e => (e.t === 'seg' || e.t === 'boss') && e.act !== s.act).map(e => `<details class="breakdown"><summary>${e.D}s · ${e.t === 'seg' ? `Round ${e.seg + 1}` : `Boss · ${esc(e.op)}`}<small>${e.t === 'seg' ? `${e.w}-${e.d}-${e.l} · ${e.gf}–${e.ga}` : `Attempt ${e.n}${e.pw ? ' · penalties' : e.et ? ' · extra time' : ''}`}</small><b>${e.t === 'seg' ? `${e.pts} pts` : `${(e.agg || [e.gx, e.gy]).join('–')} ${e.won ? 'win' : 'loss'}`}</b></summary><div class="match-list">${runCards(e).join('')}</div></details>`).join('')}</div></section>`;
 }
 
 // A Gauntlet draft's results page: the run itself, then the replay controls.
@@ -231,9 +252,9 @@ export function more() {
   if (C) cc = `<div class="circuit"><p class="lbl">Tournament circuit · complete</p><h2>${C.totals.titles} titles · ${C.events.length} events</h2><p class="small">${C.totals.played} matches · ${C.totals.won} wins · ${C.totals.gf} scored · ${C.totals.ga} conceded</p>
     <div class="honours">${C.honours.map(h => `<span class="honour">${esc(h)}</span>`).join('')}</div>
     ${awards(C.awards, 'Circuit', id => (id === 'your-club' ? 'Your Era XI' : Object.values(F).flat().find(c => c.id === id)?.nm || id))}
-    <div class="mode-log">${C.events.map(c => `<div class="mode-event"><div>Event ${c.i} · ${c.Ds}s · ${esc(c.label)}<small>${c.matches.filter(f => f.A === 'your-club' || f.B === 'your-club').length} of your matches${c.position ? ` · ${ord(c.position)} place` : ''}</small></div><b>${c.won ? 'Champion' : c.position ? ord(c.position) : 'Out'}</b></div>`).join('')}</div></div>`;
+    <div class="mode-log result-log">${C.events.map(c => `<details class="breakdown" open><summary>Event ${c.i} · ${c.Ds}s · ${esc(c.label)}<small>${c.matches.filter(f => f.A === 'your-club' || f.B === 'your-club').length} of your matches${c.position ? ` · ${ord(c.position)} place` : ''}</small><b>${c.won ? 'Champion' : c.position ? ord(c.position) : 'Out'}</b></summary><p class="small">Winner: ${esc(c.champN)}</p>${c.tab ? table(c.tab) : ''}${(c.groups || []).map(g => `<h3>Group ${esc(g.label)}</h3>${table(g.tab)}`).join('')}<div class="match-list">${circuitCards(c).join('')}</div></details>`).join('')}</div></div>`;
   let hh = '';
-  if (H) hh = `<div class="cup-tie cup-tie--yours"><div>${H.legs.map(l => `${esc(l.h)} ${l.M.gx}–${l.M.gy} ${esc(l.a)} <small>${l.D}s</small>`).join('<br>')}<small>${H.et ? 'Extra time · ' : ''}${H.pw ? 'Penalties · ' : ''}Winner: ${esc(H.wn)}</small></div><strong>${H.agg[0]}–${H.agg[1]}</strong></div>`;
+  if (H) hh = `<div class="match-list">${h2hCards(H).join('')}</div>`;
   return `<div class="challenge-grid"><article class="challenge-card"><p class="lbl">The long road</p><h2>Tournament circuit</h2>
       <p class="small">Ten to twenty events across all decades, rotating league, knockout and group formats. Era adjustments are recalculated at every event.</p>
       <label class="field"><span class="lbl">Events</span><select id="circuit-events">${Array.from({ length: 11 }, (_, i) => `<option value="${i + 10}" ${U.ev === i + 10 ? 'selected' : ''}>${i + 10} events</option>`).join('')}</select></label>

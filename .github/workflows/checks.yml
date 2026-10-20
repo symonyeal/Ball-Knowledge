@@ -34,6 +34,7 @@ jobs:
           node tests/browser/clubhouse.cjs --playwright "$RUNNER_TEMP/browser/node_modules/playwright" --output "$RUNNER_TEMP/football-browser-results/clubhouse"
           node tests/browser/repairs.cjs --playwright "$RUNNER_TEMP/browser/node_modules/playwright" --output "$RUNNER_TEMP/football-browser-results/repairs"
           node tests/browser/night-sky.cjs --playwright "$RUNNER_TEMP/browser/node_modules/playwright" --url http://127.0.0.1:8765/ --output "$RUNNER_TEMP/football-browser-results/night-sky"
+          node tests/browser/results.cjs --playwright "$RUNNER_TEMP/browser/node_modules/playwright" --url http://127.0.0.1:8765/ --output "$RUNNER_TEMP/football-browser-results/results"
       - name: Preserve browser check results
         if: always()
         uses: actions/upload-artifact@v4

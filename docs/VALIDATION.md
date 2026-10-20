@@ -277,6 +277,10 @@ The rival chemistry rows compare every archive club-decade side the career can f
 
 ## Identifying the evidence and its limits
 
+The match presentation regressions in `tests/engine/results-ui.test.mjs` reconcile displayed matches and goals with their saved records for the circuit, head to head, completed career seasons, Gauntlet history and older season replays. They also check every Gauntlet decade, home and away goal ownership, neutral venues and shootout score orientation. Completed-season history is checked after the next season starts.
+
+`tests/browser/results.cjs` drives the actual play controls on desktop and phone. It checks both career halves, completed-season match history, circuit results after reload, both head-to-head legs, sandbox league and Cup results, and kickoff from an older replay. It also checks for horizontal page overflow. This suite runs in the browser workflow alongside the existing gameplay, Clubhouse, portrait and match-reveal checks. These are presentation and save-continuity checks; they do not measure historical accuracy or game balance.
+
 [validation.json](../data/validation.json) names the exact bundle by its SHA-256 file fingerprint. [manifest.json](../data/manifest.json) records attribution and unresolved links, and [calibration.json](../data/calibration.json) records the goal fit and fixture coverage. The notebook calculates its counts and hash from the file it loads.
 
 The browser workflow preserves fresh records in its `browser-checks` artifact. The portable commands above generate local records in the output folder you choose; machine-specific development artifacts are not part of the repository.
