@@ -4,7 +4,7 @@ import { staff } from './staff.js';
 
 // Club seasons for the career: the real top flight of a season with your fifteen in your club's place, its
 // real squads, and the domestic and European competitions of that country and year, played in two halves
-// around the winter window. Rules and their simplifications: docs/MODEL.md (The club career).
+// back to back. Rules and their simplifications: docs/MODEL.md (The club career).
 //
 // Legend
 //   G archive (G.lg season tables, G.ec European Cup clubs, G.xn names outside the archive); lg league code;

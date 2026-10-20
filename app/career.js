@@ -9,6 +9,9 @@ import * as Club from './club.js';
 // state; only halfPlay mutates, so it receives a cloned season. The Gauntlet's rules and saves retain
 // their own state. Shared prices, tier charges, training and negotiation come from run.js.
 export const CAREER_VERSION = 1;
+// One window a season replaced a winter and a summer window. The career starts with the old winter rest
+// banked (CPAT0 = PAT0 + REST[0]) and a summer rest pays both old rests (CREST = REST[0] + REST[1]).
+export const CPAT0 = PAT0 + REST[0], CREST = REST[0] + REST[1];
 export const CAREER_DEV = {
   ...DEV,
   touch: { nm: 'First-touch Training', mx: 2, c: 3, boost: 1, ln: ['MID', 'WIDE', 'ATT'], tx: 'Adds one rating point per level to this player.' },
@@ -116,7 +119,7 @@ export function careerStart(G, draft) {
   if (draft.cap) ck(G, slots, GCAP);
   const s = { v: CAREER_VERSION, kind: 'career', seed: draft.seed, cap: !!draft.cap, D: draft.D,
     m: { ...draft.manager }, f: draft.f, slots, lg, q, years, y: 0, ph: 'half', half: 0,
-    pat: PAT0, rest: 0, lost: 0, tags: {}, up: {}, mv: {}, neg: {}, skills: {}, trouble: {},
+    pat: CPAT0, rest: 0, lost: 0, tags: {}, up: {}, mv: {}, neg: {}, skills: {}, trouble: {},
     badge: { glue: 0, mgr: 0, team: 0 }, last: [], fa: 0, prem: 0, history: [], trophies: [], log: [], evo: null, evd: {},
     node: { window: 'winter', left: 0, free: 0 }, owner: 'You have a decade to make this club yours. Show me what this squad can do.' };
   return { ...s, S: season(G, s) };
@@ -130,9 +133,9 @@ export function careerDelta(points, expected, maximum) {
     : 10.5 + 7.5 * (points - par) / Math.max(1e-9, maximum - par);
   return dP(Math.max(0, Math.min(18, x)) + 1e-9);
 }
-const halfLine = dp => dp >= 2 ? 'That is the standard I want. You have given the club room to grow.'
-  : dp >= 0 ? 'We are on course. Keep the dressing room together and make the next window count.'
-    : 'Results are below what this squad should deliver. I need a response after the break.';
+const halfLine = dp => dp >= 2 ? 'That is the standard I want. Carry it into the run-in.'
+  : dp >= 0 ? 'We are on course. Keep the dressing room together for the run-in.'
+    : 'Results are below what this squad should deliver. I need a response in the run-in.';
 const playerVerdict = (G, s, S, won) => {
   const Q = [...careerTeam(G, s).xi, ...careerTeam(G, s).bn], ids = new Map(Q.map(c => [c.id, c.r]));
   const st = S.sy.filter(r => ids.has(r[0]));
@@ -155,8 +158,7 @@ export function careerPlayHalf(G, s) {
     maximum: S.w * n, dp, gf: matches.reduce((x, f) => x + f.gf, 0), ga: matches.reduce((x, f) => x + f.ga, 0) };
   const wonCups = Object.values(S.K).filter(K => K.ch === s.q && !s.trophies.some(t => t.s === S.s && t.k === K.k))
     .map(K => ({ s: S.s, k: K.k, nm: K.nm }));
-  let nx = { ...s, S, half: h, pat, fa: 0, prem: 0, owner: halfLine(dp), log: [...s.log, e],
-    trophies: [...s.trophies, ...wonCups], node: { window: h === 1 ? 'winter' : 'summer', left: 1 + wonCups.length, free: wonCups.length } };
+  let nx = { ...s, S, half: h, pat, fa: 0, prem: 0, owner: halfLine(dp), log: [...s.log, e], trophies: [...s.trophies, ...wonCups] };
   if (h === 2) {
     const table = S.L.rows, pos = 1 + table.findIndex(r => r[0] === s.q), won = pos <= S.obj.t;
     const v = playerVerdict(G, nx, S, won), mv = { ...s.mv };
@@ -170,14 +172,15 @@ export function careerPlayHalf(G, s) {
       real: Club.history(G, s.lg, S.s, s.q), competitions: Object.fromEntries(Object.values(S.K).map(K => [K.k, { nm: K.nm, w: K.ch, r: K.ru }])),
       pat: finalPat, S: clone(S) };
     nx = { ...nx, pat: finalPat, mv, lost: s.lost + Number(!won), trophies, history: [...s.history, summary],
-      node: { window: 'summer', left: nx.node.left + leagueWin.length, free: nx.node.free + leagueWin.length },
+      // One summer change per season; a trophy this season makes it free. The final season has none.
+      node: lastYear(s) ? { window: 'summer', left: 0, free: 0 } : { window: 'summer', left: 1, free: Number(trophies.some(t => t.s === S.s)) },
       owner: finalPat <= 0 ? 'The club needs another direction. Your time in charge ends here.'
         : won ? 'You delivered what the board asked. Build on it in the summer.' : 'The objective was clear and we missed it. The next season must justify our patience.',
       log: [...nx.log, { t: 'boss', D: s.D, act: s.y, s: S.s, won, n: 1, pos, target: S.obj.t, dp: bossDP, ...v }] };
   }
   nx = evolve(nx);
   if (nx.pat <= 0) return { ...nx, pat: 0, ph: 'fired', node: { ...nx.node, left: 0, free: 0 }, owner: 'The club needs another direction. Your time in charge ends here.' };
-  return { ...nx, ph: 'node' };
+  return { ...nx, ph: h === 1 ? 'half' : lastYear(s) ? 'done' : 'node' };
 }
 
 // One rival entry {id, nm, T, ...} of the current season, as the engine fields it against you; null if absent.
@@ -229,14 +232,17 @@ function developments(G, s) {
 export function careerOffers(G, s) {
   if (s.ph !== 'node') return [];
   const tag = `${seedKey(s)}:node:${s.y}:${s.half}:${s.node.left}`, out = [];
-  const list = market(G, s, mk(hs(`${tag}:fa:${s.fa}`)), s.prem ? 'A' : 'C', 3);
+  // Market: three cards from the decade and up to three from next season's actual rivals.
+  const r0 = mk(hs(`${tag}:fa:${s.fa}`)), fl = s.prem ? 'A' : 'C', next = s.half === 2 ? s.years[s.y + 1] : undefined;
+  const rv = new Set((Club.rows(G, s.lg, next) || []).map(r => r[0]).filter(q => q !== s.q)), A = market(G, s, r0, fl, 3);
+  const list = [...A, ...(rv.size ? market(G, s, r0, fl, 3, (k, c) => rv.has(k.split(':')[0]) && c.a <= next && next <= c.b, new Set(A.map(c => c.p))) : [])];
   if (list.length) out.push({ kind: 'market', list, re: !s.fa });
   const L = developments(G, s), r = mk(hs(`${tag}:dev`));
   for (let n = s.pat >= PAT_MAX ? 2 : 1; n > 0 && L.length; n--) {
     const fresh = L.filter(o => !s.last.includes(o.id)), Q = fresh.length ? fresh : L, o = Q[Math.floor(r() * Q.length)];
     out.push(o); L.splice(L.indexOf(o), 1);
   }
-  if (s.pat < PAT_MAX && !s.node.free) out.push({ kind: 'rest', gain: REST[Math.min(2, s.rest)] });
+  out.push({ kind: 'rest', gain: Math.min(PAT_MAX - s.pat, s.rest ? REST[Math.min(2, s.rest)] : CREST) });
   if (s.pat < DESP) {
     const r = mk(hs(`${tag}:desp`)), a = market(G, s, r, 'S', 1);
     const b = market(G, s, r, 'A', a.length ? 1 : 2, () => true, new Set(a.map(x => x.p)));
@@ -263,7 +269,7 @@ const drop = (s, p) => ({ ...Object.fromEntries(['tags', 'up', 'mv', 'neg', 'ski
 })), evo: s.evo?.p === p ? null : s.evo ?? null });
 function afterReward(s, O) {
   const node = { ...s.node, left: s.node.left - 1, free: Math.max(0, s.node.free - 1) };
-  const ph = node.left > 0 ? 'node' : s.half === 1 ? 'repo' : lastYear(s) ? 'done' : 'hop';
+  const ph = node.left > 0 ? 'node' : s.half === 2 && lastYear(s) ? 'done' : 'repo';
   return { ...s, node, ph, fa: 0, prem: 0, rest: 0, last: O.filter(o => o.kind === 'dev').map(o => o.id) };
 }
 export function careerTake(G, s, j, options = {}) {
@@ -309,44 +315,21 @@ export function careerTake(G, s, j, options = {}) {
     log: [...s.log, { t: 'dev', id: o.id, p, lv: level, cost: o.cost, free }], owner: 'A specialist gives the manager another way to win. Use him well.' };
 }
 
-// Summer offers: three cards from next season's actual rivals and three from the decade. One from
-// each pool replaces one squad player for free. Empty archive pools are explicitly optional.
-export function careerHopPools(G, s) {
-  if (s.ph !== 'hop') return null;
-  const next = s.years[s.y + 1], rivals = new Set((Club.rows(G, s.lg, next) || []).map(r => r[0]).filter(q => q !== s.q));
-  const old = market(G, s, mk(hs(`${seedKey(s)}:summer:${s.y}:rivals`)), 'C', 3,
-    (k, c) => rivals.has(k.split(':')[0]) && c.a <= next && next <= c.b);
-  const neu = market(G, s, mk(hs(`${seedKey(s)}:summer:${s.y}:decade`)), 'C', 3, () => true, new Set(old.map(c => c.p)));
-  return { from: s.years[s.y], to: next, old, neu };
-}
-export function careerHop(G, s, selection = {}) {
-  const H = careerHopPools(G, s);
-  if (!H) throw new Error('The summer transfer window opens after the rewards.');
-  const a = selection.old || [], b = selection.neu || [], out = selection.out || [];
-  const pick = (ids, pool) => ids.length === Math.min(1, pool.length) && ids.every(i => Number.isInteger(i) && i >= 0 && i < pool.length);
-  if (!pick(a, H.old) || !pick(b, H.neu)) throw new Error('Sign one player from each available summer pool.');
-  if (out.length !== a.length + b.length || new Set(out).size !== out.length || out.some(i => !Number.isInteger(i) || i < 0 || i >= 15)) throw new Error('Choose a different squad place for each signing.');
-  const ins = [...a.map(i => H.old[i]), ...b.map(i => H.neu[i])], slots = s.slots.slice();
-  let nx = s;
-  out.forEach(i => { nx = { ...nx, ...drop(nx, s.slots[i].p) }; });
-  ins.forEach((c, j) => { slots[out[j]] = { k: c.k, p: c.p }; });
-  if (s.cap) ck(G, careerBill(G, { ...nx, slots }), GCAP);
-  return { ...nx, slots, ph: 'repo', owner: 'The summer business is done. Pick the side that will carry us into next season.',
-    log: [...s.log, { t: 'hop', act: s.y, in: ins.map(c => [c.k, c.p]), out: out.map(i => s.slots[i].p) }] };
-}
+// Lineup changes are open between matches: before a half, in the summer window, or at a legacy stop.
+const between = s => ['half', 'node', 'hop', 'repo'].includes(s.ph);
 export function careerSwap(s, a, b) {
-  if (s.ph !== 'repo') throw new Error('Rearrange the lineup after the transfer window.');
+  if (!between(s)) throw new Error('The career is over.');
   if (![a, b].every(i => Number.isInteger(i) && i >= 0 && i < 15)) throw new Error('Choose two squad places.');
   const slots = s.slots.slice(); [slots[a], slots[b]] = [slots[b], slots[a]]; return { ...s, slots };
 }
 export function careerForm(G, s, f) {
-  if (s.ph !== 'repo') throw new Error('Change formation after the transfer window.');
+  if (!between(s)) throw new Error('The career is over.');
   const T = careerTeam(G, s), o = move(T.xi, T.S, shape(G, f), s.D), slots = [...Array(11).fill(null), ...s.slots.slice(11)];
   o.forEach((j, i) => { slots[j] = s.slots[i]; });
   return { ...s, f, slots, log: [...s.log, { t: 'form', act: s.y, f }] };
 }
 export function careerNext(G, s) {
-  if (s.ph !== 'repo') throw new Error('Finish the transfer window and lineup first.');
+  if (!['hop', 'repo'].includes(s.ph)) throw new Error('Choose the summer change first.');
   if (s.half === 1) return { ...s, ph: 'half', owner: 'The winter business is done. Deliver the objective in the run-in.' };
   if (lastYear(s)) throw new Error('The decade is complete.');
   const nx = { ...s, y: s.y + 1, half: 0, ph: 'half', rest: 0, fa: 0, prem: 0, node: { window: 'winter', left: 0, free: 0 },
@@ -358,9 +341,8 @@ export function careerAction(G, s, action) {
   if (!action || typeof action.type !== 'string') throw new Error('Choose a career action.');
   const { type, ...o } = action;
   if (type === 'play') return careerPlayHalf(G, s);
-  if (type === 'take') return careerTake(G, s, o.index, o);
+  if (type === 'take') { const t = careerTake(G, s, o.index, o); return t.ph === 'repo' ? careerNext(G, t) : t; }
   if (type === 'respin') return careerRespin(G, s, !!o.premium);
-  if (type === 'hop') return careerHop(G, s, o);
   if (type === 'swap') return careerSwap(s, o.a, o.b);
   if (type === 'form') return careerForm(G, s, o.f);
   if (type === 'next') return careerNext(G, s);
@@ -433,7 +415,7 @@ export function validCareer(G, s, manager, cap) {
     if (e.t === 'boss') return e.D === s.D && int(e.act, 0, s.years.length - 1) && e.s === s.years[e.act] && typeof e.won === 'boolean' &&
       e.n === 1 && int(e.pos, 1, 22) && int(e.target, 1, 22) && [4, -4, -6].includes(e.dp) &&
       (e.mvp === null || person(e.mvp)) && (e.lvp === null || person(e.lvp)) && !(e.mvp && e.lvp);
-    if (e.t === 'rest') return int(e.gain, 0, 2);
+    if (e.t === 'rest') return int(e.gain, 0, CREST);
     if (e.t === 'respin') return typeof e.prem === 'boolean' && int(e.cost, 1, 12);
     if (e.t === 'boost') return ref({ k: e.from, p: e.p }) && ref({ k: e.to, p: e.p }) && int(e.cost, 0, 12) && typeof e.free === 'boolean';
     if (e.t === 'sign') return ref({ k: e.k, p: e.p }) && person(e.out) && int(e.cost, 0, 12) && typeof e.free === 'boolean' && (e.desp === undefined || e.desp === 1);

@@ -104,6 +104,19 @@ All sixty-four careers reached their available final season. League results were
 
 This small sample uses the strongest offered manager grades and covers six leagues, with no Portuguese club drawn. Four seeds per decade do not establish results for every club, league, formation, reward strategy or human player. The experiment measured continuation and difficulty; the spin retune [below](#the-spin-settings-trade-variety-against-strength) targets the season benchmark, and these high completion and title rates do not establish a balanced challenge. The report records every career, settings, season finishes and the current bundle's SHA-256 fingerprint.
 
+## One summer change per season (2026-10-20)
+
+The career dropped its winter window and summer transfer stage: one change per summer, free after a trophy, with next season's league rivals in the market. To keep the patience a resting player had, the career starts at 10 and a summer rest pays 3. The same command and seeds compared the previous rules (b571e94) with the new ones, with the summer-transfer step removed from the policy:
+
+| Rules | Version | Completed / attempted | Dismissed | Seasons | Objectives met | League titles |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Salary cap | before | 32 / 32 | 0 | 300 | 283 | 275 |
+| Salary cap | after | 32 / 32 | 0 | 300 | 270 | 248 |
+| Classic | before | 32 / 32 | 0 | 300 | 291 | 289 |
+| Classic | after | 31 / 32 | 1 | 298 | 287 | 280 |
+
+The career stays easy for this policy; fewer prime upgrades (317 before, 47 after) account for most of the lower title count. Without the patience compensation, four of the sixty-four careers were dismissed.
+
 ## Draft difficulty varies by decade
 
 This is the retained version 3 fictional twenty-club Era League benchmark, measured before the club career. It keeps the original all-era manager options and cannot be read as a career title rate. Add `legacy` to reproduce that manager pool with the current harness.

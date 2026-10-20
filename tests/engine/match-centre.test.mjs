@@ -1,24 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { frame } from '../../app/ui/match-centre.js';
+import { moments, split } from '../../app/ui/match-centre.js';
 
-const match = { gf: 2, ga: 1, et: false, pw: null, sc: [[8, 1, 'a', null], [45, 0, 'b', null], [89, 1, 'c', 'a']] };
-test('playback reveals only goals reached by the clock and never edits the saved result', () => {
-  const before = structuredClone(match);
-  assert.deepEqual(frame(match, 0).score, [0, 0]);
-  assert.deepEqual(frame(match, 44).score, [1, 0]);
-  assert.deepEqual(frame(match, 45).score, [1, 1]);
-  assert.deepEqual(frame(match, 90).score, [2, 1]);
-  assert.equal(frame(match, 44).events.length, 1);
+const match = { k: 'L', gf: 2, ga: 1, et: false, pw: null, sc: [[89, 1, 'c', 'a'], [8, 1, 'a', null], [45, 0, 'b', null]] };
+test('key moments list goals by minute and name the standout without editing the saved result', () => {
+  const before = structuredClone(match), x = moments(match);
+  assert.deepEqual(x.goals.map(e => e[0]), [8, 45, 89]);
+  assert.equal(x.star, 'a');                      // a: 3 + 1 = 4 points, c: 3
+  assert.equal(x.sg, 1);
+  assert.deepEqual(x.form, []);
   assert.deepEqual(match, before);
 });
-test('extra time and penalties are revealed at the end, including events after minute 120', () => {
-  const m = { ...match, gf: 3, et: true, pw: [5, 4], sc: [...match.sc, [121, 1, 'd', null]] };
-  assert.equal(frame(m, 90).done, false);
-  assert.equal(frame(m, 120).done, false);
-  assert.deepEqual(frame(m, 120).score, [2, 1]);
-  assert.equal(frame(m, 121).done, true);
-  assert.deepEqual(frame(m, 121).score, [3, 1]);
-  assert.deepEqual(frame(m, 121).penalties, [5, 4]);
-  assert.equal(frame(m, 90).penalties, null);
+test('a win with three goal involvements earns an in-form; a draw does not', () => {
+  const m = { ...match, gf: 3, ga: 1, sc: [[10, 1, 'a', null], [20, 1, 'a', null], [30, 1, 'b', 'a'], [40, 0, 'z', null]] };
+  assert.deepEqual(moments(m).form, ['a']);
+  assert.equal(moments(m).sg, 2);
+  assert.deepEqual(moments({ ...m, gf: 1, ga: 1 }).form, []);
+});
+test('the run-in starts at the first league match after the opening half', () => {
+  const me = [{ k: 'SC' }, { k: 'L' }, { k: 'EC' }, { k: 'L' }, { k: 'L' }, { k: 'EC' }, { k: 'L' }];
+  const s = { log: [{ t: 'seg', s: 1990, half: 1, w: 1, d: 1, l: 0 }, { t: 'seg', s: 1990, half: 2, w: 2, d: 0, l: 0 }] };
+  assert.equal(split(s, { s: 1990, h: 2, me }), 4);
+  assert.equal(split(s, { s: 1990, h: 1, me: me.slice(0, 4) }), 4);
 });

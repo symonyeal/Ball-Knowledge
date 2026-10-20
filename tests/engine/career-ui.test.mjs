@@ -5,7 +5,7 @@ import * as E from '../../app/engine/index.js';
 import * as D from '../../app/draft.js';
 import * as C from '../../app/career.js';
 import { U } from '../../app/ui/kit.js';
-import { hub, careerShareText } from '../../app/ui/career.js';
+import { hub, careerShareText, matchCards } from '../../app/ui/career.js';
 import { restore } from '../../app/save.js';
 import { named } from '../../app/club.js';
 
@@ -33,6 +33,21 @@ test('the career opens with the actual league size, season objective and winter 
   assert.match(html, /More modes/);
   assert.ok(html.includes(named('L', s.lg, s.S.s)), 'the league is named for its historical era');
   assert.doesNotMatch(html, /undefined|NaN/);
+});
+test('your matches list every match once, split at the winter break, with goals and a league filter', () => {
+  U.G = G; U.S = draft(); const s0 = { ...C.careerStart(G, U.S), pat: 20 }, a = C.careerPlayHalf(G, s0), s = C.careerPlayHalf(G, a);
+  U.S.mode = { career: s }; U.tab = 'fixtures'; U.feed = 'all';
+  const html = hub(), M = s.S.me, n = M.filter(m => m.k === 'L').length;
+  assert.equal((html.match(/<article class="match /g) || []).length, M.length);
+  assert.match(html, /Opening half[\s\S]*Run-in/);
+  assert.equal(html.indexOf('Run-in') < html.lastIndexOf('<article'), true);
+  const goals = M.reduce((x, m) => x + m.sc.length, 0);
+  assert.equal((html.match(/<li class="(mine|them)">/g) || []).length, goals);
+  assert.doesNotMatch(html, /undefined|NaN/);
+  U.feed = 'L';
+  assert.equal((hub().match(/<article class="match /g) || []).length, n);
+  assert.equal(matchCards(s, a.S.me.length).length, M.length - a.S.me.length);
+  U.feed = 'all';
 });
 test('career share text reports the current club season and full league denominator', () => {
   U.G = G; U.S = draft(); U.S.mode = { career: C.careerStart(G, U.S) };

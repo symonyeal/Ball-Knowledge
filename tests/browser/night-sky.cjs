@@ -41,14 +41,15 @@ const sound=async p=>{const bad=await p.evaluate(()=>document.documentElement.sc
   },KEY);
   await p.reload();await ready(p);assert.equal(await p.locator('.hub-tile').count(),6);await shot('04-club-hub');
   const expected=await p.evaluate(async key=>{const C=await import('./app/career.js'),g=await(await fetch('./data/game.json')).json();return C.careerPlayHalf(g,JSON.parse(localStorage.getItem(key)).mode.career);},KEY);
-  await p.click('#career-half');await p.waitForSelector('#match-centre[open]');await p.click('#match-pause');
-  const clock=await p.locator('#match-clock').textContent();await p.waitForTimeout(400);assert.equal(await p.locator('#match-clock').textContent(),clock,'pause holds the clock');
-  await p.click('#match-pause');await p.waitForFunction(()=>document.querySelector('#match-clock').textContent==='Full time');
-  assert.equal(await p.evaluate(()=>document.activeElement.id),'match-next','natural full-time keeps keyboard focus on the next action');
-  const m=expected.S.me[0];assert.equal(await p.locator('#match-score').textContent(),[m.gf,m.ga].join(' – '));
-  assert.match(await p.locator('#match-announcement').textContent(),new RegExp(`Full time.*${m.gf}.*${m.ga}`),'final outcome is announced');
-  await shot('05-match-centre');await p.click('#match-next');assert.match(await p.locator('#match-count').textContent(),/^2 \/ /);await p.click('#match-finish');
-  await p.click('#match-skip');assert.equal(await p.evaluate(()=>document.activeElement.id),'tab-home');assert.deepEqual((await state(p)).mode.career,expected,'playback and Skip preserve the independently computed half');
+  await p.click('#career-half');await p.waitForSelector('#match-centre[open]');
+  assert.ok(await p.locator('#match-centre .match').count()<=2,'results appear one at a time');
+  await p.waitForFunction(()=>document.querySelectorAll('#match-centre .match').length>=3);
+  const m=expected.S.me[0];assert.match(await p.locator('#match-centre .match header b').first().textContent(),new RegExp(`${m.gf}–${m.ga}$`));
+  await shot('05-match-centre');await p.click('#match-all');
+  assert.equal(await p.locator('#match-centre .match').count(),expected.S.me.length);
+  assert.equal(await p.evaluate(()=>document.activeElement.id),'match-close','Show all moves keyboard focus to the close action');
+  assert.match(await p.locator('#match-announcement').textContent(),/^All \d+ results shown/,'completion is announced');
+  await p.click('#match-close');assert.equal(await p.evaluate(()=>document.activeElement.id),'tab-home');assert.deepEqual((await state(p)).mode.career,expected,'playback and closing preserve the independently computed half');
   await p.click('[data-tab="market"]');await ready(p);await shot('06-market');
   const choice=p.locator('.market-choices.targets input').nth(1);
   if(await choice.count()){
@@ -63,11 +64,11 @@ const sound=async p=>{const bad=await p.evaluate(()=>document.documentElement.sc
   await shot('08-clubhouse');await p.click('#clubhouse [data-club-page="sbc"]');await shot('09-challenges');
   assert.equal(await p.locator('.sbc-reward .vc').count(),11);await p.click('#clubhouse-close');
   await p.reload();await ready(p);assert.equal(await p.locator('#match-centre[open]').count(),0);assert.deepEqual((await state(p)).mode.career,expected,'reload resumes the saved half without replaying');
-  // Reduced motion reveals the final result immediately and advances only on request.
+  // Reduced motion shows every result at once.
   await p.emulateMedia({reducedMotion:'reduce'});
-  await p.evaluate(async()=>{document.getElementById('match-centre').remove();const {mountMatchCentre}=await import('./app/ui/match-centre.js'),{U}=await import('./app/ui/kit.js');mountMatchCentre().show(U.S.mode.career.S.me.slice(0,2),U.S.mode.career.q);});
-  assert.equal(await p.locator('#match-centre[open] #match-clock').textContent(),'Full time');await p.locator('#match-centre[open] #match-skip').click();
-  assert.deepEqual(errors,[]);checks.push(`${kind}: modes, position shortlist, hub, card market, timed and reduced-motion playback, Skip and exact reload`);console.log('ok',checks.at(-1));await ctx.close();
+  await p.evaluate(async()=>{document.getElementById('match-centre').remove();const {mountMatchCentre}=await import('./app/ui/match-centre.js'),{matchCards}=await import('./app/ui/career.js'),{U}=await import('./app/ui/kit.js');mountMatchCentre().show(matchCards(U.S.mode.career,0).slice(0,2),'Opening half');});
+  assert.equal(await p.locator('#match-centre[open] .match').count(),2);assert.equal(await p.locator('#match-centre[open] #match-all').isHidden(),true);await p.locator('#match-centre[open] #match-close').click();
+  assert.deepEqual(errors,[]);checks.push(`${kind}: modes, position shortlist, hub, card market, match-by-match and reduced-motion playback, Show all and exact reload`);console.log('ok',checks.at(-1));await ctx.close();
  }
  }finally{await b.close();}
  fs.writeFileSync(path.join(out,'night-sky.json'),JSON.stringify({passed:true,checks},null,2));

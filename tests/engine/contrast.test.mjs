@@ -46,11 +46,11 @@ test('error notices reach 4.5:1', () => {
   for (const f of [T.ink, T.bad]) at(f, prop('.toast--error', 'background'), 4.5);
 });
 
-test('the match clock and league highlight remain readable in light mode', () => {
+test('goal minutes and the league highlight remain readable in light mode', () => {
   const light = Object.fromEntries([...rule('body[data-theme=light]').matchAll(/--([\w-]+):(#[0-9A-Fa-f]{6})/g)].map(m => [m[1],m[2]]));
   const resolve = value => value.replace(/var\(--([^)]*)\)/g, (_,k) => light[k] || T[k]);
   for (const surface of ['n0','n1','n2','n3']) {
-    at(resolve(prop('body[data-theme=light] #match-clock','color')), light[surface], 4.5);
+    at(resolve(prop('.moments li.mine>b','color')), light[surface], 4.5);
     at(resolve(prop('body[data-theme=light] .is-yours','color')), light[surface], 4.5);
   }
 });

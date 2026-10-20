@@ -89,8 +89,6 @@ test('a new season starts without the last season’s in-forms', () => {
   while (s.y === 0) {
     if (s.ph === 'half') s = C.careerPlayHalf(G, s);
     else if (s.ph === 'node') s = C.careerTake(G, s, C.careerOffers(G, s).findIndex(o => ['rest', 'dev'].includes(o.kind)));
-    else if (s.ph === 'hop') { const H = C.careerHopPools(G, s), n = Math.min(1, H.old.length) + Math.min(1, H.neu.length);
-      s = C.careerHop(G, s, { old: H.old.length ? [0] : [], neu: H.neu.length ? [0] : [], out: [12, 13].slice(0, n) }); }
     else {
       if (s.half === 2) { const p = s.slots[9].p; s = { ...s, S: { ...s.S, me: [...s.S.me, { k: 'L', gf: 3, ga: 0, sc: [[1, 1, p, null], [2, 1, p, null], [3, 1, p, null]] }] } }; assert.ok(C.inForms(s)[p] > 0); }
       s = C.careerNext(G, s);
