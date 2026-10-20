@@ -14,6 +14,7 @@ import * as Rn from '../run.js';
 import { code } from '../play.js';
 import { U, esc, num, ord, nm, club, kv, tier, rules, pitch, links, face, capTiles, teamLine, spell, portrait } from './kit.js';
 import { candidate, marketPreview, upgradePreview } from './transfers.js';
+import { card } from './match-centre.js';
 
 export const me = () => { const T = team(U.G, U.S); return { id: 'your-club', nm: 'Your Era XI', T, x: E.rate(T, U.S.D).ovr, me: true }; };
 export function season() {
@@ -82,6 +83,21 @@ export function results() {
 }
 
 // Era Gauntlet
+// runCards(e): the match cards of a round or boss entry of the run log; legs are stored from each home side.
+export function runCards(e) {
+  if (e.t === 'seg') return e.res.map((m, i) => card(m, `${e.D}s · Round ${e.seg + 1} · Match ${i + 1} · ${m.h ? 'Home' : 'Away'}`, `<span>${m.h ? 'v' : 'at'} ${esc(m.op)}</span>`));
+  if (!e.legs) return [];
+  const L = [[e.legs[0][0], e.legs[0][1]], [e.legs[1][1], e.legs[1][0]]], pw = e.pw && [e.pw.y, e.pw.x];
+  return L.map(([gf, ga], i) => card({ gf, ga, ...(e.sc ? { sc: e.sc[i] } : {}) }, `${e.D}s · Boss · Leg ${i + 1} · ${i ? 'Away' : 'Home'}`, `<span>${i ? 'at' : 'v'} ${esc(e.op)}</span>`,
+    i ? [e.et && 'After extra time', pw && `Penalties ${pw.join('–')}`, `Aggregate ${e.agg.join('–')}`, e.won ? 'Boss beaten' : 'Boss tie lost',
+      e.mvp && `MVP: ${esc(nm(e.mvp))} +1 rating`, e.lvp && `LVP: ${esc(nm(e.lvp))} −1 rating`] : []));
+}
+// Formation and two-place swaps between matches, rated for the decade about to be played.
+const runLineup = s => `<details class="breakdown"><summary>Change the lineup</summary><div class="repo-ctl">
+  <label class="field"><span class="lbl">Formation</span><select id="run-form">${Object.keys(U.G.formations).map(f => `<option value="${esc(f)}" ${f === s.f ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select></label>
+  <button class="btn q" type="button" id="run-form-apply">Change formation</button>
+  <label class="field"><span class="lbl">First place</span><select id="run-swap-a">${squadOptions(s)}</select></label><label class="field"><span class="lbl">Second place</span><select id="run-swap-b">${squadOptions(s)}</select></label>
+  <button class="btn q" type="button" id="run-swap">Swap players</button></div></details>`;
 const pips = p => `<span class="pips" role="img" aria-label="Patience ${p} of ${Rn.PAT_MAX}">${Array.from({ length: Rn.PAT_MAX }, (_, i) => `<i class="${i < p ? 'on' : ''}"></i>`).join('')}</span>`;
 const charged = (s, p) => { const r = Rn.bill(U.G, s).find(r => r.p === p); return TI(U.G.cards[r.k].find(c => c.p === p).r); };
 function runSquad(s) {
@@ -129,9 +145,9 @@ function offerCard(o, j, s) {
 }
 function transfer(s) {
   const H = Rn.hopPools(U.G, s);
-  return `<h3>Transfer window</h3><p class="small">Choose ${Math.min(Rn.HOP_N, H.old.length)} players from the ${H.from}s and ${Math.min(Rn.HOP_N, H.neu.length)} from the ${H.to}s. Each replaces a different squad player at no patience cost. Keep your S and A charges within their limits.</p>
-    <div class="rewards transfer-pools">${[['old', H.old, H.from], ['neu', H.neu, H.to]].map(([k, Q, D]) => `<fieldset class="reward"><legend class="lbl">${D}s arrivals</legend>${Q.map((f, i) => `<div class="transfer-pick"><label><input type="checkbox" data-hop-pick="${k}" value="${i}"> ${esc(nm(f.p))} · ${esc(f.l)} · ${Math.round(f.r)} · ${TI(f.r)} tier</label><div data-arrival-preview>${candidate(f)}</div><label class="field"><span class="lbl">Release</span><select id="hop-out-${k}-${i}"><option value="">Choose a squad player</option>${squadOptions(s)}</select></label></div>`).join('')}</fieldset>`).join('')}</div>
-    <p class="small" id="run-transfer-window-status" role="status">Choose the arrivals and different players to release.</p><div id="run-transfer-window-preview"></div><button class="btn" type="button" id="run-hop" disabled>Confirm transfers</button>`;
+  return `<h3>Transfer window</h3><p class="small">Sign one player from the ${H.from}s and one from the ${H.to}s. Each replaces a different squad player at no patience cost. Keep your S and A charges within their limits.</p>
+    <div class="rewards transfer-pools">${[['old', H.old, H.from], ['neu', H.neu, H.to]].map(([k, Q, D]) => `<fieldset class="reward"><legend class="lbl">${D}s arrivals</legend>${Q.map((f, i) => `<div class="transfer-pick"><label><input type="radio" name="run-hop-${k}" data-hop-pick="${k}" value="${i}"> ${esc(nm(f.p))} · ${esc(f.l)} · ${Math.round(f.r)} · ${TI(f.r)} tier</label><div data-arrival-preview>${candidate(f)}</div><label class="field"><span class="lbl">Release</span><select id="hop-out-${k}-${i}"><option value="">Choose a squad player</option>${squadOptions(s)}</select></label></div>`).join('')}</fieldset>`).join('')}</div>
+    <p class="small" id="run-transfer-window-status" role="status">Choose the arrivals and different players to release.</p><div id="run-transfer-window-preview"></div><button class="btn" type="button" id="run-hop" disabled>Confirm transfers and enter the ${H.to}s</button>`;
 }
 const sgn = x => `${x >= 0 ? '+' : '−'}${num(Math.abs(x))}`;
 export function honoured(h, title) {
@@ -160,16 +176,16 @@ export function gauntlet() {
   const { G, S, F } = U, s = S.mode?.run;
   if (!s) {
     return `<div class="challenge-card"><p class="lbl">One squad. Four maps.</p><h2>Era Gauntlet</h2>
-      <p class="small">Choose a three-decade route or all eight decades, forwards or backwards. Each decade has four six-match rounds against rising opposition, a reward after each round, then a two-legged boss tie. A win opens a transfer window and a lineup stage where you may change formation; a loss costs board patience and restarts the decade against a different boss.${S.cap ? ` Hold at most ${Rn.RCAP.S} S-tier and ${Rn.RCAP.A} A-tier charges; earned boosts keep the player’s original charge.` : ''}</p>
+      <p class="small">Choose a three-decade route or all eight decades, forwards or backwards. Each decade has four six-match rounds against rising opposition, a reward after the second and fourth, then a two-legged boss tie. A win opens a transfer window of two signings that leads into the next decade; a loss costs board patience and restarts the decade against a different boss.${S.cap ? ` Hold at most ${Rn.RCAP.S} S-tier and ${Rn.RCAP.A} A-tier charges; earned boosts keep the player’s original charge.` : ''}</p>
       ${mapChoice()}<button class="btn" type="button" id="run-start">Start the Gauntlet</button></div>`;
   }
   const Dc = Rn.D_of(s), b = Rn.runBoss(F, s), last = s.log.at(-1), sc = Rn.score(s);
   let main = '';
   const wait = ['rd', 'node'].includes(s.ph) && s.rd === Rn.N_RD - 1 ? `<p class="run-boss small">Waiting after this round: <b>${esc(b.nm)}</b> · strength ${num(b.x)} against your ${num(E.rate(Rn.runTeam(G, s), Dc).ovr)}.</p>` : '';
-  if (s.ph === 'rd') main = `<p class="small">Round ${s.rd + 1} of ${Rn.N_RD}: six matches against rising ${Dc}s opposition. Earn 13+ points for +2 patience, 18 for +3; fewer than 9 costs patience.</p>${wait}<button class="btn" type="button" id="run-round">Play the round</button>`;
+  if (s.ph === 'rd') main = `<p class="small">Round ${s.rd + 1} of ${Rn.N_RD}: six matches against rising ${Dc}s opposition. Earn 13+ points for +2 patience, 18 for +3; fewer than 9 costs patience. ${Rn.NODE(s.rd) ? 'A reward follows this round.' : 'The next round follows directly.'}</p>${wait}<button class="btn" type="button" id="run-round">Play the round</button>`;
   else if (s.ph === 'node') main = `${wait}<p class="small">Choose one reward. Prices rise by ${Rn.sur(s)} patience in this act.</p><div class="rewards">${Rn.offers(G, F, s).map((o, j) => offerCard(o, j, s)).join('')}</div>`;
   else if (s.ph === 'boss') main = `<p class="small">The ${Dc}s boss: <b>${esc(b.nm)}</b> (strength ${num(b.x)}). Your squad here: ${num(E.rate(Rn.runTeam(G, s), Dc).ovr)}. Home and away, with extra time and penalties if aggregate goals are level.</p><button class="btn" type="button" id="run-boss">Face the boss</button>`;
-  else if (s.ph === 'hop') main = `${honoured(Rn.honours(s, s.act), `The ${Dc}s honours`)}${transfer(s)}`;
+  else if (s.ph === 'hop') main = `${honoured(Rn.honours(s, s.act), `The ${Dc}s honours`)}${keeper(s, Rn.D_next(s))}${rerated(s)}${transfer(s)}`;
   else if (s.ph === 'repo') {
     const D1 = Rn.MAPS[s.map].D[s.act + 1], rec = G.managers.find(m => m.nm === s.m.nm)?.f || [];
     main = `<h3>Prepare for the ${D1}s</h3><p class="small">Swap any two squad places or change formation before entering the next decade. A formation change keeps every card, the bench and your cap charges.</p>
@@ -183,14 +199,15 @@ export function gauntlet() {
   const msg = !last ? '' : last.t === 'seg' ? `Last round: ${last.w}-${last.d}-${last.l}, ${last.pts} points, patience ${last.dp >= 0 ? '+' : ''}${last.dp}.`
     : last.t === 'boss' ? `Boss: ${(last.agg || [last.gx, last.gy]).join('–')}${last.pw ? ' (penalties)' : last.et ? ' (extra time)' : ''}: ${last.won ? 'won' : 'lost'}, patience ${last.dp >= 0 ? '+' : ''}${last.dp}.${last.mvp ? ` MVP: ${nm(last.mvp)} (+1 rating).` : last.lvp ? ` LVP: ${nm(last.lvp)} (−1 rating).` : ''}`
       : last.t === 'boost' ? `Boost card played: ${nm(last.p)} is now ${club(last.to)}.` : last.t === 'sign' ? `Signed ${nm(last.p)}, released ${nm(last.out)}.`
-        : last.t === 'dev' ? `${Rn.DEV[last.id]?.nm || 'Development'}${last.p ? `: ${nm(last.p)}` : ''}.` : last.t === 'hop' ? 'Transfers complete. Rearrange your squad before the next decade.'
+        : last.t === 'dev' ? `${Rn.DEV[last.id]?.nm || 'Development'}${last.p ? `: ${nm(last.p)}` : ''}.` : last.t === 'hop' ? 'Transfers complete.'
           : last.t === 'form' ? `Formation changed to ${last.f}.` : last.t === 'respin' ? 'New transfer offers scouted.' : last.t === 'act' ? `Entered the ${Dc}s.` : 'Rested.';
   return `<section class="run"><div class="run-head"><div><p class="lbl">${esc(Rn.MAPS[s.map].nm)} · ${rules(s)} · decade ${s.act + 1} of ${Rn.MAPS[s.map].D.length}</p><h2>The ${Dc}s</h2></div>
       <div class="run-pat"><span class="lbl">Board patience ${s.pat} / ${Rn.PAT_MAX}</span>${pips(s.pat)}</div></div>
     ${msg ? `<p class="run-msg" role="status">${esc(msg)}</p>` : ''}${main}
     ${['done', 'fired'].includes(s.ph) ? `${mapChoice()}<button class="btn q sm" type="button" id="run-start">Start a new run ↻</button>` : ''}
-    ${runSquad(s)}
-    <div class="mode-log">${s.log.slice().reverse().filter(e => e.t === 'seg' || e.t === 'boss').slice(0, 20).map(e => `<div class="mode-event"><div>${e.D}s · ${e.t === 'seg' ? `Round ${e.seg + 1}` : `Boss · ${esc(e.op)}`}<small>${e.t === 'seg' ? `${e.w}-${e.d}-${e.l} · ${e.gf}–${e.ga}` : `Attempt ${e.n}${e.pw ? ' · penalties' : e.et ? ' · extra time' : ''}`}</small></div><b>${e.t === 'seg' ? `${e.pts} pts` : `${(e.agg || [e.gx, e.gy]).join('–')} ${e.won ? 'win' : 'loss'}`}</b></div>`).join('')}</div></section>`;
+    ${runSquad(s)}${['rd', 'node', 'boss', 'hop'].includes(s.ph) ? runLineup(s) : ''}
+    <h3 class="st">Matches in the ${Dc}s</h3><div class="match-list">${s.log.filter(e => e.act === s.act && ['seg', 'boss'].includes(e.t)).map((e, i, Q) => `<details class="breakdown" ${i === Q.length - 1 ? 'open' : ''}><summary>${e.t === 'seg' ? `Round ${e.seg + 1} · ${e.w}-${e.d}-${e.l} · ${e.gf}–${e.ga}` : `Boss tie · attempt ${e.n} · ${(e.agg || [e.gx, e.gy]).join('–')} ${e.won ? 'won' : 'lost'}`}</summary><div class="match-list">${runCards(e).join('')}</div></details>`).join('') || '<p class="empty">Your matches appear after the first round.</p>'}</div>
+    <div class="mode-log">${s.log.slice().reverse().filter(e => (e.t === 'seg' || e.t === 'boss') && e.act !== s.act).slice(0, 20).map(e => `<div class="mode-event"><div>${e.D}s · ${e.t === 'seg' ? `Round ${e.seg + 1}` : `Boss · ${esc(e.op)}`}<small>${e.t === 'seg' ? `${e.w}-${e.d}-${e.l} · ${e.gf}–${e.ga}` : `Attempt ${e.n}${e.pw ? ' · penalties' : e.et ? ' · extra time' : ''}`}</small></div><b>${e.t === 'seg' ? `${e.pts} pts` : `${(e.agg || [e.gx, e.gy]).join('–')} ${e.won ? 'win' : 'loss'}`}</b></div>`).join('')}</div></section>`;
 }
 
 // A Gauntlet draft's results page: the run itself, then the replay controls.

@@ -31,6 +31,7 @@ export { TI, CAP, GCAP, RCAP } from './cap.js';
 //              5 patience: cut-price stars, 1 patience, free at 2 or less
 //   LINES      position lines by first position, for the transfer window and development
 //   HOP_N      signings from each decade in the transfer window (Eraball 1 of 3 each for 9 places)
+//   NODE(rd)   whether round rd ends in a reward: rounds 2 and 4; rounds 1 and 3 run straight on
 //   bossAt     the act's boss from the seed; a retry draws a different one of the three
 //   pl         per-player tallies of a round or boss tie, person -> [goals, assists, clean sheets, apps]
 //   state v 3: seed, cap, map, m (the draft's team), f (formation), slots, act, rd, ph (rd | node | boss | hop | repo | done | fired),
@@ -45,7 +46,9 @@ export const MAPS = {
   odyssey: { nm: 'The Full Odyssey', D: [1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020], tx: 'All eight decades in order, a boss in every one. The longest run.' },
   reverse: { nm: 'Odyssey in Reverse', D: [2020, 2010, 2000, 1990, 1980, 1970, 1960, 1950], tx: 'All eight decades from the 2020s back to the 1950s.' },
 };
-export const N_RD = 4, N_M = 6, PAT0 = 8, PAT_MAX = 20, B_WIN = 4, DESP = 5, HOP_N = 2;
+export const N_RD = 4, N_M = 6, PAT0 = 8, PAT_MAX = 20, B_WIN = 4, DESP = 5, HOP_N = 1;
+// Rounds rd (0-based) followed by a reward: the second and the fourth.
+export const NODE = rd => rd % 2 === 1;
 export const B_LOSS = n => (n === 0 ? 4 : 6);
 export const dP = p => (p >= 18 ? 3 : p >= 13 ? 2 : p >= 12 ? 1 : p >= 9 ? 0 : p >= 7 ? -2 : p >= 4 ? -3 : p >= 2 ? -4 : -5);
 const LAD = [[10, 16], [6, 12], [3, 9], [0, 6]];
@@ -123,11 +126,15 @@ export function runTeam(G, s) {
   return { m, S: shape(G, s.f), xi: Q.slice(0, 11), bn: Q.slice(11), lk: s.badge?.glue ? 1.5 : 1, gs: s.badge?.mgr || 0 };
 }
 
-// Formation change in the lineup stage between decades: the draft's policy on the run's own cards
-// (tags, MVP points, signing terms), rated for the decade about to be played. Logged as {t: 'form'}.
+// Lineup changes are open between matches; in the transfer window (or a legacy lineup stage) they are
+// rated for the decade about to be played.
+const between = s => ['rd', 'node', 'boss', 'hop', 'repo'].includes(s.ph);
+export const D_next = s => ['hop', 'repo'].includes(s.ph) ? MAPS[s.map].D[s.act + 1] : D_of(s);
+
+// Formation change: the draft's policy on the run's own cards (tags, MVP points, signing terms). Logged as {t: 'form'}.
 export function runForm(G, s, f) {
-  if (s.ph !== 'repo') throw new Error('Change formation after the transfer window, before the next decade.');
-  const T = runTeam(G, s), o = move(T.xi, T.S, shape(G, f), MAPS[s.map].D[s.act + 1]);
+  if (!between(s)) throw new Error('The run is over.');
+  const T = runTeam(G, s), o = move(T.xi, T.S, shape(G, f), D_next(s));
   const slots = [...Array(11).fill(null), ...s.slots.slice(11)];
   o.forEach((j, i) => { slots[j] = s.slots[i]; });
   return { ...s, f, slots, log: [...s.log, { t: 'form', act: s.act, f }] };
@@ -138,6 +145,9 @@ const me = (G, s) => ({ id: 'your-club', nm: 'Your Era XI', T: runTeam(G, s), me
 export function runBoss(F, s) {
   return s.ph === 'done' || s.ph === 'fired' ? null : F[D_of(s)][s.boss];
 }
+
+// Goals of match M as [minute, mine, scorer, assist], mine when your side is home iff h.
+const goals = (M, h) => M.ev.map(e => [e.m, Number((e.t === 0) === h), e.sc || null, e.as || null]);
 
 // Our players' tallies from a stats map filled by note().
 const tally = st => Object.fromEntries([...st.values()].filter(p => p.cl === 'your-club').map(p => [p.id, [p.g, p.as, p.cs, p.ap]]));
@@ -158,11 +168,12 @@ export function runRound(G, F, s) {
     const a = h ? M.gx : M.gy, b = h ? M.gy : M.gx;
     gf += a; ga += b;
     if (a > b) { w++; pts += 3; } else if (a === b) { d++; pts++; } else l++;
-    res.push({ op: o.nm, h, gf: a, ga: b });
+    res.push({ op: o.nm, h, gf: a, ga: b, sc: goals(M, h) });
   });
   const dp = dP(pts), pat = clamp(s.pat + dp);
   const e = { t: 'seg', D, act: s.act, seg: s.rd, w, d, l, pts, gf, ga, dp, res, pl: tally(st) };
-  return { ...s, pat, ph: pat <= 0 ? 'fired' : 'node', fa: 0, prem: 0, log: [...s.log, e] };
+  const next = NODE(s.rd) ? { ph: 'node' } : { ph: 'rd', rd: s.rd + 1 };
+  return { ...s, pat, ...(pat <= 0 ? { ph: 'fired' } : next), fa: 0, prem: 0, log: [...s.log, e] };
 }
 
 // Boss tie MVP (won) and LVP (lost) from the tie's recorded events: MVP has the best 4 goals + 3
@@ -189,7 +200,7 @@ export function runPlayBoss(G, F, s) {
   if (lvp) mv[lvp] = (mv[lvp] || 0) - 1;
   const dp = won ? B_WIN : -B_LOSS(s.lost), pat = clamp(s.pat + dp);
   const e = { t: 'boss', D, act: s.act, op: B.nm, n, won, agg: t.agg, legs: t.legs.map(M => [M.gx, M.gy]), et: t.et,
-    pw: t.pw ? { w: t.pw.w, x: t.pw.x, y: t.pw.y } : null, dp, mvp, lvp, pl: tally(st) };
+    pw: t.pw ? { w: t.pw.w, x: t.pw.x, y: t.pw.y } : null, dp, mvp, lvp, pl: tally(st), sc: [goals(t.legs[0], true), goals(t.legs[1], false)] };
   const log = [...s.log, e];
   if (won) return { ...s, tries, mv, pat, ph: isLast(s) ? 'done' : 'hop', log };
   if (pat <= 0) return { ...s, tries, mv, pat: 0, lost: s.lost + 1, ph: 'fired', log };
@@ -364,11 +375,11 @@ export function hop(G, s, sel = {}) {
   for (const i of out) x = { ...x, ...drop(x, s.slots[i].p) };
   ins.forEach((f, j) => { slots[out[j]] = { k: f.k, p: f.p }; });
   if (s.cap) ck(G, bill(G, { ...x, slots }), RCAP);
-  return { ...x, slots, ph: 'repo', log: [...s.log, { t: 'hop', act: s.act, in: ins.map(f => [f.k, f.p]), out: out.map(i => s.slots[i].p) }] };
+  return nextAct({ ...x, slots, ph: 'repo', log: [...s.log, { t: 'hop', act: s.act, in: ins.map(f => [f.k, f.p]), out: out.map(i => s.slots[i].p) }] });
 }
 
 export function runSwap(s, a, b) {
-  if (s.ph !== 'repo') throw new Error('The lineup can be rearranged after the transfer window.');
+  if (!between(s)) throw new Error('The run is over.');
   if (![a, b].every(i => Number.isInteger(i) && i >= 0 && i < 15)) throw new Error('Choose two squad places.');
   const slots = s.slots.slice(); [slots[a], slots[b]] = [slots[b], slots[a]];
   return { ...s, slots };
@@ -420,19 +431,23 @@ export function validRun(G, r0, manager, cap) {
   const act = e => obj(e) && M && int(e.act, 0, M.D.length - 1) && e.D === M.D[e.act];
   const tg = (k, v) => (['tal', 'rock', 'mae', 'poa', 'tl', 'vs', 'ss'].includes(k) && (v === 1 || v === 2)) || (k === 'bg' && int(v, 1, 3));
   const pair = x => Array.isArray(x) && x.length === 2 && x.every(y => int(y));
+  const sc = x => Array.isArray(x) && x.every(g => Array.isArray(g) && g.length === 4 && int(g[0], 0, 150) && int(g[1], 0, 1) &&
+    (g[2] === null || typeof g[2] === 'string') && (g[3] === null || typeof g[3] === 'string'));
   const pl = x => x === undefined || (obj(x) && Object.entries(x).every(([p, v]) => person(p) && Array.isArray(v) && v.length === 4 && v.every(y => int(y))));
   const log = e => {
     if (!obj(e)) return false;
     if (e.t === 'seg') return act(e) && pl(e.pl) && int(e.seg, 0, N_RD - 1) && [e.w, e.d, e.l, e.gf, e.ga].every(x => int(x)) &&
       e.w + e.d + e.l === N_M && e.pts === 3 * e.w + e.d && int(e.dp, -5, 3) &&
-      Array.isArray(e.res) && e.res.length === N_M && e.res.every(f => obj(f) && typeof f.op === 'string' && typeof f.h === 'boolean' && int(f.gf) && int(f.ga));
+      Array.isArray(e.res) && e.res.length === N_M && e.res.every(f => obj(f) && typeof f.op === 'string' && typeof f.h === 'boolean' && int(f.gf) && int(f.ga) &&
+        (f.sc === undefined || (sc(f.sc) && f.sc.filter(g => g[1]).length === f.gf && f.sc.length === f.gf + f.ga)));
     if (e.t === 'boss') {
       const base = act(e) && pl(e.pl) && typeof e.op === 'string' && int(e.n, 1) && typeof e.won === 'boolean' && typeof e.et === 'boolean' && [4, -4, -6].includes(e.dp);
       if (!base) return false;
       if (e.legs === undefined) return int(e.gx) && int(e.gy) && (!e.pw || (obj(e.pw) && int(e.pw.w, 0, 1) && int(e.pw.x) && int(e.pw.y)));
       return pair(e.agg) && Array.isArray(e.legs) && e.legs.length === 2 && e.legs.every(pair) &&
         (e.pw === null || (obj(e.pw) && int(e.pw.w, 0, 1) && int(e.pw.x) && int(e.pw.y))) &&
-        (e.mvp === null || person(e.mvp)) && (e.lvp === null || person(e.lvp)) && !(e.mvp && e.lvp);
+        (e.mvp === null || person(e.mvp)) && (e.lvp === null || person(e.lvp)) && !(e.mvp && e.lvp) &&
+        (e.sc === undefined || (Array.isArray(e.sc) && e.sc.length === 2 && e.sc.every(sc)));
     }
     if (e.t === 'rest') return int(e.gain, 0, 2);
     if (e.t === 'boost') return ref(e.from, e.p) && ref(e.to, e.p) && int(e.cost, 1, 12);
@@ -441,7 +456,7 @@ export function validRun(G, r0, manager, cap) {
     if (e.t === 'dev') return Object.hasOwn(DEV, e.id) && int(e.cost, 1, 12) && (DEV[e.id].team ? e.p === undefined : person(e.p) && int(e.lv, 1, DEV[e.id].mx));
     if (e.t === 'respin') return typeof e.prem === 'boolean' && int(e.cost, 1, 12);
     if (e.t === 'hop') return M && int(e.act, 0, M.D.length - 2) && Array.isArray(e.in) && Array.isArray(e.out) && e.in.length === e.out.length &&
-      e.in.length <= 2 * HOP_N && e.in.every(x => Array.isArray(x) && ref(x[0], x[1])) && e.out.every(person);
+      e.in.length <= 4 && e.in.every(x => Array.isArray(x) && ref(x[0], x[1])) && e.out.every(person);
     if (e.t === 'act') return M && int(e.act, 1, M.D.length - 1);
     if (e.t === 'form') return M && int(e.act, 0, M.D.length - 2) && typeof e.f === 'string' && Object.hasOwn(G.formations, e.f);
     return false;

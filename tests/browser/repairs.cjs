@@ -51,7 +51,7 @@ const sound=async(p,label='')=>{
     for(let j=0;j<5;j++){d=D.spin(g,d);for(let k=0;k<3;k++)d=D.place(g,d,g.cards[d.combo].find(c=>D.can(g,d,c.p)).p,j*3+k);}
     d={...d,phase:'results'};let s={...C.careerStart(g,d),pat:20};s=C.careerPlayHalf(g,C.careerPlayHalf(g,s));
     if(s.ph!=='node')throw Error('Fixture did not reach a reward window');
-    const run=R.runRound(g,fields(g),{...R.runNew(d.seed,d,'original'),pat:20});
+    const run=R.runRound(g,fields(g),R.runRound(g,fields(g),{...R.runNew(d.seed,d,'original'),pat:20}));
     d.mode={career:s,run};localStorage.setItem(key,JSON.stringify(d));
    },KEY);
    await p.reload();await ready(p);await p.waitForSelector('[data-career-fa]');

@@ -2,7 +2,7 @@
 // It never runs the simulator.
 // moments(m): goals in minute order, the standout (3 per goal, 1 per assist, ties by id), in-form earners.
 // split(s, S): index of the first run-in match in S.me: the (n1+1)-th league match, n1 = league matches in half 1.
-// matchCard(s, S, i): one match; a deciding leg carries the aggregate and whether you went through.
+// card(...): one match card; matchCard(s, S, i): a career match, whose deciding leg carries the aggregate and the outcome.
 // mountMatchCentre(): reveals the new half's cards one at a time; Show all reveals the rest.
 import { U, esc, nm, crest } from './kit.js';
 import { cname, named } from '../club.js';
@@ -29,19 +29,28 @@ export function split(s, S) {
 }
 
 const comp = (s, S, k) => k === 'L' ? named('L', s.lg, S.s) || U.G.lg[s.lg].nm : S.K[k]?.nm || k;
+// card(m, head, op, notes, form): one match m = {gf, ga, sc?}; head and op are escaped HTML; notes precede the
+// standout; form adds in-form earners (career only). A record without sc predates saved goals.
+export function card(m, head, op, notes = [], form = false, comp = '') {
+  const x = moments({ sc: [], ...m }), r = m.gf > m.ga ? 'W' : m.gf < m.ga ? 'L' : 'D';
+  const N = [...notes, x.star && `Standout: ${esc(nm(x.star))}${x.sg > 1 ? `, ${x.sg} goals` : ''}`, ...(form ? x.form.map(p => `In-form: ${esc(nm(p))} +1`) : [])].filter(Boolean);
+  const G = !m.sc ? '<p class="small dim">Goals were not recorded in this older save.</p>' : x.goals.length
+    ? `<ol class="moments">${x.goals.map(([t, mine, a, b]) => `<li class="${mine ? 'mine' : 'them'}"><b>${t}′</b> ${a ? esc(nm(a)) : 'Scorer unrecorded'}${b ? ` <small>(${esc(nm(b))})</small>` : ''}${mine ? '' : ' <small>· opponent</small>'}</li>`).join('')}</ol>`
+    : '<p class="small dim">No goals.</p>';
+  return `<article class="match ${r}"${comp ? ` data-comp="${comp}"` : ''}>
+    <header><span class="lbl">${head}</span><b>${r} ${m.gf}–${m.ga}</b></header><p class="match-op">${op}</p>
+    ${G}${N.length ? `<p class="small match-notes">${N.join(' · ')}</p>` : ''}</article>`;
+}
+
 export function matchCard(s, S, i) {
-  const m = S.me[i], n = id => esc(cname(U.G, id)), x = moments(m), r = m.gf > m.ga ? 'W' : m.gf < m.ga ? 'L' : 'D';
+  const m = S.me[i];
   const legs = S.me.filter(f => f.k === m.k && f.rd === m.rd && f.op === m.op), last = legs.length === 2 && legs[1] === m;
   const t = m.k !== 'L' && (legs.length === 1 || last) ? S.K[m.k]?.R.flat().find(t => t.rd === m.rd && [t.A, t.B].includes(m.op) && [t.A, t.B].includes(s.q)) : null;
   const agg = last ? [legs[0].gf + m.gf, legs[0].ga + m.ga] : null;
   const notes = [m.et && 'After extra time', m.pw && `Penalties ${m.pw.join('–')}`, agg && `Aggregate ${agg.join('–')}`,
-    t && (m.rd === 'Final' ? (t.w === s.q ? 'Trophy won' : 'Runners-up') : t.w === s.q ? 'Through' : 'Out'),
-    x.star && `Standout: ${esc(nm(x.star))}${x.sg > 1 ? `, ${x.sg} goals` : ''}`, ...x.form.map(p => `In-form: ${esc(nm(p))} +1`)].filter(Boolean);
-  return `<article class="match ${r}" data-comp="${m.k === 'L' ? 'L' : 'K'}">
-    <header><span class="lbl">${esc(m.rd)} · ${esc(comp(s, S, m.k))} · ${m.h === 'H' ? 'Home' : m.h === 'A' ? 'Away' : 'Neutral'}</span><b>${r} ${m.gf}–${m.ga}</b></header>
-    <p class="match-op">${crest(m.op)}<span>${m.h === 'A' ? 'at' : 'v'} ${n(m.op)}</span></p>
-    ${x.goals.length ? `<ol class="moments">${x.goals.map(([t, mine, a, b]) => `<li class="${mine ? 'mine' : 'them'}"><b>${t}′</b> ${a ? esc(nm(a)) : 'Scorer unrecorded'}${b ? ` <small>(${esc(nm(b))})</small>` : ''}${mine ? '' : ' <small>· opponent</small>'}</li>`).join('')}</ol>` : '<p class="small dim">No goals.</p>'}
-    ${notes.length ? `<p class="small match-notes">${notes.join(' · ')}</p>` : ''}</article>`;
+    t && (m.rd === 'Final' ? (t.w === s.q ? 'Trophy won' : 'Runners-up') : t.w === s.q ? 'Through' : 'Out')];
+  return card(m, `${esc(m.rd)} · ${esc(comp(s, S, m.k))} · ${m.h === 'H' ? 'Home' : m.h === 'A' ? 'Away' : 'Neutral'}`,
+    `${crest(m.op)}<span>${m.h === 'A' ? 'at' : 'v'} ${esc(cname(U.G, m.op))}</span>`, notes, true, m.k === 'L' ? 'L' : 'K');
 }
 
 export function mountMatchCentre() {

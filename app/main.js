@@ -9,7 +9,7 @@ import { wk, code, uncode, h2h } from './play.js';
 import { U, esc, nm, club, kv, rules, vcard, keys } from './ui/kit.js';
 import { intro, teams } from './ui/lobby.js';
 import { desk, rosterList } from './ui/desk.js';
-import { results, about, season, me, shareText, cardImage, signing, arena, runShareText } from './ui/season.js';
+import { results, about, season, me, shareText, cardImage, signing, arena, runShareText, runCards } from './ui/season.js';
 import { hub, careerShareText, careerCardImage, careerSigning, matchCards } from './ui/career.js';
 import { mountClubhouse } from './ui/clubhouse.js';
 import { mountPortraits } from './portraits.js';
@@ -361,8 +361,10 @@ root.addEventListener('click', async e => {
     else if (b.id === 'career-next') setCareer(Cr.careerNext(G, U.S.mode.career));
     else if (b.id === 'career-evo-start') { const s = U.S.mode.career, o = Cr.evoOptions(G, s)[Number($('#career-evo').value)]; setCareer(Cr.careerAction(G, s, { type: 'evo', p: o.p, id: o.id }), `Evolution started: ${Cr.EVO[o.id].nm}.`); }
     else if (b.id === 'run-start') { const r = Rn.runNew(U.S.seed, U.S, $('#run-map').value); setRun(r, `The Gauntlet begins in the ${Rn.D_of(r)}s.`); }
-    else if (b.id === 'run-round') setRun(Rn.runRound(G, U.F, U.S.mode.run));
-    else if (b.id === 'run-boss') setRun(Rn.runPlayBoss(G, U.F, U.S.mode.run));
+    else if (b.id === 'run-round' || b.id === 'run-boss') {
+      const s = (b.id === 'run-round' ? Rn.runRound : Rn.runPlayBoss)(G, U.F, U.S.mode.run), e = s.log.at(-1);
+      setRun(s); matchCentre.show(runCards(e), e.t === 'seg' ? `${e.D}s · Round ${e.seg + 1}` : `${e.D}s · Boss tie`);
+    }
     else if (b.dataset.respin) setRun(Rn.respin(G, U.F, U.S.mode.run, b.dataset.respin === 'premium'));
     else if (b.id === 'run-hop') {
       const Q = [...root.querySelectorAll('[data-hop-pick]:checked')], sel = { old: [], neu: [], out: [] };

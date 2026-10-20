@@ -117,6 +117,17 @@ The career dropped its winter window and summer transfer stage: one change per s
 
 The career stays easy for this policy; fewer prime upgrades (317 before, 47 after) account for most of the lower title count. Without the patience compensation, four of the sixty-four careers were dismissed.
 
+## Gauntlet: two rewards and two transfers per decade (2026-10-20)
+
+Rewards now follow rounds 2 and 4 only, and the transfer window signs one player from each decade instead of two. Forty capped runs of Odyssey in Reverse (`node tests/balance.mjs gauntlet 40 5 cap reverse`, seeds 500-539) before (49da2ce) and after:
+
+| Version | Decades cleared: runs | Median | Full clears |
+| --- | --- | ---: | ---: |
+| before | 0: 4, 1: 22, 2: 7, 3: 4, 8: 3 | 1 | 3 |
+| after | 0: 6, 1: 17, 2: 6, 3: 4, 4: 1, 8: 6 | 1 | 6 |
+
+The median is unchanged, so no compensation was added. The policy signs the lowest-rated arrivals, so fewer forced arrivals helps it; this does not measure human play.
+
 ## Draft difficulty varies by decade
 
 This is the retained version 3 fictional twenty-club Era League benchmark, measured before the club career. It keeps the original all-era manager options and cannot be read as a career title rate. Add `legacy` to reproduce that manager pool with the current harness.

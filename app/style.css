@@ -526,6 +526,7 @@ tbody tr:last-child td{border-bottom:0}
 .transfer-pick{padding:10px 0;border-bottom:1px solid var(--l1);font-size:14px}
 .transfer-pick input{accent-color:#fff;width:16px;height:16px}
 .repo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,320px);gap:20px;align-items:start}
+.run>*{min-width:0}.repo-ctl{display:grid;gap:8px;min-width:0}.repo-ctl select{width:100%;max-width:100%;min-width:0}
 .repo .xi{grid-template-columns:minmax(0,360px) minmax(0,1fr)}
 .mode-log{max-height:420px;overflow:auto;border-radius:12px;border:1px solid var(--l1)}
 .mode-event{display:flex;justify-content:space-between;gap:14px;padding:10px 14px;border-bottom:1px solid var(--l1);background:var(--n1);font-size:14px}

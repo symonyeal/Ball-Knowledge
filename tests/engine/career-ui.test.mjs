@@ -8,6 +8,9 @@ import { U } from '../../app/ui/kit.js';
 import { hub, careerShareText, matchCards } from '../../app/ui/career.js';
 import { restore } from '../../app/save.js';
 import { named } from '../../app/club.js';
+import * as Rn from '../../app/run.js';
+import { fields } from '../../app/data.js';
+import { runCards } from '../../app/ui/season.js';
 
 const G = JSON.parse(readFileSync(new URL('../../data/game.json', import.meta.url)));
 E.cfg(G.params);
@@ -48,6 +51,18 @@ test('your matches list every match once, split at the winter break, with goals 
   assert.equal((hub().match(/<article class="match /g) || []).length, n);
   assert.equal(matchCards(s, a.S.me.length).length, M.length - a.S.me.length);
   U.feed = 'all';
+});
+test('a Gauntlet round and boss tie list each match with its goals; older records show scores only', () => {
+  U.G = G; U.F = fields(G); U.S = draft();
+  const s = Rn.runRound(G, U.F, { ...Rn.runNew(7, U.S, 'reverse'), pat: 20 }), e = s.log.at(-1), C6 = runCards(e).join('');
+  assert.equal((C6.match(/<article class="match /g) || []).length, 6);
+  assert.equal((C6.match(/<li class="(mine|them)">/g) || []).length, e.res.reduce((n, m) => n + m.gf + m.ga, 0));
+  assert.doesNotMatch(C6, /undefined|NaN/);
+  assert.match(runCards({ ...e, res: e.res.map(({ sc, ...m }) => m) })[0], /not recorded/);
+  const b = Rn.runPlayBoss(G, U.F, { ...s, ph: 'boss', rd: 4 }).log.at(-1), B = runCards(b);
+  assert.equal(B.length, 2);
+  assert.match(B[1], new RegExp(`Aggregate ${b.agg[0]}–${b.agg[1]}`));
+  assert.match(B[1], b.won ? /Boss beaten/ : /Boss tie lost/);
 });
 test('career share text reports the current club season and full league denominator', () => {
   U.G = G; U.S = draft(); U.S.mode = { career: C.careerStart(G, U.S) };

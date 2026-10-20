@@ -50,11 +50,11 @@ test('a career signing shows incoming and outgoing cards before commitment',()=>
  assert.equal(JSON.stringify(s),before,'preview must not mutate the saved career');
 });
 test('Gauntlet summer previews rate arrivals for the upcoming decade',()=>{
- const s={...R.runNew(851,draft(),'odyssey'),ph:'hop'}, sel={old:[0,1],neu:[0,1],out:[11,12,13,14]};
+ const s={...R.runNew(851,draft(),'odyssey'),ph:'hop'}, sel={old:[0],neu:[0],out:[13,14]};
  const next=R.hop(G,s,sel), expected=E.rate(R.runTeam(G,next),1960).ovr.toFixed(1);
- const x=windowPreview(s,sel,false);
+ const x=windowPreview(s,sel);
  assert.equal(x.ok,true);
  assert.ok(x.html.includes(`→ ${expected} (`),'squad overall must match the upcoming preparation screen');
  assert.match(x.html,/1960s/);
- assert.equal(windowPreview(s,{...sel,out:[11,11,13,14]},false).ok,false,'duplicate departures are blocked');
+ assert.equal(windowPreview(s,{...sel,out:[14,14]}).ok,false,'duplicate departures are blocked');
 });
