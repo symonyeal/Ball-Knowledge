@@ -23,6 +23,7 @@ function draft(seed = 17, D = 1990, cap = false) {
 }
 const d = draft(), newCareer = () => C.careerStart(G, d);
 const rest = s => C.careerTake(G, s, C.careerOffers(G, s).findIndex(o => o.kind === 'rest'));
+const summer = s => C.careerPlayHalf(G, C.careerPlayHalf(G, s));
 
 test('the career requires fifteen cards and covers the club league for the available decade', () => {
   assert.throws(() => C.careerStart(G, { ...d, slots: d.slots.slice(1) }), /fifteen|finished/i);
@@ -31,7 +32,7 @@ test('the career requires fifteen cards and covers the club league for the avail
   assert.equal(s.years.length, 10);
   assert.equal(s.S.s, s.years[0]);
   assert.ok(s.S.ord.includes(d.manager.q));
-  assert.equal(s.pat, 8);
+  assert.equal(s.pat, C.CPAT0);
   assert.equal(s.ph, 'half');
   assert.deepEqual(C.validCareer(G, s, d.manager, d.cap), s);
 });
@@ -43,27 +44,26 @@ test('the expectation scale pays the eight Eraball patience steps including par 
   assert.equal(C.careerDelta(18, 18, 30), 0);
 });
 
-test('a winter save resumes deterministically and playing a half leaves the prior state untouched', () => {
+test('the opening half runs straight into the run-in, and a summer save resumes deterministically', () => {
   const s = newCareer(), saved = JSON.stringify(s), t = C.careerPlayHalf(G, s);
   assert.equal(JSON.stringify(s), saved);
   assert.equal(t.half, 1);
-  assert.ok(['node', 'fired'].includes(t.ph));
+  assert.ok(['half', 'fired'].includes(t.ph));
   assert.deepEqual(C.careerPlayHalf(G, s), t);
   if (t.ph === 'fired') return;
-  const a = rest(t), b = rest(C.validCareer(G, JSON.parse(JSON.stringify(t)), d.manager, d.cap));
-  assert.equal(a.ph, 'repo');
-  const resumed = C.careerNext(G, b), ready = C.careerNext(G, a);
-  assert.equal(ready.y, 0);
-  assert.equal(ready.ph, 'half');
-  assert.deepEqual(C.careerPlayHalf(G, ready), C.careerPlayHalf(G, resumed));
-  assert.throws(() => C.careerPlayHalf(G, t), /window|reward/i);
+  assert.deepEqual(t.node, s.node, 'no winter window');
+  const u = C.careerPlayHalf(G, { ...t, pat: 20 });
+  assert.equal(u.ph, 'node');
+  assert.equal(u.node.left, 1);
+  assert.throws(() => C.careerPlayHalf(G, u), /window|reward/i);
+  const take = x => C.careerAction(G, x, { type: 'take', index: C.careerOffers(G, x).findIndex(o => o.kind === 'rest') });
+  const a = take(u), b = take(C.validCareer(G, JSON.parse(JSON.stringify(u)), d.manager, d.cap));
+  assert.equal(a.y, 1); assert.equal(a.half, 0); assert.equal(a.ph, 'half');
+  assert.deepEqual(C.careerPlayHalf(G, a), C.careerPlayHalf(G, b));
 });
 
 test('the season objective, cabinet and season history are resolved after the run-in', () => {
-  let s = C.careerPlayHalf(G, { ...newCareer(), pat: 20 });
-  const j = C.careerOffers(G, s).findIndex(o => o.kind === 'dev' && o.cost < s.pat && o.id !== 'upg');
-  s = C.careerNext(G, C.careerTake(G, s, j));
-  s = C.careerPlayHalf(G, s);
+  const s = summer({ ...newCareer(), pat: 20 });
   assert.equal(s.half, 2);
   assert.equal(s.history.length, 1);
   const h = s.history[0], boss = s.log.find(e => e.t === 'boss');
@@ -74,12 +74,12 @@ test('the season objective, cabinet and season history are resolved after the ru
   assert.equal(h.real.n, s.S.ord.length);
   assert.equal(h.w + h.d + h.l, 2 * (s.S.ord.length - 1));
   assert.deepEqual(s.trophies.map(t => t.k), h.trophies);
-  assert.ok(s.node.free >= 0);
+  assert.deepEqual(s.node, { window: 'summer', left: 1, free: Number(h.trophies.length > 0) });
   assert.deepEqual(C.validCareer(G, s, d.manager, d.cap), s);
 });
 
 test('desperation signings at two patience are free but paid rewards preserve the last point', () => {
-  let s = C.careerPlayHalf(G, { ...newCareer(), pat: 20 });
+  let s = summer({ ...newCareer(), pat: 20 });
   s = { ...s, pat: 2 };
   const O = C.careerOffers(G, s), j = O.findIndex(o => o.kind === 'desp');
   assert.ok(j >= 0);
@@ -91,35 +91,35 @@ test('desperation signings at two patience are free but paid rewards preserve th
   assert.throws(() => C.careerTake(G, s, k), /patience/i);
 });
 
-test('each trophy grants an extra free reward without consuming patience', () => {
-  const base = C.careerPlayHalf(G, { ...newCareer(), pat: 20 });
-  const s = { ...base, pat: 8, node: { ...base.node, left: 2, free: 1 } };
+test('a trophy makes the single summer change free', () => {
+  const base = summer({ ...newCareer(), pat: 20 });
+  const s = { ...base, pat: 8, node: { ...base.node, left: 1, free: 1 } };
   const O = C.careerOffers(G, s), j = O.findIndex(o => o.kind === 'dev' && o.id !== 'upg');
   assert.ok(j >= 0);
   const t = C.careerTake(G, s, j);
   assert.equal(t.pat, s.pat);
-  assert.equal(t.node.left, 1);
-  assert.equal(t.node.free, 0);
-  assert.equal(t.ph, 'node');
+  assert.deepEqual([t.node.left, t.node.free, t.ph], [0, 0, 'repo']);
 });
 
-test('a summer window swaps two distinct people, keeps tiers and repositions before the next season', () => {
-  const initial = newCareer();
-  const s = { ...initial, ph: 'hop', half: 2, S: { ...initial.S, h: 2 }, pat: 12 };
-  const H = C.careerHopPools(G, s);
-  assert.equal(H.old.length, 3);
-  assert.equal(H.neu.length, 3);
-  assert.equal(new Set([...H.old, ...H.neu].map(c => c.p)).size, 6);
-  assert.throws(() => C.careerHop(G, s, { old: [0], neu: [0], out: [14, 14] }), /different|distinct/i);
-  const t = C.careerHop(G, s, { old: [0], neu: [0], out: [13, 14] });
-  assert.equal(t.ph, 'repo');
-  assert.equal(t.pat, 12);
-  assert.equal(new Set(t.slots.map(c => c.p)).size, 15);
-  const u = C.careerNext(G, C.careerSwap(t, 0, 11));
-  assert.equal(u.y, 1);
-  assert.equal(u.S.s, initial.years[1]);
-  assert.equal(u.ph, 'half');
-  assert.equal(u.slots[11].p, t.slots[0].p);
+test('the summer market adds the next season rivals and lineup changes are open between matches', () => {
+  const s = summer({ ...newCareer(), pat: 20 }), next = s.years[s.y + 1];
+  const rivals = new Set(Club.rows(G, s.lg, next).map(r => r[0]).filter(q => q !== s.q));
+  const L = C.careerOffers(G, s).find(o => o.kind === 'market').list;
+  assert.ok(L.length > 3 && L.length <= 6);
+  assert.equal(new Set(L.map(c => c.p)).size, L.length);
+  assert.ok(L.slice(3).every(c => rivals.has(c.k.split(':')[0])));
+  const t = C.careerSwap(s, 0, 11);
+  assert.equal(t.slots[11].p, s.slots[0].p);
+  assert.equal(C.careerSwap(C.careerPlayHalf(G, newCareer()), 0, 11).ph, 'half');
+  assert.throws(() => C.careerSwap({ ...s, ph: 'done' }, 0, 11), /over/);
+});
+
+test('a legacy summer-transfer save continues to the next season without transfers', () => {
+  const s = summer({ ...newCareer(), pat: 20 }), t = { ...s, ph: 'hop', node: { ...s.node, left: 0, free: 0 } };
+  assert.deepEqual(C.validCareer(G, t, d.manager, d.cap), t);
+  const u = C.careerNext(G, t);
+  assert.deepEqual([u.y, u.half, u.ph], [1, 0, 'half']);
+  assert.deepEqual(u.slots, s.slots);
 });
 
 test('career save validation rejects malformed state, fixture scores and player references', () => {
@@ -134,8 +134,8 @@ test('career save validation rejects malformed state, fixture scores and player 
 });
 
 test('a trophy pick reserves no paid signing fee when scouting but keeps the last patience point', () => {
-  const earned = C.careerPlayHalf(G, newCareer());
-  const s = { ...earned, pat: 2, node: { ...earned.node, left: 2, free: 1 } };
+  const earned = summer({ ...newCareer(), pat: 20 });
+  const s = { ...earned, pat: 2, node: { ...earned.node, left: 1, free: 1 } };
   const scout = C.careerRespin(G, s);
   assert.equal(scout.pat, 1); assert.equal(scout.fa, 1); assert.equal(scout.node.free, 1);
   assert.equal(C.careerRespin(G, { ...s, pat: 6 }, true).pat, 1);
@@ -152,7 +152,7 @@ test('career price uses the same negotiation and every-second-season surcharge a
 
 test('prime upgrades keep the same person and retain the original tier charge on capped careers', () => {
   const capped = draft(31, 1990, true);
-  const base = C.careerPlayHalf(G, { ...C.careerStart(G, capped), pat: 20 });
+  const base = summer({ ...C.careerStart(G, capped), pat: 20 });
   let dealt = null;
   for (let seed = 0; seed < 100 && !dealt; seed++) {
     const s = { ...base, seed }, O = C.careerOffers(G, s), j = O.findIndex(o => o.id === 'upg');
@@ -167,21 +167,14 @@ test('prime upgrades keep the same person and retain the original tier charge on
   assert.deepEqual(C.validCareer(G, t, capped.manager, true), t);
 });
 
-test('a one-season archive completes after the summer rewards and grants no nonexistent transfer window', () => {
+test('a one-season archive completes after the run-in with no summer window', () => {
   const s0 = newCareer(), year = s0.years[0], archive = { ...G, ec: { ...G.ec, [year]: [[s0.q, s0.lg, 0.5]] },
     lg: { ...G.lg, [s0.lg]: { ...G.lg[s0.lg], S: { [year]: G.lg[s0.lg].S[year] } } } };
   let s = C.careerStart(archive, d);
-  s = C.careerPlayHalf(archive, { ...s, pat: 20 });
-  const choose = s => {
-    const O = C.careerOffers(archive, s), j = O.findIndex(o => o.kind === 'rest');
-    return C.careerTake(archive, s, j >= 0 ? j : O.findIndex(o => o.kind === 'dev' && o.id !== 'upg' && o.cost < s.pat));
-  };
-  while (s.ph === 'node') s = choose(s);
-  s = C.careerPlayHalf(archive, C.careerNext(archive, s));
-  while (s.ph === 'node') s = choose(s);
+  s = C.careerPlayHalf(archive, C.careerPlayHalf(archive, { ...s, pat: 20 }));
   assert.equal(s.ph, 'done');
+  assert.equal(s.node.left, 0);
   assert.equal(s.history.length, 1);
-  assert.equal(C.careerHopPools(archive, s), null);
   assert.equal(C.careerScore(s).seasons, 1);
   assert.equal(s.history[0].real.ec, 0.5, 'the real archive uses half-stage values for early European exits');
   assert.deepEqual(C.validCareer(archive, s, d.manager, d.cap), s);
@@ -215,9 +208,7 @@ test('a save cannot fabricate completed matchdays, pending rewards or a differen
     { fa: 1 },
   ];
   for (const patch of bad) assert.throws(() => C.validCareer(G, { ...s, ...patch }, d.manager, d.cap));
-  let t = C.careerPlayHalf(G, { ...s, pat: 20 });
-  const O = C.careerOffers(G, t), j = O.findIndex(o => o.kind === 'dev' && o.id !== 'upg' && o.cost < t.pat);
-  t = C.careerPlayHalf(G, C.careerNext(G, C.careerTake(G, t, j)));
+  const t = summer({ ...s, pat: 20 });
   assert.throws(() => C.validCareer(G, { ...t, history: [{ ...t.history[0], pts: t.history[0].pts + 1 }] }, d.manager, d.cap));
   const rows = t.S.L.rows.map((r, i) => i === 0 ? [r[0], ...r.slice(1, 5), r[5] + 1, ...r.slice(6)] : r);
   assert.throws(() => C.validCareer(G, { ...t, S: { ...t.S, L: { ...t.S.L, rows } } }, d.manager, d.cap));
@@ -257,9 +248,8 @@ test('Classic and capped careers finish all ten seasons and every intermediate s
       else if (s.ph === 'node') {
         const O = C.careerOffers(A, s), rest = O.findIndex(o => o.kind === 'rest');
         const dev = O.findIndex(o => o.kind === 'dev' && o.cost < s.pat);
-        s = C.careerTake(A, s, rest >= 0 ? rest : dev);
-      } else if (s.ph === 'hop') s = C.careerHop(A, s, { old: [], neu: [], out: [] });
-      else s = C.careerNext(A, s);
+        s = C.careerAction(A, s, { type: 'take', index: rest >= 0 ? rest : dev });
+      } else throw new Error(`Unexpected phase ${s.ph}.`);
     }
     assert.equal(s.ph, 'done');
     assert.equal(s.history.length, 10);

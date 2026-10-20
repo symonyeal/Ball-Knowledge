@@ -10,7 +10,7 @@ import { U, esc, nm, club, kv, rules, vcard, keys } from './ui/kit.js';
 import { intro, teams } from './ui/lobby.js';
 import { desk, rosterList } from './ui/desk.js';
 import { results, about, season, me, shareText, cardImage, signing, arena, runShareText } from './ui/season.js';
-import { hub, careerShareText, careerCardImage, careerSigning } from './ui/career.js';
+import { hub, careerShareText, careerCardImage, careerSigning, matchCards } from './ui/career.js';
 import { mountClubhouse } from './ui/clubhouse.js';
 import { mountPortraits } from './portraits.js';
 import { refreshTransfers } from './ui/transfers.js';
@@ -231,7 +231,7 @@ root.addEventListener('change', async e => {
     $(`#up-price-${j}`).innerHTML = n < 1 ? '<p class="warn small">Not enough patience: the board keeps at least 1.</p>' : `<p class="small">Leaves ${n} patience${n <= Rn.B_LOSS(s.lost) ? ': one boss loss would end the run' : ''}.</p>`;
     $(`[data-take="${j}"]`).disabled = n < 1;
   }
-  if (t.matches('[data-career-fa], [data-career-up], [data-fa], [data-up-pick], [data-career-hop-pick], [data-hop-pick], .transfer-pick select')) refreshTransfers(root);
+  if (t.matches('[data-career-fa], [data-career-up], [data-fa], [data-up-pick], [data-hop-pick], .transfer-pick select')) refreshTransfers(root);
   if (t.id === 'import-replay') {
     const old = { S: U.S, R: U.R, C: U.C, H: U.H, tab: U.tab };
     try {
@@ -345,25 +345,17 @@ root.addEventListener('click', async e => {
     else if (b.id === 'result-card') await card();
     else if (b.id === 'career-half') {
       U.busy = true; render();
-      let newMatches, q;
-      try { await new Promise(r => setTimeout(r, 30)); const old = U.S.mode.career, s = Cr.careerPlayHalf(G, old); newMatches = s.S.me.slice(old.S.me.length); q = s.q; U.tab = 'home'; setCareer(s); }
+      let cards = [], title;
+      try { await new Promise(r => setTimeout(r, 30)); const old = U.S.mode.career, s = Cr.careerPlayHalf(G, old); cards = matchCards(s, old.S.me.length); title = old.half === 0 ? 'Opening half' : 'Run-in'; U.tab = 'home'; setCareer(s); }
       finally { U.busy = false; render(); }
-      matchCentre.show(newMatches, q);
+      matchCentre.show(cards, title);
     }
     else if (b.dataset.careerTake !== undefined) {
       const j = Number(b.dataset.careerTake), o = { pick: Number($(`#career-fa-${j}`)?.value ?? $(`#career-up-${j}`)?.value ?? 0), slot: Number($(`#career-out-${j}`)?.value ?? 0), player: Number($(`#career-dev-${j}`)?.value ?? 0) };
-      setCareer(Cr.careerTake(G, U.S.mode.career, j, o));
+      setCareer(Cr.careerAction(G, U.S.mode.career, { type: 'take', index: j, ...o }));
     }
     else if (b.dataset.careerRespin) setCareer(Cr.careerRespin(G, U.S.mode.career, b.dataset.careerRespin === 'premium'));
-    else if (b.id === 'career-hop') {
-      const Q = [...root.querySelectorAll('[data-career-hop-pick]:checked')], sel = { old: [], neu: [], out: [] };
-      for (const k of ['old', 'neu']) for (const x of Q.filter(x => x.dataset.careerHopPick === k)) {
-        const v = $(`#career-hop-out-${k}-${x.value}`).value;
-        if (v === '') throw new Error('Choose a departing squad player for each arrival.');
-        sel[k].push(Number(x.value)); sel.out.push(Number(v));
-      }
-      setCareer(Cr.careerHop(G, U.S.mode.career, sel));
-    }
+    else if (b.dataset.feed) { U.feed = b.dataset.feed; U.focus = `feed:${b.dataset.feed}`; render(); }
     else if (b.id === 'career-form-apply') setCareer(Cr.careerForm(G, U.S.mode.career, $('#career-form').value));
     else if (b.id === 'career-swap') setCareer(Cr.careerSwap(U.S.mode.career, Number($('#career-swap-a').value), Number($('#career-swap-b').value)));
     else if (b.id === 'career-next') setCareer(Cr.careerNext(G, U.S.mode.career));

@@ -2,13 +2,12 @@
 // node tests/career-balance.mjs [drafts per decade=4] [cap|classic|both] [keep=5] [free]
 //   [--decade 1950|...|2020] [--output persistent-json-path]
 // G archive; N drafts per decade and rule set; D decade; s draft/career; Q current charged cards;
-// R rated current squad; O rewards; H summer pools; keep patience retained after a paid prime upgrade;
+// R rated current squad; O rewards; keep patience retained after a paid prime upgrade;
 // free initial formation maximizes overall; q sample quantile; dp owner delta; rows individual careers.
 // Draft policy matches tests/balance.mjs: strongest manager grades, then the best legal card/slot by
 // fit, era and the team chemistry it adds. Rewards prefer an affordable prime upgrade retaining keep patience,
-// otherwise rest, then development. Summer choices minimize lost starter strength before improving
-// the bench, with lower-rated offers breaking ties; legal cap charges include earned upgrades.
-// Summer lineup uses the best assignment within the current formation, retaining every player.
+// otherwise rest, then development; legal cap charges include earned upgrades. After the single summer
+// change the lineup uses the best assignment within the current formation, retaining every player.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
@@ -16,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import * as E from '../app/engine/index.js';
 import * as Dr from '../app/draft.js';
 import * as C from '../app/career.js';
-import { ct, TI, GCAP, fits } from '../app/cap.js';
+import { GCAP, fits } from '../app/cap.js';
 
 const raw = readFileSync(new URL('../data/game.json', import.meta.url)), G = JSON.parse(raw);
 if (G.params) E.cfg(G.params);
@@ -93,34 +92,6 @@ function take(s) {
   return C.careerTake(G, s, best.j, best);
 }
 
-function hop(s) {
-  const H = C.careerHopPools(G, s), low = L => L.map((_, i) => i).sort((a, b) => L[a].r - L[b].r);
-  const A = H.old.length ? low(H.old) : [-1], B = H.neu.length ? low(H.neu) : [-1];
-  const Q = C.careerBill(G, s), counts = ct(G, Q), T = C.careerTeam(G, s), R = E.rate(T, s.D);
-  const tiers = Q.map(c => TI(Dr.hydrate(G, c).r)); let best = null;
-  for (const a of A) for (const b of B) {
-    const ins = [...(a >= 0 ? [H.old[a]] : []), ...(b >= 0 ? [H.neu[b]] : [])], cards = ins.map(c => Dr.hydrate(G, c));
-    const values = cards.map(c => T.S.map(slot => c.r * (1 - E.ft(c, slot.s).f) * E.em(c.D, s.D)));
-    const go = out => {
-      if (s.cap) for (const t of Object.keys(GCAP)) if (counts[t] + ins.filter(c => TI(c.r) === t).length - out.filter(i => tiers[i] === t).length > GCAP[t]) return;
-      let loss = 0, gain = 0;
-      out.forEach((i, j) => {
-        const d = i < 11 ? values[j][i] - R.xi[i].a : 0.15 * (cards[j].r * E.em(cards[j].D, s.D) - R.bn[i - 11].a);
-        if (i < 11 && d < 0) loss -= d; gain += d;
-      });
-      const v = gain - 100 * loss - 0.001 * ins.reduce((n, c) => n + c.r, 0);
-      if (!best || v > best.v) best = { v, old: a < 0 ? [] : [a], neu: b < 0 ? [] : [b], out };
-    };
-    if (!ins.length) go([]);
-    else for (let i = 0; i < 15; i++) {
-      if (ins.length === 1) go([i]);
-      else for (let j = 0; j < 15; j++) if (i !== j) go([i, j]);
-    }
-  }
-  if (!best) throw new Error('No legal summer transfer choice.');
-  return C.careerHop(G, s, best);
-}
-
 function repo(s) {
   const T = C.careerTeam(G, s), B = E.best([...T.xi, ...T.bn], T.S, s.D), ids = [...B.xi, ...B.bn].map(c => c.id);
   for (let i = 0; i < ids.length; i++) if (s.slots[i].p !== ids[i]) s = C.careerSwap(s, i, s.slots.findIndex(c => c.p === ids[i]));
@@ -134,7 +105,6 @@ for (const cap of mode === 'both' ? [true, false] : [mode === 'cap']) for (const
   while (!['done', 'fired'].includes(s.ph) && steps++ < 300) {
     if (s.ph === 'half') s = C.careerPlayHalf(G, s);
     else if (s.ph === 'node') s = take(s);
-    else if (s.ph === 'hop') s = hop(s);
     else if (s.ph === 'repo') s = repo(s);
     else throw new Error(`Unknown phase ${s.ph}.`);
   }
@@ -171,7 +141,7 @@ for (const cap of mode === 'both' ? [true, false] : [mode === 'cap']) for (const
 }
 const result = { schema: 1, dataSha256: createHash('sha256').update(raw).digest('hex'), elapsedSeconds: (performance.now() - start) / 1000,
   settings: { draftsPerDecade: N, rules: mode, decades: DS, seeds: [1000, 1000 + N - 1], keep, freeInitialFormation: free,
-    draftVersion: Dr.VERSION, careerVersion: C.CAREER_VERSION, policy: 'Best manager grades; legal fit/era/chemistry draft; prime upgrade if keep patience remains, else rest then development; summer minimizes lost starter strength then improves bench within cap, lower-card tie break; best current-formation assignment after summer.' },
+    draftVersion: Dr.VERSION, careerVersion: C.CAREER_VERSION, policy: 'Best manager grades; legal fit/era/chemistry draft; prime upgrade if keep patience remains, else rest then development; one summer change; best current-formation assignment after summer.' },
   groups, rows };
 mkdirSync(dirname(output), { recursive: true }); writeFileSync(output, `${JSON.stringify(result, null, 2)}\n`);
 console.table(groups.map(r => ({ rules: r.rules, decade: r.decade, runs: r.runs, complete: r.complete, sacked: r.sacked, seasons: r.seasons, objectives: r.objectives, titles: Object.values(r.titles).reduce((a, b) => a + b, 0) })));

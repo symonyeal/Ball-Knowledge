@@ -22,11 +22,11 @@ const st = p => p.evaluate(k => JSON.parse(localStorage.getItem(k)), KEY);
 // Follow the new menu/window flow; dedicated night-sky checks exercise playback and card controls.
 const settle = async p => {
   await p.waitForFunction(() => document.body.getAttribute('aria-busy') !== 'true' && !document.querySelector('.loading'));
-  if (await p.locator('#match-centre[open]').count()) await p.click('#match-skip');
+  if (await p.locator('#match-centre[open]').count()) await p.click('#match-close');
   if (await p.locator('#career-setup:not([open])').count()) await p.click('#career-setup > summary');
   const phase = await p.evaluate(k => JSON.parse(localStorage.getItem(k) || 'null')?.mode?.career?.ph, KEY);
   if (await p.locator('.career-hero').count()) {
-    if (['node','hop','repo'].includes(phase) && await p.locator('[data-tab="home"][aria-selected="true"]').count()) await p.click('[data-tab="market"]');
+    if (phase === 'node' && await p.locator('[data-tab="home"][aria-selected="true"]').count()) await p.click('[data-tab="market"]');
     if (phase === 'half' && await p.locator('[data-tab="market"][aria-selected="true"]').count()) await p.click('[data-tab="home"]');
   }
   await p.locator('.market-fallback').evaluateAll(Q => Q.forEach(e => e.open = true));
@@ -341,15 +341,7 @@ async function full(kind) {
     assert.equal((await st(p)).mode.career.half, 1);
     await p.reload(); await settle(p);
     assert.equal((await st(p)).mode.career.half, 1, 'winter resumes without replaying fixtures');
-    while ((await st(p)).mode.career.ph === 'node') {
-      const rest = p.locator('[data-career-rest]');
-      if (await rest.count()) await rest.click();
-      else await p.locator('[data-career-take]:not([disabled])').first().click();
-      await settle(p);
-    }
-    assert.equal((await st(p)).mode.career.ph, 'repo');
-    await p.click('#career-next'); await settle(p);
-    assert.equal((await st(p)).mode.career.y, 0);
+    assert.equal((await st(p)).mode.career.ph, 'half', 'no winter window');
     await p.click('#career-half'); await settle(p);
     const full = (await st(p)).mode.career;
     assert.equal(full.half, 2); assert.equal(full.history.length, 1);
@@ -360,12 +352,15 @@ async function full(kind) {
     assert.equal(completed[0].gf, full.history[0].gf);
     await p.reload(); await settle(p);
     assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('football-era-draft-profile-v1')).events.filter(e => e.kind === 'season').length), 1);
-    await p.click('[data-tab="fixtures"]'); await settle(p); assert.equal(await p.locator('.fixture[data-comp="L"]').count(), 2 * (career0.S.ord.length - 1));
+    await p.click('[data-tab="fixtures"]'); await settle(p); assert.equal(await p.locator('.match[data-comp="L"]').count(), 2 * (career0.S.ord.length - 1));
+    assert.equal(await p.locator('#result-panel .match').count(), full.S.me.length);
+    await p.click('[data-feed="K"]'); await settle(p); assert.equal(await p.locator('#result-panel .match[data-comp="L"]').count(), 0);
+    await p.click('[data-feed="all"]'); await settle(p);
     await p.click('[data-tab="cup"]'); await settle(p); assert.ok(await p.locator('.career-bracket').count() >= 1);
     await p.click('[data-tab="stats"]'); await settle(p); await p.click('[data-tab="lineup"]'); await settle(p);
     assert.equal(await p.locator('#result-panel .tk').count(), 11);
     await p.click('[data-tab="history"]'); await settle(p); assert.match(await p.locator('#result-panel').innerText(), /Season history/i);
-    ok(`${kind}: a real club season plays two halves around winter, resumes exactly, and records tables, cups, fixtures and history`);
+    ok(`${kind}: a real club season plays two halves with no winter stop, resumes exactly, and lists every match with tables, cups and history`);
     const replay = path.join(out, `${kind}-replay.json`);
     const [download] = await Promise.all([p.waitForEvent('download'), p.click('#download')]);
     await download.saveAs(replay);
@@ -541,34 +536,19 @@ async function careerControls() {
     await p.click(`[data-career-take="${deal.j}"]`); await settle(p);
     assert.equal((await st(p)).mode.career.slots[deal.slot].p, deal.p);
     ok('career prime upgrades keep the person and tier charge; scouting and quoted signings apply to the chosen place');
-    s = (await st(p)).mode.career; assert.equal(s.ph, 'hop');
-    assert.equal(await p.locator('#career-hop').isDisabled(), true); assert.equal((await st(p)).mode.career.ph, 'hop');
-    const transfers = await p.evaluate(async key => {
-      const C = await import('./app/career.js'), g = await (await fetch('./data/game.json')).json(), s = JSON.parse(localStorage.getItem(key)).mode.career, H = C.careerHopPools(g, s);
-      for (let old = 0; old < H.old.length; old++) for (let neu = 0; neu < H.neu.length; neu++)
-        for (let a = 0; a < 15; a++) for (let b = a + 1; b < 15; b++) {
-          const sel = { old: [old], neu: [neu], out: [a, b] };
-          try { return { ...sel, slots: C.careerHop(g, s, sel).slots }; } catch { /* another legal pair */ }
-        }
-      throw new Error('No legal summer transfer pair.');
-    }, KEY);
-    for (const [j, k] of ['old', 'neu'].entries()) {
-      const i = transfers[k][0]; await p.check(`[data-career-hop-pick="${k}"][value="${i}"]`);
-      await p.selectOption(`#career-hop-out-${k}-${i}`, String(transfers.out[j]));
-    }
-    await p.click('#career-hop'); await settle(p); s = (await st(p)).mode.career;
-    assert.equal(s.ph, 'repo'); assert.deepEqual(s.slots, transfers.slots);
+    s = (await st(p)).mode.career;
+    assert.equal(s.y, 1); assert.equal(s.half, 0); assert.equal(s.ph, 'half'); assert.equal(s.S.s, s.years[1]);
+    assert.equal(await p.locator('#career-hop').count(), 0, 'no separate summer transfer window');
+    await p.click('[data-tab="lineup"]'); await settle(p);
     const f = s.f === '3-5-2' ? '4-4-2' : '3-5-2';
     await p.selectOption('#career-form', f); await p.click('#career-form-apply'); await settle(p);
     const next = (await st(p)).mode.career; assert.equal(next.f, f); assert.deepEqual(next.slots.slice(11), s.slots.slice(11));
     await p.selectOption('#career-swap-a', '0'); await p.selectOption('#career-swap-b', '12'); await p.click('#career-swap'); await settle(p);
-    assert.equal((await st(p)).mode.career.slots[12].p, next.slots[0].p);
-    await p.click('#career-next'); await settle(p); s = (await st(p)).mode.career;
-    assert.equal(s.y, 1); assert.equal(s.half, 0); assert.equal(s.S.s, s.years[1]);
+    s = (await st(p)).mode.career; assert.equal(s.slots[12].p, next.slots[0].p);
     await p.reload(); await settle(p); assert.deepEqual((await st(p)).mode.career, s);
     await sound(p, 'next club season'); await p.evaluate(() => scrollTo(0, 0));
     await p.screenshot({ path: path.join(out, 'desktop-next-season.png'), fullPage: true });
-    ok('two summer transfers, formation changes, lineup swaps and the next real club season survive a reload');
+    ok('the summer window ends after its change; the next real club season, formation changes and lineup swaps from the squad tab survive a reload');
   } finally { await b.close(); }
 }
 

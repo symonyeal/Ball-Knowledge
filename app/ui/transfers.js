@@ -37,11 +37,12 @@ export function upgradePreview(s, u, career = true) {
   const T = team(s,career), out = [...T.xi,...T.bn][u.i];
   return `<div class="transfer-pair"><section><h4>Current card</h4>${candidate(u.from)}<p class="small">Developed rating ${num(out.r)}.</p></section><section><h4>Prime card</h4>${candidate(u.to)}<p class="small">Base improvement ${signed(u.to.r-u.from.r)}. Development stays with the player.</p></section></div>`;
 }
-export function windowPreview(s, selection, career = true) {
+// Gauntlet transfer window; the career has a single summer change instead.
+export function windowPreview(s, selection) {
   try {
-    const next = career ? C.careerHop(U.G,s,selection) : R.hop(U.G,s,selection), H = career ? C.careerHopPools(U.G,s) : R.hopPools(U.G,s);
+    const next = R.hop(U.G,s,selection), H = R.hopPools(U.G,s);
     const refs = [...selection.old.map(i=>H.old[i]), ...selection.neu.map(i=>H.neu[i])];
-    const html = refs.map((ref,j)=>transferPair(s,ref,selection.out[j],career,next)).join('');
+    const html = refs.map((ref,j)=>transferPair(s,ref,selection.out[j],false,next)).join('');
     return {ok:true,tx:`Ready: ${refs.length} arrivals, ${refs.length} different departures. No patience cost.`,html};
   } catch(e) { return {ok:false,tx:e.message,html:''}; }
 }
@@ -59,23 +60,23 @@ export function refreshTransfers(root) {
     const O=career ? C.careerOffers(U.G,s) : R.offers(U.G,U.F,s);
     el.innerHTML=upgradePreview(s,O[j].list[pick],career);
   });
-  const confirm=root.querySelector(career ? '#career-hop' : '#run-hop');
+  const confirm=!career && root.querySelector('#run-hop');
   if (!confirm) continue;
-  const H=career ? C.careerHopPools(U.G,s) : R.hopPools(U.G,s), selection={old:[],neu:[],out:[]};
+  const H=R.hopPools(U.G,s), selection={old:[],neu:[],out:[]};
   for (const k of ['old','neu']) {
-    const inputs=root.querySelectorAll(career ? `[data-career-hop-pick="${k}"]` : `[data-hop-pick="${k}"]`);
+    const inputs=root.querySelectorAll(`[data-hop-pick="${k}"]`);
     inputs.forEach(input => {
       const i=Number(input.value), wrap=input.closest('.transfer-pick'), out=wrap.querySelector('select'), el=wrap.querySelector('[data-arrival-preview]');
       const slot=out.value === '' ? null : Number(out.value);
       // Only show the departure once this candidate is selected; other rows retain their incoming card.
-      el.innerHTML=input.checked && slot !== null ? transferPair(s,H[k][i],slot,career) : candidate(H[k][i]);
+      el.innerHTML=input.checked && slot !== null ? transferPair(s,H[k][i],slot,false) : candidate(H[k][i]);
       wrap.classList.toggle('selected',input.checked);
       if (input.checked) { selection[k].push(i); selection.out.push(slot); }
     });
   }
-  const x=windowPreview(s,selection,career);
+  const x=windowPreview(s,selection);
   confirm.disabled=!x.ok;
-  root.querySelector(`#${mode}-transfer-window-status`).textContent=x.tx;
-  root.querySelector(`#${mode}-transfer-window-preview`).innerHTML=x.html;
+  root.querySelector('#run-transfer-window-status').textContent=x.tx;
+  root.querySelector('#run-transfer-window-preview').innerHTML=x.html;
  }
 }
