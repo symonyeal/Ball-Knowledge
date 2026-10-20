@@ -42,6 +42,16 @@ export function card(m, head, op, notes = [], form = false, comp = '') {
     ${G}${N.length ? `<p class="small match-notes">${N.join(' · ')}</p>` : ''}</article>`;
 }
 
+// engineCard(f, id, head, notes): orient an engine fixture and its events to the selected club.
+export function engineCard(f, id, head, notes = []) {
+  const h = f.A === id, M = f.M;
+  const m = { gf: h ? M.gx : M.gy, ga: h ? M.gy : M.gx,
+    sc: M.ev.map(e => [e.m, Number((e.t === 0) === h), e.sc, e.as]) };
+  const pw = M.pw && (h ? [M.pw.x, M.pw.y] : [M.pw.y, M.pw.x]);
+  return card(m, `${esc(head)} · ${f.neutral ? 'Neutral' : h ? 'Home' : 'Away'}`, `<span>${h || f.neutral ? 'v' : 'at'} ${esc(h ? f.bn : f.an)}</span>`,
+    [M.et && 'After extra time', pw && `Penalties ${pw.join('–')}`, ...notes]);
+}
+
 export function matchCard(s, S, i) {
   const m = S.me[i];
   const legs = S.me.filter(f => f.k === m.k && f.rd === m.rd && f.op === m.op), last = legs.length === 2 && legs[1] === m;

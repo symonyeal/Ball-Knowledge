@@ -7,7 +7,7 @@ import { PROFILE, emptyProfile, validateProfile, record, totals, collection, ach
 import * as Sbc from '../sbc.js';
 import { KINDS, day, puzzle, answer, clues, cardAt, streak } from '../minis.js';
 import { esc, SRC, SRT, vcard } from './kit.js';
-import { xi, breakdown } from './season.js';
+import { xi, breakdown, seasonCards } from './season.js';
 import { ambience } from '../ambience.js';
 
 const pages = { home:'Clubhouse', sandbox:'Sandbox', sbc:'Squad challenges', database:'Player database', stats:'Lifetime stats', records:'Personal records', achievements:'Achievements', collection:'Card collection', minis:'Mini-games', weekly:'Weekly archive', settings:'Settings' };
@@ -111,7 +111,7 @@ export function mountClubhouse(U, { notice, weekly }) {
   let slot=0, other=1;
   function seasonView(R) {
     const t=R.L.tab.find(t=>t.me);
-    return `<section class="club-result"><h2>Sandbox season · ${t.W}W ${t.D}D ${t.L}L</h2><p>${R.honours.join(' · ')||'Season complete'} · European Cup: ${esc(R.K.champN)}</p><div class="tw"><table><thead><tr><th>#</th><th>Club</th><th>Pts</th><th>W–D–L</th><th>Goals</th></tr></thead><tbody>${R.L.tab.map((t,i)=>`<tr class="${t.me?'your-row':''}"><td>${i+1}</td><td>${esc(t.nm)}</td><td>${t.Pts}</td><td>${t.W}–${t.D}–${t.L}</td><td>${t.GF}–${t.GA}</td></tr>`).join('')}</tbody></table></div><details><summary>Your fixtures</summary>${R.L.res.map(m=>`<p>${m.h?'Home':'Away'} · ${esc(m.op)} · ${m.gf}–${m.ga}</p>`).join('')}</details></section>`;
+    return `<section class="club-result"><h2>Sandbox season · ${t.W}W ${t.D}D ${t.L}L</h2><p>${R.honours.join(' · ')||'Season complete'} · European Cup: ${esc(R.K.champN)}</p><div class="tw"><table><thead><tr><th>#</th><th>Club</th><th>Pts</th><th>W–D–L</th><th>Goals</th></tr></thead><tbody>${R.L.tab.map((t,i)=>`<tr class="${t.me?'your-row':''}"><td>${i+1}</td><td>${esc(t.nm)}</td><td>${t.Pts}</td><td>${t.W}–${t.D}–${t.L}</td><td>${t.GF}–${t.GA}</td></tr>`).join('')}</tbody></table></div><details open><summary>Your matches · league and European Cup</summary><div class="match-list">${seasonCards(R, 'sandbox').join('')}</div></details></section>`;
   }
 
   function statistics() {

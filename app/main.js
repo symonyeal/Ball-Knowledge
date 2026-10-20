@@ -9,7 +9,7 @@ import { wk, code, uncode, h2h } from './play.js';
 import { U, esc, nm, club, kv, rules, vcard, keys } from './ui/kit.js';
 import { intro, teams } from './ui/lobby.js';
 import { desk, rosterList } from './ui/desk.js';
-import { results, about, season, me, shareText, cardImage, signing, arena, runShareText, runCards } from './ui/season.js';
+import { results, about, season, me, shareText, cardImage, signing, arena, runShareText, runCards, circuitCards, h2hCards, seasonCards } from './ui/season.js';
 import { hub, careerShareText, careerCardImage, careerSigning, matchCards } from './ui/career.js';
 import { mountClubhouse } from './ui/clubhouse.js';
 import { mountPortraits } from './portraits.js';
@@ -171,6 +171,7 @@ async function play() {
     U.tab = U.S.mode?.career ? 'home' : 'league'; U.undo = []; U.redo = []; save();
     root.focus(); window.scrollTo({ top: 0, behavior: 'instant' });
   } finally { U.busy = false; render(); }
+  if (U.R) matchCentre.show(seasonCards(U.R), `${U.S.D}s season`);
 }
 const resultText = () => U.S.g ? runShareText() : U.S.mode?.career ? careerShareText() : shareText();
 function download() {
@@ -385,6 +386,7 @@ root.addEventListener('click', async e => {
       U.busy = true; document.body.setAttribute('aria-busy', 'true'); b.textContent = 'Playing events…';
       try { await new Promise(r => setTimeout(r, 30)); U.C = E.circuit(U.S.seed, me(), U.F, { events: U.ev, Ds: U.S.D }); U.S = { ...U.S, mode: { ...U.S.mode, ci: U.ev } }; save(); }
       finally { U.busy = false; render(); }
+      matchCentre.show(U.C.events.flatMap(circuitCards), 'Tournament circuit');
     } else if (b.id === 'copy-code') await copy(code(G, U.S), 'Team code copied. Send it to a friend.');
     else if (b.id === 'h2h-play') {
       const t = uncode(G, $('#their-code').value);
@@ -392,6 +394,7 @@ root.addEventListener('click', async e => {
       U.H = h2h(U.S.seed, { id: 'your-club', nm: 'Your Era XI', T: me().T, D: U.S.D }, { id: 'friend', nm: "Friend's XI", T: t.T, D: t.D });
       save();
       render(); notice(U.H.w === 'your-club' ? 'You won the tie.' : 'Your friend won the tie.');
+      matchCentre.show(h2hCards(U.H), 'Head to head');
     }
   } catch (x) { U.busy = false; document.body.setAttribute('aria-busy', 'false'); notice(x.message, true); }
 });
