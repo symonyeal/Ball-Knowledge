@@ -4,6 +4,12 @@ The checks answer several different questions: whether the game follows its rule
 
 ## The rules are checked automatically
 
+The phone draft checks in `tests/browser/night-sky.cjs` scroll a long roster
+to its end while keeping search and sorting in place. At 320×568, 390×844
+and 430×932 they require room for a complete player card and keep the roster
+above the fixed lineup action. These checks use the visible draft and do not
+alter its saved team or simulation rules.
+
 The account-free Clubhouse expansion adds sandbox invariants, deterministic daily
 puzzles, resumable deadlines, calendar streaks, completed-event deduplication,
 collection identity and profile validation. `tests/browser/clubhouse.cjs` exercises
@@ -127,6 +133,28 @@ Rewards now follow rounds 2 and 4 only, and the transfer window signs one player
 | after | 0: 6, 1: 17, 2: 6, 3: 4, 4: 1, 8: 6 | 1 | 6 |
 
 The median is unchanged, so no compensation was added. The policy signs the lowest-rated arrivals, so fewer forced arrivals helps it; this does not measure human play.
+
+## Current career and Gauntlet evidence, repeated on 2026-10-20
+
+The career and capped reverse Gauntlet commands above were run again at
+`6a52c67`, including chemistry v2, the position rules, the single summer
+change and the two-reward Gauntlet. They reproduced the current tables:
+Salary cap completed 32 of 32 careers, with 270 objectives and 248 league
+titles in 300 seasons; Classic completed 31 of 32, with one dismissal,
+287 objectives and 280 league titles in 298 seasons. The 40 Gauntlet seeds
+again cleared 0, 1, 2, 3, 4 and 8 decades in 6, 17, 6, 4, 1 and 6 runs,
+respectively. Six runs cleared the whole map; the median remained one decade.
+
+[The machine-readable evidence](validation-2026-10-20.json) records the
+bundle fingerprint, relevant source fingerprints, settings, decade groups
+and aggregate counts. Career seeds were 1000–1003 in each decade and rule
+set; Gauntlet seeds were 500–539 with five patience retained after paid
+upgrades. These current-policy results supersede the earlier career and
+Gauntlet measurements above for current gameplay. They do not replace the
+separately labelled fictional-season benchmark or establish human difficulty.
+No match-engine parameters changed for this measurement. Rebuilding the
+source archive or refitting the EA-based goal model still requires inputs
+that are not bundled with a fresh checkout.
 
 ## Draft difficulty varies by decade
 

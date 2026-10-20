@@ -10,7 +10,7 @@ Ball Knowledge (formerly Football Era Draft) is a draft game about building a te
 
 Career, Era Gauntlet, Weekly and Clubhouse have their own menu tiles. Open Career or Gauntlet setup to choose the decade, rules and replay seed. The night-sky palette takes its blue, gray and ecru tones from Sanzo Wada combinations; the shield cards and club crests use original styling.
 
-On the draft screen, choose an empty pitch position to shortlist players who fit it, or select a player first and compare his possible places. The pitch and substitutes use compact cards; the header shows squad rating and chemistry. Arrow keys browse players and positions, Escape cancels a selection, R re-spins when available, and Ctrl+Z undoes a lineup edit. Q/E changes career tabs.
+On the draft screen, choose an empty pitch position to shortlist players who fit it, or select a player first and compare his possible places. On phones, the roster scrolls inside its panel so search, filters and the lineup action stay within reach. The pitch and substitutes use compact cards; the header shows squad rating and chemistry. Arrow keys browse players and positions, Escape cancels a selection, R re-spins when available, and Ctrl+Z undoes a lineup edit. Q/E changes career tabs.
 
 The career hub brings together the next league fixture, standings, squad, board inbox, objectives and transfer market. Summer targets and outgoing players can be selected as cards; the comparison shows the effect before a signing is confirmed. Formation and position swaps sit in the Your squad tab between matches.
 
