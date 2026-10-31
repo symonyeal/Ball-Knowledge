@@ -1,14 +1,14 @@
 # Ball Knowledge
 
-Ball Knowledge (formerly Football Era Draft) is a draft game about building a team across generations. Maradona's Napoli card can play alongside Messi's Barcelona card, but you still have to find a goalkeeper, fill your chosen formation, leave four useful substitutes on the bench and stay inside a salary cap that allows only two S-tier stars. Your fifteen then take your chosen club's place in its real domestic league for the available seasons of the decade, with cup races, transfer windows and a board that rewards or punishes your results.
+Ball Knowledge is a football draft and career game. Draft fifteen players from different club eras under a tier-based salary cap, then replace a club's squad for the available seasons of a chosen decade. Career play includes domestic leagues, cups, transfers and board objectives.
 
 [Play in your browser](https://symonyeal.github.io/Ball-Knowledge/). The game uses bundled data and needs no account, API key, package installation or separate source downloads.
 
 ![Lineup review before kick-off: fifteen drafted players, salary-cap allowances and formation controls.](docs/images/ball-knowledge.png)
 
-## Choose your mode
+## Modes and interface
 
-Career, Era Gauntlet, Weekly and Clubhouse have their own menu tiles. Open Career or Gauntlet setup to choose the decade, rules and replay seed. The night-sky palette takes its blue, gray and ecru tones from Sanzo Wada combinations; the shield cards and club crests use original styling.
+Career, Era Gauntlet, Weekly and Clubhouse have their own menu tiles. Open Career or Gauntlet setup to choose the decade, rules and replay seed. The palette uses blue, gray and ecru combinations from Sanzo Wada. The shield cards and club crests use original styling.
 
 On the draft screen, choose an empty pitch position to shortlist players who fit it, or select a player first and compare his possible places. On phones, the roster scrolls inside its panel so search, filters and the lineup action stay within reach. The pitch and substitutes use compact cards; the header shows squad rating and chemistry. Arrow keys browse players and positions, Escape cancels a selection, R re-spins when available, and Ctrl+Z undoes a lineup edit. Q/E changes career tabs.
 
@@ -20,7 +20,7 @@ Completed career seasons keep every match in Career history. Earlier Gauntlet de
 
 ![Career hub with the next league fixture, board inbox and season objectives.](docs/images/football-era-career.png)
 
-## Five clubs supply your fifteen players
+## Clubhouse
 
 The **Clubhouse** button opens the account-free extras from any stage of the game. Browse all 52,976 club-era cards by player, club, decade, position, tier or tag; inspect their rating sources and pin up to three versions for comparison. Sandbox lets you choose any fifteen distinct players, change their formation, manager and simulation era, fill empty places automatically and play a league and European Cup. Export a sandbox squad or send its Classic team code to a friend.
 
@@ -30,17 +30,19 @@ Four mini-games offer daily puzzles and unlimited practice: guess an exact club-
 
 Lifetime statistics and personal records track completed games by mode and era. Identical seeded drafts and replays count once. Football achievements show their requirements and progress; winning a trophy in a completed career season unlocks the exact club-era cards in that season's final squad. Sandbox experiments keep separate records. Preferences include day/night appearance, backdrops, motion, compact lists, default roster sorting and optional stadium ambience. **Settings → Export profile** backs up this progress and the sandbox; use the existing **Download replay** control to back up the active career. There are no accounts or shared online standings.
 
+## Draft a career squad
+
 Start by choosing where the career takes place: one of eight decades from the 1950s to the 2020s. This sets the league seasons, opposition and conditions your players will face. It leaves the player draft open to every era. Random decade lets your replay seed choose an era; the seed has its own re-roll button.
 
 The first draw gives you five managers, each paired with a recorded club spell that overlaps your decade and that club's real top-flight records. You can re-spin twice before keeping one. Choose the formation independently: the preview follows your selection, and recorded formations are clickable. Change it during the draft or before kick-off; it sets the eleven starting positions you must fill. The manager has attacking and defensive grades, and selecting one of his signature players improves those grades.
 
 Then you draw five club squads and choose three players from each. A squad belongs to a club and a decade, such as Napoli in the 1980s. Every available player from that squad appears in the roster. Click a player, then an empty place on the pitch or bench. You have one squad re-spin for the whole draft, usable before making a pick from that draw.
 
-This makes each selection depend on what the team still needs. Three outstanding forwards from the first club may leave you looking for defenders later. A reserve goalkeeper costs a place that could have gone to another attacker, but gives you cover when the starter misses a match. Any of the archive's 268 clubs can come up. Squads from decades near your season and stronger squads appear more often, and no club appears twice in one draft.
+Each selection depends on what the team still needs. Three outstanding forwards from the first club may leave you looking for defenders later. A reserve goalkeeper costs a place that could have gone to another attacker, but gives you cover when the starter misses a match. Any of the archive's 268 clubs can come up. Squads from decades near your season and stronger squads appear more often, and no club appears twice in one draft.
 
 A footballer may have several cards at different clubs or ages. Those cards are versions of the same person, so choosing one rules out the others during the draft. Once all fifteen places are filled, you can swap any two players and inspect the rating breakdown before kick-off.
 
-## The salary cap makes every star a choice
+## Salary cap
 
 A new draft uses a salary cap modelled on Eraball's Salary Cap Draft. Every card has a tier set by its base rating: S at 90 or above, A from 85, B from 80, C from 75 and D below that. Your fifteen must finish with exactly two S-tier players, four A, four B, three C and two D. Substitutes count, so a star cannot be parked on the bench for free. Eraball fills nine places with two S, two A, two B, two C and one D; the fifteen-place version is this game's adaptation.
 
@@ -50,7 +52,7 @@ As in Eraball, every squad offers a player from the best tier you still need, st
 
 Classic removes tier limits while keeping the same draw rules. The [model document](docs/MODEL.md#the-salary-cap-limits-stars-across-the-whole-squad) gives the full cap rules. [Validation](docs/VALIDATION.md#draft-difficulty-varies-by-decade) retains the earlier automatic-policy measurements against the fictional twenty-club Era League as a legacy benchmark; those title rates do not measure the real-league career.
 
-## The card belongs to a player, a club and a decade
+## Player ratings and chemistry
 
 The club and decade matter because the game uses the version of a player recorded there. An overall rating gives a starting point; the position you assign him changes the contribution he can make.
 
@@ -62,7 +64,7 @@ Taking a player out of his own era applies another adjustment. Older players los
 
 Chemistry can recover some points. On EA FC Ultimate Team's scale, each starter in a listed position earns up to 3 chemistry points, and each point adds one rating point; the team maximum is 33. The points come from real careers: former teammates (the same club in the same seasons, at any club either played for), players who shared a club in other seasons, the same football nation, the same league, and a manager who coached the player. The pitch draws those bonds, and the draft screen shows the rating chemistry adds and the win chance against a median opponent with and without it. Listed football partnerships earn a separate bonus when both start. The formation distributes the resulting ratings between attack, midfield and defence. Moving a player can therefore affect his own rating, the team's chemistry and the balance of the team. The [model document](docs/MODEL.md) gives the complete calculation and its limits.
 
-## Lead your club through the decade
+## Career seasons
 
 Your drafted fifteen replace your chosen club's squad. Each season uses its domestic league's real clubs and league size, with home-and-away fixtures and the period's two- or three-point win rule. If your club was outside the top flight that year, it takes the lowest-finishing real club's place. You keep the same league throughout the career; the game does not simulate relegation to a second division. Careers cover all available league seasons in the decade: the Bundesliga starts in 1963, and the supplied 2020s end with 2024/25.
 
@@ -82,7 +84,7 @@ The model's goal calculations were fitted to real club results from 2014 to 2019
 
 Recorded goals, assists and expected goals also help choose who receives a simulated goal or assist. Expected goals, or xG, describe the chances a player had; expected assists, or xA, describe the chances his passes created. The game uses those records where they exist and falls back to other scoring records or position-based estimates. The scorer, assist and clean-sheet awards in your results come from the matches that were simulated. [Validation](docs/VALIDATION.md) explains what was tested and what the measurements can support.
 
-## The Gauntlet develops the team you drafted
+## Era Gauntlet
 
 The **Era Gauntlet** card on the start screen opens a separate draft for it, as in Eraball: choose a map and the usual rules and seed, then draft from squads within two decades of the map's first stop (the 2000s to the 2020s for Odyssey in Reverse). The spins mostly land on each decade's strongest squads, and the salary cap allows up to 3 S-tier and 6 A-tier players with the other tiers free, so the fifteen can stand up to a decade's best clubs. Kick-off starts the run instead of a career. More modes also offers the Gauntlet to a squad drafted for the career. Choose one of four routes. The default, Odyssey in Reverse, visits all eight decades from the 2020s back to the 1950s; The Full Odyssey travels the other way. Original Gauntlet visits the 1960s, 1990s and 2010s, and Back in Time reverses that route. Each decade has four six-match rounds against rising opposition, with a reward after the second and fourth rounds, then a two-legged boss tie against one of its three strongest clubs, announced before the last round. Each cleared decade names its player, top scorer, assist leader, clean-sheet leader and biggest win, and the run ends with the same honours for the whole run. Before each new decade the squad's ratings are shown for the decade left and the one ahead.
 
@@ -92,7 +94,7 @@ Rewards offer free agents, player or team development, and rest. A prime-card bo
 
 After each boss win before the final decade, a free transfer window offers players from the decade you leave and the one you enter. Sign one from each and release two different squad members; the next decade starts at once. The re-rating table and goalkeeper warning appear in the window. Formation and two-place swaps are available between matches under Change the lineup. A capped run allows at most three S-tier and six A-tier charges across the fifteen; a boosted player keeps his original tier charge. The final score rewards cleared decades, round results and remaining patience, with a 1.5 multiplier under the cap. [MODEL.md](docs/MODEL.md#era-gauntlet) gives the prices, development catalogue, negotiation terms and score calculation.
 
-## Take the same squad into other competitions
+## Other competitions and challenges
 
 More modes also contains the tournament circuit and Head to Head. The circuit plays 10 to 20 events across the decades. It rotates through an eight-club league, a European Cup, an eight-club knockout, groups followed by knockout, and a Super Cup. The squad is reassessed for the era of each event. Completion shows your titles and the circuit's leading scorer, assist provider, goalkeeper and player.
 
@@ -102,7 +104,7 @@ The Weekly Challenge gives everyone the same draft seed and season decade for th
 
 Progress stays in the browser you used. Download a replay to preserve your choices and resume them elsewhere, or download a result image to share. Saved version 2 and version 3 drafts retain their original manager choices and fictional season, including club spells outside the new career's decade rule; older team codes still work. Start a new draft for the real-league career. A seed recreates the same draws when the same choices are made with the same data and engine. It does not record which players you chose or where you placed them, and different picks lead to different later draws.
 
-## The historical archive is uneven
+## Data coverage and limits
 
 The supplied archive has 52,976 cards for 25,382 people, covering 910 club-and-decade squads from 268 clubs, and 96 managers. The five major leagues supply 185 of those clubs, up to twenty per league in each decade; [DATA.md](docs/DATA.md#a-decade-squad-covers-a-period-at-a-club) shows where the records fall short, such as Germany before the Bundesliga. EA and Championship Manager provide much of the later-era rating evidence. The 1950s, 1960s and 1970s remain almost entirely estimated. Earlier community databases are a pending source of evidence, not part of this release.
 
@@ -110,7 +112,7 @@ Wikidata supplies club membership and dated spells at a club. A decade squad can
 
 An EA or CM rating is that game's assessment. An estimated historical card is a model's prediction from later game ratings and recorded player facts. Neither establishes an objective ranking across football history. Source badges and the [coverage table](docs/DATA.md#coverage-by-decade) let you see where the evidence changes.
 
-## Inspect the choices in the notebook
+## Notebook experiments
 
 The [Jupyter notebook](Ball%20Knowledge.ipynb) shares the browser's JavaScript rating and match functions. Its existing experiment plays one fictional twenty-club Era League and sixteen-club European Cup, using decade-wide club squads. It does not reproduce the browser's real-league career, season-specific opponents, qualification or transfer economy. Python displays the data and results: source coverage, a real card's position ratings, the chosen squad, rating adjustments, team strengths, fixtures, Cup ties and player awards.
 
@@ -118,7 +120,9 @@ You can supply your own fifteen players, choose a manager and formation, change 
 
 The [notebook settings reference](docs/MODEL.md#notebook-settings) explains how to retain exact browser cards and placement. Exporting a notebook result is optional and happens only when you set `export_path`.
 
-## Project files and running your own copy
+<a id="project-files-and-running-your-own-copy"></a>
+
+## Run locally
 
 | File or folder | What to use it for |
 | --- | --- |
